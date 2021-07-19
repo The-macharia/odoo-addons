@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="0">
+        <template id="remittance_advice_report_document" name="remittance_report">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-size: 13px !important;">
+                        <br />
+                        <br />
+                        <div class="row mt-8">
+                            <h5>
+                                <span>VENDOR:</span>
+                                <t t-esc="data[d]['vendor']" />
+                            </h5>
+                            <br />
+                        </div>
+                        <br />
+
+                        <div class="row">
+                            <h6>
+                                <span>VAT:</span>
+                                <span>
+                                    <t t-esc="data[d]['vendor_pin']" />
+                                </span>
+                            </h6>
+                        </div>
+                        <br />
+                        <br />
+
+                        <div class="row">
+                            <h4>REMITTANCE ADVICE</h4>
+                        </div>
+                        <div class="row">
+                            <table class="table mt16 table-sm o_main_table" style="border:1px solid #ddd; width:100%;">
+                                <thead>
+                                    <tr>
+                                        <th style="border:1px solid #ddd; text-align:center; color: #000;">DATE</th>
+                                        <th style="border:1px solid #ddd; text-align:center; color: #000;">INVOICE</th>
+                                        <th style="border:1px solid #ddd; text-align:center; color: #000;">PAID</th>
+                                        <th style="border:1px solid #ddd; text-align:center; color: #000;">DESCRIPTION</th>
+                                        <th style="border:1px solid #ddd; text-align:center; color: #000;">NET</th>
+                                        <th style="border:1px solid #ddd; text-align:center; color: #000;">AMOUNT</th>
+                                        <th style="border:1px solid #ddd; text-align:center; color: #000;">VAT</th>
+                                        <th style="border:1px solid #ddd; text-align:center; color: #000;">WH VAT</th>
+                                        <th style="border:1px solid #ddd; text-align:center; color: #000;">NON VAT</th>
+                                        <th style="border:1px solid #ddd; text-align:center; color: #000;">TOTAL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="data[d]['vals']" t-as="a">
+                                        <tr>
+                                            <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                                <t t-esc="a['date']" />
+                                            </td>
+                                            <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                                <t t-esc="a['inv']" />
+                                            </td>
+                                            <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                                <t t-esc="a['paid']" />
+                                            </td>
+                                            <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                                <t t-esc="a['description']" />
+                                            </td>
+                                            <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                                <t t-esc="'{:,.2f}'.format(a['net'])" />
+                                            </td>
+                                            <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                                <t t-esc="'{:,.2f}'.format(a['amt'])" />
+                                            </td>
+                                            <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                                <t t-esc="'{:,.2f}'.format(a['vat'])" />
+                                            </td>
+                                            <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                                <t t-esc="'{:,.2f}'.format(a['whvat'])" />
+                                            </td>
+                                            <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                                <t t-esc="'{:,.2f}'.format(a['non_vat'])" />
+                                            </td>
+                                            <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                                <t t-esc="'{:,.2f}'.format(a['total'])" />
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tr>
+                                        <td style="text-align:center;" colspan="4">
+                                            <b>TOTALS</b>
+                                        </td>
+                                        <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                            <b>
+                                                <t t-esc="'{:,.2f}'.format(data[d]['totals']['net'])" />
+                                            </b>
+                                        </td>
+                                        <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                            <b>
+                                                <t t-esc="'{:,.2f}'.format(data[d]['totals']['amt'])" />
+                                            </b>
+                                        </td>
+                                        <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                            <b>
+                                                <t t-esc="'{:,.2f}'.format(data[d]['totals']['vat'])" />
+                                            </b>
+                                        </td>
+                                        <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                            <b>
+                                                <t t-esc="'{:,.2f}'.format(data[d]['totals']['whvat'])" />
+                                            </b>
+                                        </td>
+                                        <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                            <b>
+                                                <t t-esc="'{:,.2f}'.format(data[d]['totals']['non_vat'])" />
+                                            </b>
+                                        </td>
+                                        <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                            <b>
+                                                <t t-esc="'{:,.2f}'.format(data[d]['totals']['total'])" />
+                                            </b>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="row text-left mt-3 p-1">
+                            <div class="col-6 pull-left" style="border: 2px solid black;">
+                                <span>LESS WITHHOLDING / VAT:</span>
+                                <b>
+                                    <t t-esc="'{:,.2f}'.format(data[d]['wh'])" />
+                                </b>
+                            </div>
+                        </div>
+                        <div class="row justify-content-between mt-4">
+                            <div class="col-6">
+                                <br />
+                                <br />
+                                Check Number: _________________________
+                            </div>
+                            <div class="col-6 text-left">
+                                <br />
+                                <br />
+                                <span style="border-bottom: 3px double black; font-size:20px;" class="p-1 text-right">
+                                    <span class="margin-right: 20px;">Total (Less WHT):</span>
+                                    <b>
+                                        <t t-esc="'{:,.2f}'.format(data[d]['total']+data[d]['wh'])" />
+                                    </b>
+                                </span>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="row">
+                            <div class="col-6"></div>
+                            <div class="col-6 pull-right text-left">
+                                <span style="border-bottom: 3px double black; font-size:20px;" class="p-1 text-right">
+                                    <span class="margin-right: 20px;">Total Paid (Less WHT):</span>
+                                    <b>
+                                        <t t-esc="'{:,.2f}'.format(data[d]['total_paid'])" />
+                                    </b>
+                                </span>
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                        <p class="text-muted">Generated on: <t t-esc="datetime.date.today().strftime('%m/%d/%Y')" />
+                        </p>
+                    </div>
+                </t>
+            </t>
+        </template>
+
+        <template id="remittance_advice_report">
+            <t t-foreach="data" t-as="d">
+                <t t-call="remittance_report.remittance_advice_report_document" />
+            </t>
+        </template>
+    </data>
+</odoo>
