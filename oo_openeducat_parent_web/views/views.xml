@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <data noupdate="0">
+
+    <template id="mychild" name="My Child">
+      <t t-call="website.layout">
+        <div class="container" id="wrap">
+          <div class="row">
+            <nav aria-label="breadcrumb" class="border-1 my-2">
+              <ol class="breadcrumb">
+                <a t-attf-href="/home" aria-current="page" class="breadcrumb-item active">Home</a>
+              </ol>
+            </nav>
+          </div>
+
+          <div class="row py-4">
+            <t t-foreach="students" t-as="s">
+              <div class="col-6">
+                <a t-attf-href="/my/child/{{s.id}}/profile">
+                  <div class="card d-flex flex-row p-0">
+                    <div class="img w-50 text-center">
+                      <img t-attf-src="data:image/png;base64,{{s.image_1920}}" class="figure-img img-fluid rounded w-100 h-100" alt="..." t-if="s.image_1920" />
+                      <img src="/openeducat_parent_web/static/img/profile.png" class="figure-img img-fluid rounded w-100 h-100" alt="..." t-if="not s.image_1920" style="background: indigo" />
+                    </div>
+
+                    <div class="w-50 d-flex flex-column justify-content-center ml-4">
+                      <h4 t-field="s.name" class="p-1" style="border-bottom: 1px solid #e7e7e7" />
+                      <p class="pt8 mb-0">
+                        <i class="fa fa-calendar" style="margin-right: 7px;"></i>
+                        <span t-field="s.birth_date" />
+                      </p>
+                      <p class="pt8 mb-0">
+                        <i class="fa fa-phone" style="margin-right: 7px;"></i>
+                        <span t-field="s.mobile" />
+                      </p>
+                      <p class="pt8 mb-0">
+                        <i class="fa fa-envelope-o" style="margin-right: 7px;"></i>
+                        <span t-field="s.email" />
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </t>
+          </div>
+        </div>
+      </t>
+    </template>
+
+    <template id="my_child_profile" name="Student Profile">
+      <t t-call="website.layout">
+        <div class="container" id="wrap" style="min-height: 80vh;">
+          <div class="row">
+            <nav aria-label="breadcrumb" class="border-1 my-2">
+              <ol class="breadcrumb">
+                <a t-attf-href="/home" aria-current="page" class="breadcrumb-item active">Home</a>
+              </ol>
+            </nav>
+          </div>
+
+          <div class="row align-items-start">
+            <div class="col-sm-12 col-md-3 nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+              <a class="nav-link active" id="v-pills-home-tab" data-bs-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">Personal Information</a>
+              <a class="nav-link" id="v-pills-education-tab" data-bs-toggle="pill" href="#v-pills-education" role="tab" aria-controls="v-pills-education" aria-selected="false">Educational</a>
+              <a class="nav-link" id="v-pills-exams-tab" data-bs-toggle="pill" href="#v-pills-exams" role="tab" aria-controls="v-pills-exams" aria-selected="false">Exams</a>
+              <a class="nav-link" id="v-pills-parent-tab" data-bs-toggle="pill" href="#v-pills-parent" role="tab" aria-controls="v-pills-parent" aria-selected="false">Parent</a>
+              <a class="nav-link" id="v-pills-activity-tab" data-bs-toggle="pill" href="#v-pills-activity" role="tab" aria-controls="v-pills-activity" aria-selected="false">Activity Log</a>
+              <a class="nav-link" id="v-pills-fees-tab" data-bs-toggle="pill" href="#v-pills-fees" role="tab" aria-controls="v-pills-fees" aria-selected="false">Fees Collection Details</a>
+            </div>
+
+            <div class="col-sm-12 col-md-9 tab-content border-2" id="v-pills-tabContent">
+              <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+
+                <div class="d-flex align-items-center mb-4">
+                  <img t-attf-src="data:image/png;base64,{{student.image_1920}}" class="border-2 figure-img img-fluid img-responsive rounded" alt="..." />
+
+                  <h3 t-field="student.name" class="ml-4" />
+                </div>
+
+                <div class="row">
+                  <div class="col-4 d-flex flex-column">
+                    <div class="media d-flex align-items-start">
+                      <i class="fa fa-venus-mars my-2 mr-1" style="font-size: 1rem; margin-top:7px !important; color: indigo;"></i>
+                      <div class="media-body">
+                        <strong class="text-secondary">Gender</strong>
+                        <p t-field="student.gender" />
+                      </div>
+                    </div>
+
+                    <div class="media d-flex align-items-start">
+                      <i class="fa fa-globe my-2 mr-1" style="font-size: 1rem; margin-top:7px !important; color: indigo;"></i>
+                      <div class="media-body">
+                        <strong class="text-secondary">Nationality</strong>
+                        <p t-field="student.nationality" />
+                      </div>
+                    </div>
+
+                    <div class="media d-flex align-items-start">
+                      <i class="fa fa-map-marker my-2 mr-1" style="font-size: 1rem; margin-top:7px !important; color: indigo;"></i>
+                      <div class="media-body">
+                        <strong class="text-secondary">Address</strong>
+                        <p t-field="student.street" />
+                      </div>
+                    </div>
+
+                  </div>
+                  <div class="col-4 d-flex flex-column">
+                    <div class="media d-flex align-items-start">
+                      <i class="fa fa-birthday-cake my-2 mr-1" style="font-size: 1rem; margin-top:7px !important; color: indigo;"></i>
+                      <div class="media-body">
+                        <strong class="text-secondary">Birth Date</strong>
+                        <p t-esc="student.birth_date and student.birth_date.strftime('%B, %d %Y')" />
+                      </div>
+                    </div>
+                    <div class="media d-flex align-items-start">
+                      <i class="fa fa-mobile my-2 mr-1" style="font-size: 1rem; margin-top:7px !important; color: indigo;"></i>
+                      <div class="media-body">
+                        <strong class="text-secondary">Mobile</strong>
+                        <p t-field="student.mobile" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-4 d-flex flex-column">
+                    <div class="media d-flex align-items-start">
+                      <i class="fa fa-object-group my-2 mr-1" style="font-size: 1rem; margin-top:7px !important; color: indigo;"></i>
+                      <div class="media-body">
+                        <strong class="text-secondary">Blood Group</strong>
+                        <p t-field="student.blood_group" />
+                      </div>
+                    </div>
+
+                    <div class="media d-flex align-items-start">
+                      <i class="fa fa-email my-2 mr-1" style="font-size: 1rem; margin-top:7px !important; color: indigo;"></i>
+                      <div class="media-body">
+                        <strong class="text-secondary">Email</strong>
+                        <p t-field="student.email" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="v-pills-education" role="tabpanel" aria-labelledby="v-pills-education-tab">
+                <div class="mb-2">
+                  <h4>Education Details</h4>
+                </div>
+                <div class="mb-4 d-flex">
+                  <h6>
+                    Gr Number:
+                    <t t-esc="student.gr_no" />
+                  </h6>
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <table class="table border-1 w-100">
+                      <thead>
+                        <tr>
+                          <th class="border-1">Course</th>
+                          <th class="border-1">Batch</th>
+                          <th class="border-1">Roll Number</th>
+                          <th class="border-1">Subjects</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <t t-foreach="student.course_detail_ids" t-as="course">
+                          <tr>
+                            <td class="border-1">
+                              <span t-field="course.course_id.name" />
+                            </td>
+                            <td class="border-1">
+                              <span t-field="course.batch_id.name" />
+                            </td>
+                            <td class="border-1">
+                              <span t-field="course.roll_number" />
+                            </td>
+                            <td class="border-1">
+                              <span>
+                                <t t-esc="', '.join(course.subject_ids.mapped('name'))" />
+                              </span>
+                            </td>
+                          </tr>
+                        </t>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="v-pills-exams" role="tabpanel" aria-labelledby="v-pills-exams-tab">
+                <div class="mb-4">
+                  <h4>Exams</h4>
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <table class="table table-responsive w-100">
+                      <thead>
+                        <th>Exams</th>
+                        <th>Term</th>
+                        <th>Class</th>
+                        <th>Year</th>
+                      </thead>
+                      <tbody>
+                        <tr t-foreach="exams" t-as="exam">
+                          <td>
+                            <a t-attf-href="/my/child/exams/{{student.id}}/exam/{{exam.id}}" t-field="exam.name" />
+                          </td>
+                          <td>
+                            <span t-field="exam.course_id" />
+                          </td>
+                          <td>
+                            <span t-field="exam.course_id.class_number" />
+                          </td>
+                          <td>
+                            <span t-esc="exam.start_date.year" />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <!-- <t t-else="">
+                      <div class="row">
+                        <div>
+                          <h2 style="font-size: 20px;">
+                            <t t-esc="avg_and_score.get('exam_name')" />
+                          </h2>
+                          <br />
+                          <h3 t-field="student.name" style="color: #0d0451;" />
+                          <br />
+                          <h3 t-esc="avg_and_score.get('class_number')" />
+                          <br />
+                        </div>
+                      </div>
+                      <div class="row mt-4">
+                        <table class="w-100" style="border: 1px solid black;">
+                          <thead>
+                            <tr>
+                              <th style="color:red; font-weight: bold; border: 1px solid black;" class=" text-center">Learning Areas</th>
+                              <th style="color:red; font-weight: bold; border: 1px solid black;" class=" text-center">Marks</th>
+                              <th style="color:red; font-weight: bold; border: 1px solid black;" class=" text-center">Assessment Task Score</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <t t-foreach="exams" t-as="l">
+                              <tr>
+                                <td class="text-center py-2" style="border: 1px solid black;">
+                                  <span t-esc="l['subject']" />
+                                </td>
+                                <td class="text-center py-2" style="border: 1px solid black;">
+                                  <span t-esc="l['marks_obtained']" />
+                                </td>
+                                <td class="text-center py-2" style="border: 1px solid black;">
+                                  <span t-esc="l['rubrics_grade']" />
+                                </td>
+                              </tr>
+                            </t>
+                            <tr>
+                              <td class="text-center py-2" style="border: 1px solid black;">Average</td>
+                              <td class="text-center py-2" style="border: 1px solid black;" colspan="2">
+                                <span t-esc="avg_and_score.get('percentage')" />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="text-center py-2" style="border: 1px solid black;">Score</td>
+                              <td class="text-center py-2" style="border: 1px solid black;" colspan="2">
+                                <span t-esc="avg_and_score.get('score')" />
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="row" style="margin-top: 30px;">
+                        <table class="w-100" style="border: 1px solid black;">
+                          <thead>
+                            <tr>
+                              <th colspan="2" style="color:red; font-weight: bold; border: 1px solid black;" class="text-center">ASSESSMENT RUBRICS</th>
+                              <th style="color:red; font-weight: bold; border: 1px solid black;" class="text-center">X/100</th>
+                              <th style="color:red; font-weight: bold; border: 1px solid black;" class="text-center">X/50</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td class="text-center py-2 px-3" style="border: 1px solid black;">4</td>
+                              <td class="text-center" style="border: 1px solid black;">Consistently performs above grade level
+                                                        standards, exceeds expectation.</td>
+                              <td class="text-center" style="border: 1px solid black;">98-100</td>
+                              <td class="text-center" style="border: 1px solid black;">48-50</td>
+                            </tr>
+                            <tr>
+                              <td class="text-center py-2 px-3" style="border: 1px solid black;">3</td>
+                              <td class="text-center" style="border: 1px solid black;">Consistently meets grade level standards,
+                                                        meets expectations.</td>
+                              <td class="text-center" style="border: 1px solid black;">80-97</td>
+                              <td class="text-center" style="border: 1px solid black;">40-47</td>
+                            </tr>
+                            <tr>
+                              <td class="text-center py-2 px-3" style="border: 1px solid black;">2</td>
+                              <td class="text-center" style="border: 1px solid black;">Progressing towards grade level standards,
+                                                        meets some expectations.</td>
+                              <td class="text-center" style="border: 1px solid black;">50-79</td>
+                              <td class="text-center" style="border: 1px solid black;">30-39</td>
+                            </tr>
+                            <tr>
+                              <td class="text-center py-2 px-3" style="border: 1px solid black;">1</td>
+                              <td class="text-center" style="border: 1px solid black;">Little progress towards grade level standards,
+                                                        meets few expectations.</td>
+                              <td class="text-center" style="border: 1px solid black;">0-49</td>
+                              <td class="text-center" style="border: 1px solid black;">0-29</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </t> -->
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="tab-pane fade" id="v-pills-parent" role="tabpanel" aria-labelledby="v-pills-parent-tab">
+                <div class="mb-4">
+                  <h4>Parents</h4>
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <table class="table w-100">
+                      <thead>
+                        <tr>
+                          <th class="border-1">Name</th>
+                          <th class="border-1">Email</th>
+                          <th class="border-1">Mobile</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <t t-foreach="parents" t-as="parent">
+                          <tr>
+                            <td class="border-1">
+                              <span t-field="parent.name.name" />
+                            </td>
+                            <td class="border-1">
+                              <span t-field="parent.name.email" />
+                            </td>
+                            <td class="border-1">
+                              <span t-field="parent.mobile" />
+                            </td>
+                          </tr>
+                        </t>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="v-pills-activity" role="tabpanel" aria-labelledby="v-pills-activity-tab">
+                <div class="mb-4">
+                  <h4>Activity Log</h4>
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <table class="table w-100">
+                      <thead>
+                        <tr>
+                          <th class="border-1">Activity Type</th>
+                          <th class="border-1">Date</th>
+                          <th class="border-1">Faculty</th>
+                          <th class="border-1">Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <t t-foreach="activity" t-as="a">
+                          <tr>
+                            <td class="border-1">
+                              <span t-field="a.type_id.name" />
+                            </td>
+                            <td class="border-1">
+                              <span t-field="a.date" />
+                            </td>
+                            <td class="border-1">
+                              <span t-field="a.faculty_id.name" />
+                            </td>
+                            <td class="border-1">
+                              <span t-field="a.description" />
+                            </td>
+                          </tr>
+                        </t>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="v-pills-fees" role="tabpanel" aria-labelledby="v-pills-fees-tab">
+                <div class="mb-4">
+                  <h4>Fees Collection Details</h4>
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <table class="table w-100">
+                      <thead>
+                        <tr>
+                          <th class="border-1">Invoice Date</th>
+                          <th class="border-1">Fee Amount</th>
+                          <th class="border-1">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr t-foreach="request.env['account.move'].search([('partner_id','=',student.partner_id.id),('type','in',['out_invoice','out_refund'])],order='invoice_date desc')" t-as="invoice">
+                          <td class="border-1">
+                            <span t-field="invoice.invoice_date" />
+                          </td>
+                          <td class="border-1">
+                            <span t-field="invoice.amount_total" />
+                          </td>
+                          <td class="border-1">
+                            <span t-field="invoice.invoice_payment_state" />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </t>
+    </template>
+
+  </data>
+</odoo>

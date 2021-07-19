@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- <template id="report_marksheet_report_extended" inherit_id="openeducat_exam.report_marksheet_report"> <xpath expr="" position="inside"></xpath> </template> -->
+
+        <template id="marksheet_report_document">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="web.basic_layout">
+                        <div class="font">
+                            <div class="page mx-4">
+                                <style>
+                                    .font{
+                                    font-size:14px;
+                                    }
+                                    @page{
+                                    size: A4;
+                                    }
+                                    th{
+                                        padding: 10px;
+                                        font-size: 18px;
+                                    }
+                                </style>
+                                <div class="row">
+                                    <div class="col-4"></div>
+                                    <div class="col-4 text-center">
+                                        <img src="/openeducat_parent_web/static/img/logo.png" class="border-2 figure-img img-fluid img-responsive rounded" alt="Logo" style="width:200px; height:auto;" />
+                                    </div>
+                                    <div class="col-4"></div>
+                                </div>
+                                <br />
+                                <t t-if="o.marksheet_reg_id.exam_session_id.course_id.upper_or_lower != 'lower'">
+                                    <div class="text-center">
+                                        <h3>
+                                            <strong>MarkSheet</strong>
+                                        </h3>
+                                    </div>
+                                    <br />
+                                    <!-- <t t-if="o.evaluation_type == 'normal'"> -->
+                                    <table class="table w-100">
+                                        <tbody style="font-size:14px;">
+                                            <tr>
+                                                <td>
+                                                    <b>Student Name:</b>
+                                                    <span t-field="o.student_id.name" />
+                                                </td>
+                                                <td class="text-right">
+                                                    <b>Course:</b>
+                                                    <span t-field="o.marksheet_reg_id.exam_session_id.course_id.name" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <b>Exam Name:</b>
+                                                    <span t-field="o.marksheet_reg_id.name" />
+                                                </td>
+                                                <td class="text-right">
+                                                    <b>Exam Code:</b>
+                                                    <span t-field="o.marksheet_reg_id.exam_session_id.exam_code" />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <br />
+                                    <br />
+                                    <table class="table table-bordered">
+                                        <thead class="text-center" style="background-color:#eeeeee; font-size:14px; font-weight:600;">
+                                            <th class="text-center">Subject
+                                            </th>
+                                            <th class="text-center">Exam
+                                                    Type
+                                            </th>
+                                            <th class="text-center">Total
+                                                    Marks
+                                            </th>
+                                            <th class="text-center">Passing
+                                                    Marks
+                                            </th>
+                                            <th class="text-center">Obtained
+                                                    Marks
+                                            </th>
+                                        </thead>
+                                        <tbody class="text-left" style="font-size:12px;">
+                                            <t t-foreach="o.result_line" t-as="result">
+                                                <tr>
+                                                    <td class="text-center">
+                                                        <span t-field="result.exam_id.subject_id.name" />
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span t-field="result.exam_id.session_id.exam_type.name" />
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span t-field="result.exam_id.total_marks" />
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span t-field=" result.exam_id.min_marks" />
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span t-field="result.marks" />
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                    <br />
+                                    <table width="100%" class="table table-bordered">
+                                        <thead class="text-center" style="background-color:#eeeeee; font-size:14px; font-weight:600;">
+                                            <th class="text-center">Month/Year of Passing</th>
+                                            <th class="text-center">Obtained Marks/Total Marks</th>
+                                            <th class="text-center">Percentage</th>
+                                        </thead>
+                                        <tbody class="text-left" style="font-size:12px;">
+                                            <tr>
+                                                <td class="text-center">
+                                                    <span t-field="o.generated_date" />
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-field="o.total_marks" />
+                                                    /
+                                                    <span t-esc="sum(o.result_line.mapped('exam_id.total_marks'))" />
+                                                </td>
+
+                                                <td class="text-center">
+                                                    <span t-esc="round(o.percentage,2)" />
+                                                    %
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </t>
+                                <t t-else="">
+                                    <!-- <div class="row" style="margin-top: 75px !important;"> -->
+                                    <div class="row">
+                                        <h5>
+                                            <t t-esc="o.marksheet_reg_id.exam_session_id.name" />
+                                        </h5>
+                                    </div>
+                                    <div class="row w-100">
+                                        <h5 t-field="o.student_id.name" style="color: #0d0451;" />
+                                    </div>
+                                    <div class="row">
+                                        <p t-field="o.marksheet_reg_id.exam_session_id.course_id.class_number" />
+                                    </div>
+                                    <div class="row mt-4">
+                                        <table class="w-100" style="border: 1px solid black;">
+                                            <thead>
+                                                <tr>
+                                                    <th style="color:red; font-weight: bold; border: 1px solid black;" class=" text-center">Learning Areas</th>
+                                                    <th style="color:red; font-weight: bold; border: 1px solid black;" class=" text-center">Obtained Marks</th>
+                                                    <th style="color:red; font-weight: bold; border: 1px solid black;" class=" text-center">Assessment Task Score</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="o.result_line" t-as="l">
+                                                    <tr>
+                                                        <td class="text-center py-2" style="border: 1px solid black;">
+                                                            <span t-field="l.exam_id.subject_id.name" />
+                                                        </td>
+                                                        <td class="text-center py-2" style="border: 1px solid black;">
+                                                            <span t-field="l.marks" />
+                                                        </td>
+                                                        <td class="text-center py-2" style="border: 1px solid black;">
+                                                            <span t-field="l.rubrics_grade" />
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                                <tr>
+                                                    <td class="text-center py-2" style="border: 1px solid black;">Average</td>
+                                                    <td class="text-center py-2" style="border: 1px solid black;" colspan="2">
+                                                        <span t-field="o.percentage" />
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-center py-2" style="border: 1px solid black;">Score</td>
+                                                    <td class="text-center py-2" style="border: 1px solid black;" colspan="2">
+
+                                                        <t t-if="o.percentage &gt;= 98 and o.percentage &lt;= 100">
+                                                            <span>4</span>
+                                                        </t>
+                                                        <t t-if="o.percentage &gt;= 80 and o.percentage &lt;= 97">
+                                                            <span>3</span>
+                                                        </t>
+                                                        <t t-if="o.percentage &gt;= 50 and o.percentage &lt;= 79">
+                                                            <span>2</span>
+                                                        </t>
+                                                        <t t-if="o.percentage &gt;= 0 and o.percentage &lt;= 49">
+                                                            <span>1</span>
+                                                        </t>
+
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="row" style="margin-top: 30px;">
+                                        <table class="w-100" style="border: 1px solid black;">
+                                            <thead>
+                                                <tr>
+                                                    <th colspan="2" style="color:red; font-weight: bold; border: 1px solid black;" class="text-center">ASSESSMENT RUBRICS</th>
+                                                    <th style="color:red; font-weight: bold; border: 1px solid black;" class="text-center">X/100</th>
+                                                    <th style="color:red; font-weight: bold; border: 1px solid black;" class="text-center">X/50</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="text-center py-2 px-3" style="border: 1px solid black;">4</td>
+                                                    <td class="text-center" style="border: 1px solid black;">Consistently performs above grade level
+                                                        standards, exceeds expectation.</td>
+                                                    <td class="text-center" style="border: 1px solid black;">98-100</td>
+                                                    <td class="text-center" style="border: 1px solid black;">48-50</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-center py-2 px-3" style="border: 1px solid black;">3</td>
+                                                    <td class="text-center" style="border: 1px solid black;">Consistently meets grade level standards,
+                                                        meets expectations.</td>
+                                                    <td class="text-center" style="border: 1px solid black;">80-97</td>
+                                                    <td class="text-center" style="border: 1px solid black;">40-47</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-center py-2 px-3" style="border: 1px solid black;">2</td>
+                                                    <td class="text-center" style="border: 1px solid black;">Progressing towards grade level standards,
+                                                        meets some expectations.</td>
+                                                    <td class="text-center" style="border: 1px solid black;">50-79</td>
+                                                    <td class="text-center" style="border: 1px solid black;">30-39</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-center py-2 px-3" style="border: 1px solid black;">1</td>
+                                                    <td class="text-center" style="border: 1px solid black;">Little progress towards grade level standards,
+                                                        meets few expectations.</td>
+                                                    <td class="text-center" style="border: 1px solid black;">0-49</td>
+                                                    <td class="text-center" style="border: 1px solid black;">0-29</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="row mt-4">
+                                        <p>General Comment:</p>
+                                    </div>
+                                    <p style="page-break-after: always;" />
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+
+            </t>
+        </template>
+    </data>
+</odoo>

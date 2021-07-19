@@ -1,0 +1,137 @@
+.box {
+  background-color: blue;
+  color: white;
+  width: 80%;
+  height: 200px;
+  border-radius: 3px;
+  padding: 5px;
+}
+
+.box h6 {
+  color: white;
+  font-size: 18px;
+  margin-top: 5px;
+  line-height: 1.7;
+  letter-spacing: 1px;
+}
+
+.box img {
+  width: 100px;
+}
+
+.media-body {
+  flex: 1;
+}
+
+body {
+  color: #666666;
+}
+
+h4 {
+  color: black;
+}
+
+.exam-pass {
+  background-color: green;
+  color: white;
+  border-radius: 20%;
+  text-align: center;
+  display: inline-block;
+}
+
+.exam-fail {
+  text-align: center;
+  display: inline-block;
+  border-radius: 20%;
+  background-color: salmon;
+  color: black;
+}
+
+header .navbar-brand.logo img {
+  height: 7rem !important;
+}
+
+.nav-item .nav-link span {
+  font-weight: 700;
+}
+
+.o_footer_copyright {
+  display: none;
+
+}
+
+.foooter {
+  padding: 5px;
+  color: #222;
+  background-color: rgb(235, 235, 235);
+}
+
+.foooter div:first-child {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+}
+
+.o_footer_copyright .container .row div:last-child {
+  display: flex;
+  justify-content: flex-end;
+  text-transform: capitalize;
+  flex: 1;
+}
+
+.no-students {
+  font-size: 40px;
+  font-weight: bold;
+  color: indigo;
+}
+
+.fee {
+  font-size: 30px;
+  color: indigo;
+  font-weight: bold;
+}
+
+span~p {
+  font-size: 20px;
+}
+
+.home-box a {
+  padding: 5px 10px;
+  display: flex;
+  align-items: center
+}
+
+.box-text {
+  font-size: 18px;
+  margin-left: 15px;
+}
+
+.box-icon {
+  font-size: 37px;
+  color: indigo;
+}
+
+.icon {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.boxy {
+  text-align: center;
+}
+
+.boxy.icon {
+  text-align: center;
+}
+
+.boxy .icon i {
+  font-size: 45px;
+  color: indigo;
+}
+
+.boxy p {
+  font-size: 18px;
+  text-transform: capitalize;
+}

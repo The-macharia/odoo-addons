@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="result_xlsx_form" model="ir.ui.view">
+            <field name="name">Results Xlsx From</field>
+            <field name="model">op.result.xlsx</field>
+            <field name="arch" type="xml">
+                <form string="Results Report">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="school_year" required="1" />
+                                <field name="exam_session" />
+                            </group>
+                            <group>
+                                <field name="school_term" />
+                                <field name="school_class" />
+                            </group>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button string='Generate Report' name="create_results_xlsx_file" type="object" class="btn-primary" />
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="act_result_report_wizard" model="ir.actions.act_window">
+            <field name="name">Results Report Report</field>
+            <field name="res_model">op.result.xlsx</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="openeducat_parent_web.result_xlsx_form" />
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_op_school_results_xlsx" action="act_result_report_wizard" name="Print School Results" parent="openeducat_exam.menu_op_exam_root" sequence="10" groups="openeducat_core.group_op_back_office,openeducat_core.group_op_back_office_admin,openeducat_core.group_op_faculty" />
+
+        <record id="wizard_excel_report_from" model="ir.ui.view">
+            <field name="name">wizard.excel.result.from</field>
+            <field name="model">wizard.excel.result</field>
+            <field name="arch" type="xml">
+                <form string="Report">
+                    <sheet>
+                        <group>
+                            <field name="name" invisible="1" />
+                            <field name="report" readonly="1" filename="name" />
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

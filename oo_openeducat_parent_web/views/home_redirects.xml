@@ -1,0 +1,498 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data noupdate="0">
+        <template id="myfee" name="Fee Balance">
+            <t t-call="website.layout">
+                <div class="container" id="wrap" style="min-height: 100vh;">
+                    <br />
+                    <div class="row">
+                        <nav aria-label="breadcrumb" class="border-1 my-2">
+                            <ol class="breadcrumb">
+                                <a t-attf-href="/home" aria-current="page" class="breadcrumb-item active">Home</a>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 col-sm-12">
+                            <table class="table table-responsive w-100">
+                                <thead>
+                                    <th>Student</th>
+                                    <th>Total Invoiced</th>
+                                    <th>Total Paid</th>
+                                    <th>Total Balance</th>
+                                    <th></th>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="parent.student_ids" t-as="student">
+                                        <t t-set="inv_bal" t-value="sum(request.env['account.move'].sudo().search(
+                [('partner_id', '=', student.partner_id.id), ('type', 'in', ['out_invoice'])]).mapped('amount_residual'))" />
+                                        <t t-set="credit_bal" t-value="sum(request.env['account.move'].sudo().search(
+                [('partner_id', '=', student.partner_id.id), ('type', 'in', ['out_refund'])]).mapped('amount_residual'))" />
+                                        <t t-set="bal" t-value="inv_bal -abs(credit_bal)" />
+                                        <td>
+                                            <span t-field="student.name" />
+                                        </td>
+                                        <td>
+                                            <span t-esc="'{:,.2f}'.format(student.total_invoiced)" />
+                                        </td>
+                                        <td>
+                                            <span t-esc="'{:,.2f}'.format(student.total_invoiced - bal)" />
+                                        </td>
+                                        <td>
+                                            <span t-esc="'{:,.2f}'.format(bal)" />
+                                        </td>
+                                        <td>
+                                            <a href="/my/invoices" class="btn btn-sm btn-info">View Statement</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-4 col-sm-12">
+                            <div class="text-center">
+                                <p>School Bank Details</p>
+                                <p>Account Name: Royal Brains School Ltd.</p>
+                            </div>
+                            <div>
+                                <p>Bank Name: Equity Bank</p>
+                                <p>Branch: Gigiri</p>
+                                <p>Account No: 1340261008188</p>
+                                <hr />
+                                <p>Bank Name: Stanbic Bank</p>
+                                <p>Branch: Warwick</p>
+                                <p>Account No: 0100004607575 &amp; 0100004607583</p>
+                                <hr />
+                                <p>Paybill Business No: 843985</p>
+                                <p>Account No: Child's Name</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="openeducat_parent_web.school_footer" />
+            </t>
+        </template>
+
+        <template id="my_child_results" name="Child Results">
+            <t t-call="website.layout">
+                <div class="container" id="wrap" style="min-height: 100vh;">
+                    <br />
+                    <div class="row">
+                        <nav aria-label="breadcrumb" class="border-1 my-2">
+                            <ol class="breadcrumb">
+                                <a t-attf-href="/home" aria-current="page" class="breadcrumb-item active">Home</a>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table w-100">
+                                <thead>
+                                    <th>Students</th>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="parent.student_ids" t-as="student">
+                                        <td>
+                                            <a t-attf-href="/my/child/exam/{{student.id}}" t-field="student.name" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="openeducat_parent_web.school_footer" />
+            </t>
+        </template>
+
+        <template id="my_singlechild_results" name="Single Child Results">
+            <t t-call="website.layout">
+                <div class="container" id="wrap" style="min-height: 100vh;">
+                    <br />
+                    <div class="row">
+                        <nav aria-label="breadcrumb" class="border-1 my-2">
+                            <ol class="breadcrumb">
+                                <a t-attf-href="/home" aria-current="page" class="breadcrumb-item active">Home</a>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table table-responsive w-100">
+                                <thead>
+                                    <th>Exams</th>
+                                    <th>Term</th>
+                                    <th>Class</th>
+                                    <th>Year</th>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="exams" t-as="exam">
+                                        <td>
+                                            <a t-attf-href="/my/child/exams/{{student.id}}/exam/{{exam.id}}" t-field="exam.name" />
+                                        </td>
+                                        <td>
+                                            <span t-field="exam.course_id" />
+                                        </td>
+                                        <td>
+                                            <span t-field="exam.course_id.class_number" />
+                                        </td>
+                                        <td>
+                                            <span t-esc="exam.start_date.year" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="openeducat_parent_web.school_footer" />
+            </t>
+        </template>
+
+        <template id="my_singlechild_results_exam" name="Single Child Results Exam">
+            <t t-call="website.layout">
+                <div class="container" id="wrap" style="min-height: 100vh;">
+                    <br />
+                    <div class="row">
+                        <nav aria-label="breadcrumb" class="border-1 my-2">
+                            <ol class="breadcrumb">
+                                <a t-attf-href="/home" aria-current="page" class="breadcrumb-item active">Home</a>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12" t-if="marksheet.result_line and marksheet.result_line[0].exam_id.course_id.upper_or_lower == 'upper'">
+                            <table class="table table-responsive w-100">
+                                <thead>
+                                    <th>Subjects</th>
+                                    <th>Passing Marks</th>
+                                    <th>Student Marks</th>
+                                    <th>Total Exam Marks</th>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="marksheet.result_line" t-as="line">
+                                        <td>
+                                            <span t-field="line.exam_id.subject_id" />
+                                        </td>
+                                        <td>
+                                            <span t-field="line.exam_id.min_marks" />
+                                        </td>
+                                        <td>
+                                            <span t-esc="line.marks" />
+                                        </td>
+                                        <td>
+                                            <span t-field="line.total_marks" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="col-12" t-if="marksheet.result_line and marksheet.result_line[0].exam_id.course_id.upper_or_lower == 'lower'">
+                            <div>
+                                <b>
+                                    <p t-field="marksheet.student_id" />
+                                </b>
+                            </div>
+                            <table class="w-100" style="border: 1px solid black;">
+                                <thead>
+                                    <tr>
+                                        <th style="color:red; font-weight: bold; border: 1px solid black;" class=" text-center p-1">Learning Areas</th>
+                                        <th style="color:red; font-weight: bold; border: 1px solid black;" class=" text-center p-1">Obtained Marks</th>
+                                        <th style="color:red; font-weight: bold; border: 1px solid black;" class=" text-center p-1">Assessment Task Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="marksheet.result_line" t-as="l">
+                                        <tr>
+                                            <td class="text-center py-2" style="border: 1px solid black;">
+                                                <span t-field="l.exam_id.subject_id" />
+                                            </td>
+                                            <td class="text-center py-2" style="border: 1px solid black;">
+                                                <span t-field="l.marks" />
+                                            </td>
+                                            <td class="text-center py-2" style="border: 1px solid black;">
+                                                <span t-field="l.rubrics_grade" />
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tr>
+                                        <td class="text-center py-2" style="border: 1px solid black;">Average</td>
+                                        <td class="text-center py-2" style="border: 1px solid black;" colspan="2">
+                                            <span t-field="marksheet.percentage" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center py-2" style="border: 1px solid black;">Score</td>
+                                        <td class="text-center py-2" style="border: 1px solid black;" colspan="2">
+
+                                            <t t-if="marksheet.percentage &gt;= 98 and marksheet.percentage &lt;= 100">
+                                                <span>4</span>
+                                            </t>
+                                            <t t-if="marksheet.percentage &gt;= 80 and marksheet.percentage &lt;= 97">
+                                                <span>3</span>
+                                            </t>
+                                            <t t-if="marksheet.percentage &gt;= 50 and marksheet.percentage &lt;= 79">
+                                                <span>2</span>
+                                            </t>
+                                            <t t-if="marksheet.percentage &gt;= 0 and marksheet.percentage &lt;= 49">
+                                                <span>1</span>
+                                            </t>
+
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div style="margin-top: 30px;">
+                                <table class="w-100" style="border: 1px solid black;">
+                                    <thead>
+                                        <tr>
+                                            <th colspan="2" style="color:red; font-weight: bold; border: 1px solid black;" class="text-center p-1">ASSESSMENT RUBRICS</th>
+                                            <th style="color:red; font-weight: bold; border: 1px solid black;" class="text-center p-1">X/100</th>
+                                            <th style="color:red; font-weight: bold; border: 1px solid black;" class="text-center p-1">X/50</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-center py-2 px-3" style="border: 1px solid black;">4</td>
+                                            <td class="text-center" style="border: 1px solid black;">Consistently performs above grade level
+                                                        standards, exceeds expectation.</td>
+                                            <td class="text-center" style="border: 1px solid black;">98-100</td>
+                                            <td class="text-center" style="border: 1px solid black;">48-50</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center py-2 px-3" style="border: 1px solid black;">3</td>
+                                            <td class="text-center" style="border: 1px solid black;">Consistently meets grade level standards,
+                                                        meets expectations.</td>
+                                            <td class="text-center" style="border: 1px solid black;">80-97</td>
+                                            <td class="text-center" style="border: 1px solid black;">40-47</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center py-2 px-3" style="border: 1px solid black;">2</td>
+                                            <td class="text-center" style="border: 1px solid black;">Progressing towards grade level standards,
+                                                        meets some expectations.</td>
+                                            <td class="text-center" style="border: 1px solid black;">50-79</td>
+                                            <td class="text-center" style="border: 1px solid black;">30-39</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center py-2 px-3" style="border: 1px solid black;">1</td>
+                                            <td class="text-center" style="border: 1px solid black;">Little progress towards grade level standards,
+                                                        meets few expectations.</td>
+                                            <td class="text-center" style="border: 1px solid black;">0-49</td>
+                                            <td class="text-center" style="border: 1px solid black;">0-29</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="openeducat_parent_web.school_footer" />
+            </t>
+        </template>
+
+        <template id="my_child_attendance" name="Attendance">
+            <t t-call="website.layout">
+                <div class="container" id="wrap" style="min-height: 100vh;">
+                    <br />
+                    <div class="row">
+                        <nav aria-label="breadcrumb" class="border-1 my-2">
+                            <ol class="breadcrumb">
+                                <a t-attf-href="/home" aria-current="page" class="breadcrumb-item active">Home</a>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table w-100">
+                                <thead>
+                                    <th>Students</th>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="parent.student_ids" t-as="student">
+                                        <td>
+                                            <a t-attf-href="/my/child/attendance/{{student.id}}" t-field="student.name" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="openeducat_parent_web.school_footer" />
+            </t>
+        </template>
+
+        <template id="my_singlechild_attendance" name="Attendance">
+            <t t-call="website.layout">
+                <div class="container" id="wrap" style="min-height: 100vh;">
+                    <br />
+                    <div class="row">
+                        <nav aria-label="breadcrumb" class="border-1 my-2">
+                            <ol class="breadcrumb">
+                                <a t-attf-href="/home" aria-current="page" class="breadcrumb-item active">Home</a>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="row text-center">
+                        <div class="missed">
+                            <h3 class="no-students" t-esc="len(attendance)" />
+                            <h6>Total Absent Days</h6>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <div>
+                                <ul class="list-group" t-foreach='attendance' t-as='at'>
+                                    <li class="list-group-item">
+                                        <p>
+                                            <span>Class:</span>
+                                            <span t-field="at.course_id" />
+                                        </p>
+                                        <p>
+                                            <span>Date:</span>
+                                            <span t-field="at.date" />
+                                        </p>
+                                        <p>
+                                            <span>Excused:</span>
+                                            <span t-esc="'Yes' if at.escused else 'No'" />
+                                        </p>
+                                        <p>
+                                            <span>Remarks:</span>
+                                            <span t-field="at.remark" />
+                                        </p>
+                                    </li>
+                                </ul>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <t t-call="openeducat_parent_web.school_footer" />
+            </t>
+        </template>
+
+        <template id="my_child_assignment" name="Assignment">
+            <t t-call="website.layout">
+                <div class="container" id="wrap" style="min-height: 100vh;">
+                    <br />
+                    <div class="row">
+                        <nav aria-label="breadcrumb" class="border-1 my-2">
+                            <ol class="breadcrumb">
+                                <a t-attf-href="/home" aria-current="page" class="breadcrumb-item active">Home</a>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table w-100">
+                                <thead>
+                                    <th>Students</th>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="parent.student_ids" t-as="student">
+                                        <td>
+                                            <a t-attf-href="/my/child/assignment/{{student.id}}" t-field="student.name" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="openeducat_parent_web.school_footer" />
+            </t>
+        </template>
+
+        <template id="my_singlechild_assignment" name="Assignments">
+            <t t-call="website.layout">
+                <div class="container" id="wrap" style="min-height: 100vh;">
+                    <br />
+                    <div class="row">
+                        <nav aria-label="breadcrumb" class="border-1 my-2">
+                            <ol class="breadcrumb">
+                                <a t-attf-href="/home" aria-current="page" class="breadcrumb-item active">Home</a>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table table-responsive w-100">
+                                <thead>
+                                    <th>Subjects</th>
+                                    <th>Type</th>
+                                    <th>Date Issued</th>
+                                    <th>Submission Date</th>
+                                    <th>Marks</th>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="assignments" t-as="assignment">
+                                        <td>
+                                            <span t-field="assignment.subject_id" />
+                                        </td>
+                                        <td>
+                                            <span t-field="assignment.assignment_type_id" />
+                                        </td>
+                                        <td>
+                                            <span t-field="assignment.issued_date" />
+                                        </td>
+                                        <td>
+                                            <span t-field="assignment.submission_date" />
+                                        </td>
+                                        <td>
+                                            <span t-field="assignment.marks" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="openeducat_parent_web.school_footer" />
+            </t>
+        </template>
+
+        <template id="school_footer">
+            <footer class="row foooter">
+                <t t-set="company" t-value="request.env['res.company'].search([],limit=1)" />
+
+                <div class="col-md-4 col-sm-6">Copyright RoyalBrainSchool @2021</div>
+                <div class="col-md-4 col-sm-6">
+                    <table>
+                        <tr>
+                            <td>Phone:</td>
+                            <td>
+                                <a t-attf-href="tel:{{company.phone}}" t-field="company.phone" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Email:</td>
+                            <td>
+                                <a t-attf-href="mailto:{{company.email}}" t-field="company.email" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Street:</td>
+                            <td>
+                                <span t-field="company.street" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-4 col-sm-6 align-self-stretch align-items-center">
+                    <a t-attf-href="{{company.social_twitter}}">Twitter</a>
+                    <a t-attf-href="{{company.social_facebook}}">Facebook</a>
+                    <a t-attf-href="{{company.social_instagram}}">Instagram</a>
+                </div>
+            </footer>
+        </template>
+    </data>
+</odoo>

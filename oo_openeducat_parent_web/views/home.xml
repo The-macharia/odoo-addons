@@ -1,0 +1,159 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data noupdate="0">
+        <template id="myhome" name="My Home">
+            <t t-call="website.layout">
+                <t t-set="com" t-value="request.env['res.company'].search([],limit=1)" />
+
+                <div class="container" id="wrap" style="min-height: 100vh;">
+                    <br />
+                    <div class="row align-items-center">
+                        <div class="col-md-4 col-sm-12">
+                            <table class="table w-100" style="border:none;">
+                                <tbody>
+                                    <tr style="border:none;">
+                                        <td style="border:none;">
+                                            <b>Name</b>
+                                        </td>
+                                        <td style="border:none;">
+                                            <b>
+                                                <span t-field="parent.name" />
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <tr style="border:none;">
+                                        <td style="border:none;">
+                                            <b>
+                                                Email
+                                            </b>
+                                        </td>
+                                        <td style="border:none;">
+                                            <span t-field="parent.name.email" />
+                                        </td>
+                                    </tr>
+                                    <tr style="border:none;">
+                                        <td style="border:none;">
+                                            <b>
+                                                Mobile
+                                            </b>
+                                        </td>
+                                        <td style="border:none;">
+                                            <span t-field="parent.name.mobile" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-4 col-sm-12 text-center">
+                            <span class="no-students" t-esc="len(parent.student_ids)" />
+                            <p>Students</p>
+                        </div>
+                        <div class="col-md-4 col-sm-12 text-center">
+                            <span class="fee">
+                                <span>Ksh</span>
+                                <t t-esc="'{:,.2f}'.format(total_balance)" />
+                            </span>
+                            <p>Fee Balance</p>
+                        </div>
+                    </div>
+                    <br />
+                    <br />
+
+                    <div class="row align-items-center">
+                        <div class="col-md-8 col-sm-12 p-0 align-self-stretch">
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 home-box">
+                                    <a href="/my/fee/balance">
+                                        <span class="box-icon fa fa-money" />
+                                        <span class="box-text">Fee Statement</span>
+                                    </a>
+                                </div>
+                                <div class="col-md-4 col-sm-12 home-box">
+                                    <a href="/my/child">
+                                        <span class="box-icon fa fa-users " />
+                                        <span class="box-text">View Students</span>
+                                    </a>
+                                </div>
+                                <div class="col-md-4 col-sm-12 home-box">
+                                    <a href="/my/child/exam">
+                                        <span class="box-icon fa fa-bar-chart" />
+                                        <span class="box-text">Exam Results</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <br />
+                            <br />
+
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 home-box">
+                                    <a href="/my/child/assignment">
+                                        <span class="box-icon fa fa-pencil-square" />
+                                        <span class="box-text">Assignments</span>
+                                    </a>
+                                </div>
+                                <div class="col-md-4 col-sm-12 home-box">
+                                    <a href="/my/child/attendance">
+                                        <span class="box-icon fa fa-calendar-check-o" />
+                                        <span class="box-text">Class Attendance</span>
+                                    </a>
+                                </div>
+                                <div class="col-md-4 col-sm-12 home-box">
+                                    <a href="/my/home">
+                                        <span class="box-icon fa fa-user-circle" />
+                                        <span class="box-text">My Account</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-12 px-4 py-2 align-self-stretch" style="border: 1px solid #ddd; border-radius:5px; background: indigo;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h4 style="font-size: 20px; color:white;">School Events</h4>
+                                <a class="btn btn-primary" href="/event">View All</a>
+                            </div>
+                            <div>
+                                <ul class="list-group" t-foreach="events" t-as="event">
+                                    <li class="list-group-item d-flex py-0 px-1 my-1">
+                                        <div class="d-flex p-0 flex-column left">
+                                            <p class="m-0" t-esc="event.date_begin.strftime('%b')" />
+                                            <p class="m-0" t-esc="event.date_begin.strftime('%d')" />
+                                            <p class="m-0" t-esc="event.date_begin.year" />
+                                        </div>
+                                        <div class="align-self-stretch mx-1" style="width: 2px; height: 50px; background: #ddd;" />
+                                        <div class="right d-flex align-self-stretch align-items-center ">
+                                            <h5 t-field="event.name" />
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                    <br />
+                    <br />
+
+                    <div class="row align-items-center">
+                        <div class="col-md-4 col-sm-12 boxy">
+                            <div class="icon">
+                                <i class="fa fa-star" />
+                            </div>
+                            <p t-field="com.motto" />
+                        </div>
+                        <div class="col-md-4 col-sm-12 boxy">
+                            <div class="icon">
+                                <i class="fa fa-snowflake-o" />
+                            </div>
+                            <p t-field="com.vision" />
+                        </div>
+                        <div class="col-md-4 col-sm-12 boxy">
+                            <div class="icon">
+                                <i class="fa fa-certificate" />
+                            </div>
+                            <p t-field="com.mission" />
+                        </div>
+                    </div>
+                </div>
+                <t t-call="openeducat_parent_web.school_footer" />
+            </t>
+        </template>
+    </data>
+</odoo>
