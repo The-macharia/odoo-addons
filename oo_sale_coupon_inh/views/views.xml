@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+  <data noupdate="0">
+
+    <!-- sale.coupon inherit form view -->
+    <record id="oo_sale_coupon_apply_code_view_form" model="ir.ui.view">
+      <field name="name">sale.coupon.inherit.view.form</field>
+      <field name="model">sale.coupon.apply.code</field>
+      <field name="inherit_id" ref="sale_coupon.sale_coupon_apply_code_view_form" />
+      <field name="arch" type="xml">
+
+        <xpath expr="//group[1]" position="inside">
+          <group>
+            <p class="text-muted">Enable this option if you need to apply this coupon to a different product than one defined.</p>
+
+            <field name="allow_switch" />
+            <field name="product_id" attrs="{'invisible': [('allow_switch','!=',True)], 'required': [('allow_switch','=',True)]  }" />
+            <field name="product_to_switch_id" attrs="{'invisible': [('allow_switch','!=',True)], 'required': [('allow_switch','=',True)]  }" />
+          </group>
+        </xpath>
+
+      </field>
+    </record>
+
+  </data>
+</odoo>
