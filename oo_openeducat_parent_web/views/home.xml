@@ -152,7 +152,7 @@
                         </div>
                     </div>
                 </div>
-                <t t-call="openeducat_parent_web.school_footer" />
+                <t t-call="oo_openeducat_parent_web.school_footer" />
             </t>
         </template>
     </data>

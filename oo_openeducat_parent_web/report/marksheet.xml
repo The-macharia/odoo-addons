@@ -24,7 +24,7 @@
                                 <div class="row">
                                     <div class="col-4"></div>
                                     <div class="col-4 text-center">
-                                        <img src="/openeducat_parent_web/static/img/logo.png" class="border-2 figure-img img-fluid img-responsive rounded" alt="Logo" style="width:200px; height:auto;" />
+                                        <img src="/oo_openeducat_parent_web/static/img/logo.png" class="border-2 figure-img img-fluid img-responsive rounded" alt="Logo" style="width:200px; height:auto;" />
                                     </div>
                                     <div class="col-4"></div>
                                 </div>

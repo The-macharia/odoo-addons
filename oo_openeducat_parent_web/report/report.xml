@@ -18,6 +18,6 @@
             <field name="header_spacing" eval="5" />
         </record>
 
-        <report id="action_report_marksheet_report" model="op.marksheet.line" paperformat="paperformat_mark_sheet" string="MarkSheet" report_type="qweb-pdf" name="openeducat_parent_web.marksheet_report_document" file="openeducat_parent_web.marksheet_report_document" />
+        <report id="action_report_marksheet_report" model="op.marksheet.line" paperformat="paperformat_mark_sheet" string="MarkSheet" report_type="qweb-pdf" name="oo_openeducat_parent_web.marksheet_report_document" file="oo_openeducat_parent_web.marksheet_report_document" />
     </data>
 </odoo>

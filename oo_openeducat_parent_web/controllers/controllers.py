@@ -44,7 +44,7 @@ class OpeneducatParentWebView(http.Controller):
                 'total_balance': total_balance,
                 'events': events,
             }
-            return request.render('openeducat_parent_web.myhome', context)
+            return request.render('oo_openeducat_parent_web.myhome', context)
 
     @http.route('/my/fee/balance', auth='user', website=True)
     def my_fee(self):
@@ -55,7 +55,7 @@ class OpeneducatParentWebView(http.Controller):
             context = {
                 'parent': parent
             }
-            return request.render('openeducat_parent_web.myfee', context)
+            return request.render('oo_openeducat_parent_web.myfee', context)
 
     @http.route('/my/child/exam', auth='user', website=True)
     def my_childs_exams(self):
@@ -66,7 +66,7 @@ class OpeneducatParentWebView(http.Controller):
             context = {
                 'parent': parent
             }
-            return request.render('openeducat_parent_web.my_child_results', context)
+            return request.render('oo_openeducat_parent_web.my_child_results', context)
 
     @http.route('/my/child/exam/<int:student_id>', auth='user', website=True)
     def my_singlechild_exams(self, student_id):
@@ -80,7 +80,7 @@ class OpeneducatParentWebView(http.Controller):
                 'student': student,
                 'exams': exams
             }
-            return request.render('openeducat_parent_web.my_singlechild_results', context)
+            return request.render('oo_openeducat_parent_web.my_singlechild_results', context)
 
     @http.route('/my/child/exams/<int:student_id>/exam/<int:exam_id>', auth='user', website=True)
     def my_singlechild_exams_results(self, student_id, exam_id):
@@ -93,7 +93,7 @@ class OpeneducatParentWebView(http.Controller):
                 'student': marksheet.student_id,
                 'marksheet': marksheet
             }
-            return request.render('openeducat_parent_web.my_singlechild_results_exam', context)
+            return request.render('oo_openeducat_parent_web.my_singlechild_results_exam', context)
 
     @http.route('/my/child', auth='user', website=True)
     def web_get_parents_children(self, *args, **kwargs):
@@ -104,7 +104,7 @@ class OpeneducatParentWebView(http.Controller):
             context = {
                 'students': students
             }
-            return request.render('openeducat_parent_web.mychild', context)
+            return request.render('oo_openeducat_parent_web.mychild', context)
 
     @http.route('/my/child/<int:student_id>/profile', auth='user', website=True)
     def web_get_child_profile(self, student_id, *args, **kw):
@@ -201,7 +201,7 @@ class OpeneducatParentWebView(http.Controller):
                 'total_lines': total_lines,
                 'avg_and_score': avg_and_score,
             }
-            return request.render('openeducat_parent_web.my_child_profile', context)
+            return request.render('oo_openeducat_parent_web.my_child_profile', context)
 
     @http.route('/my/child/attendance', auth='user', website=True)
     def child_attendance(self):
@@ -212,7 +212,7 @@ class OpeneducatParentWebView(http.Controller):
             context = {
                 'parent': parent,
             }
-            return request.render('openeducat_parent_web.my_child_attendance', context)
+            return request.render('oo_openeducat_parent_web.my_child_attendance', context)
 
     @http.route('/my/child/attendance/<int:student_id>', auth='user', website=True)
     def singlechild_attendance(self, student_id):
@@ -226,7 +226,7 @@ class OpeneducatParentWebView(http.Controller):
                 'student': student,
                 'attendance': attendance,
             }
-            return request.render('openeducat_parent_web.my_singlechild_attendance', context)
+            return request.render('oo_openeducat_parent_web.my_singlechild_attendance', context)
 
     @http.route('/my/child/assignment', auth='user', website=True)
     def child_assignment(self):
@@ -237,7 +237,7 @@ class OpeneducatParentWebView(http.Controller):
             context = {
                 'parent': parent,
             }
-            return request.render('openeducat_parent_web.my_child_assignment', context)
+            return request.render('oo_openeducat_parent_web.my_child_assignment', context)
 
     @http.route('/my/child/assignment/<int:student_id>', auth='user', website=True)
     def singlechild_assignment(self, student_id):
@@ -250,4 +250,4 @@ class OpeneducatParentWebView(http.Controller):
                 'student': student,
                 'assignments': assignments,
             }
-            return request.render('openeducat_parent_web.my_singlechild_assignment', context)
+            return request.render('oo_openeducat_parent_web.my_singlechild_assignment', context)

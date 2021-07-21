@@ -20,7 +20,7 @@
                   <div class="card d-flex flex-row p-0">
                     <div class="img w-50 text-center">
                       <img t-attf-src="data:image/png;base64,{{s.image_1920}}" class="figure-img img-fluid rounded w-100 h-100" alt="..." t-if="s.image_1920" />
-                      <img src="/openeducat_parent_web/static/img/profile.png" class="figure-img img-fluid rounded w-100 h-100" alt="..." t-if="not s.image_1920" style="background: indigo" />
+                      <img src="/oo_openeducat_parent_web/static/img/profile.png" class="figure-img img-fluid rounded w-100 h-100" alt="..." t-if="not s.image_1920" style="background: indigo" />
                     </div>
 
                     <div class="w-50 d-flex flex-column justify-content-center ml-4">

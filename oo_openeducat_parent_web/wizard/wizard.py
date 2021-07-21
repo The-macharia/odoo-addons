@@ -93,7 +93,7 @@ class OpResultXlsx(models.TransientModel):
         center_align = Alignment(horizontal="center", vertical="center")
 
         # img = xl.drawing.image.Image(
-        #     f'{os.getcwd()}custom-addons/openeducat_parent_web/static/img/logo.png')
+        #     f'{os.getcwd()}custom-addons/oo_openeducat_parent_web/static/img/logo.png')
 
         # ws.add_image(img, 'A1')
         ws.merge_cells('C4:I4')

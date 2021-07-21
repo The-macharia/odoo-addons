@@ -31,7 +31,7 @@
             <field name="name">Results Report Report</field>
             <field name="res_model">op.result.xlsx</field>
             <field name="view_mode">form</field>
-            <field name="view_id" ref="openeducat_parent_web.result_xlsx_form" />
+            <field name="view_id" ref="oo_openeducat_parent_web.result_xlsx_form" />
             <field name="target">new</field>
         </record>
 
