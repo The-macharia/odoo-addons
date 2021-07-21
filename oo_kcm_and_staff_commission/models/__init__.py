@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from . import account, res_models, payroll
+from . import account, res_models, payroll, commission

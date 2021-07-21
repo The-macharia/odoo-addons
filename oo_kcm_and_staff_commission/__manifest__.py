@@ -17,12 +17,16 @@
     'version': '14.0.1.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['account', 'base', 'hr_payroll'],
+    'depends': ['account', 'base', 'hr', 'hr_payroll', 'sale'],
 
     # always loaded
     'data': [
+        'security/ir.model.access.csv',
+
         'views/account.xml',
         'views/payroll.xml',
         'views/res_models.xml',
+        'views/commission.xml',
+        'views/menus.xml',
     ],
 }

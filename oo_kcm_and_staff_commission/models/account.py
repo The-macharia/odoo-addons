@@ -90,6 +90,16 @@ class AccountMove(models.Model):
 
         return commission
 
+    def _prepare_sale_commission_values(self, amount):
+        return {
+            'date': self.invoice_date,
+            'amount': amount,
+            'user_id': self.invoice_user_id.id,
+            'employee_id': self.invoice_user_id.employee_id.id,
+            'invoice_id': self.id,
+            'confirm_uid': self.env.user.id,
+        }
+
     def update_salesperson_commission(self):
         """Adds the commission amount on the salesperson contract commission field
 
@@ -99,7 +109,13 @@ class AccountMove(models.Model):
         partner_id is assumed to be the sales agent"""
 
         for rec in self:
+            if rec.state not in 'posted':
+                raise ValidationError(
+                    'An Invoice has to have been posted before creating a commission! Cancelled and Draft entries are disregarded.')
+
             commission = rec._get_newmatic_sales_commission()
+            self.env['sale.commission'].create(
+                rec._prepare_sale_commission_values(commission))
 
             if rec.invoice_user_id:
                 salesperson_id = rec.invoice_user_id.employee_id or self.env['hr.employee'].search(

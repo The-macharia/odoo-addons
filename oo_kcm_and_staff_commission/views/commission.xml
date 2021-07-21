@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- sale.commission tree view -->
+        <record id="oo_sale_commission_view_tree" model="ir.ui.view">
+            <field name="name">sale.commission.view.tree</field>
+            <field name="model">sale.commission</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="employee_id" />
+                    <field name="date" />
+                    <field name="invoice_id" />
+                    <field name="sale_id" />
+                    <field name="amount" sum="Total Commission" />
+                </tree>
+            </field>
+        </record>
+
+        <!-- sale.commission search view -->
+        <record id="oo_sale_commission_view_search" model="ir.ui.view">
+            <field name="name">sale.commission.view.search</field>
+            <field name="model">sale.commission</field>
+            <field name="arch" type="xml">
+                <search string="Sale Commission">
+                    <field name="employee_id" />
+
+                    <group expand="0" string="Group By">
+                        <filter string="Salesperson" name="salesperson" context="{'group_by':'user_id'}" />
+                        <filter string="Invoice Date" name="invoicedate" context="{'group_by': 'date'}" />
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- sale.commission form view -->
+        <record id="oo_sale_commission_view_form" model="ir.ui.view">
+            <field name="name">sale.commission.view.form</field>
+            <field name="model">sale.commission</field>
+            <field name="arch" type="xml">
+                <form string="Sale Commission">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="employee_id" />
+                                <field name="amount" />
+                                <field name="confirm_uid" />
+                                <field name="user_id" invisible="1" />
+                            </group>
+                            <group>
+                                <field name="date" />
+                                <field name="invoice_id" />
+                                <field name="sale_id" />
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>
