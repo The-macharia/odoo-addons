@@ -10,6 +10,6 @@
             <field name="context">{}</field>
         </record>
 
-        <menuitem id="oo_staff_commission_menu" name="Staff Commission" parent="hr.hr_menu_hr_reports" action="oo_staff_commission_action" sequence="10" />
+        <menuitem id="oo_staff_commission_menu" name="Staff Commission" parent="hr.hr_menu_hr_reports" action="oo_staff_commission_action" sequence="10" groups="hr.group_hr_manager,sales_team.group_sale_manager,account.group_account_user" />
     </data>
 </odoo>

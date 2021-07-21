@@ -15,6 +15,7 @@ class SalesCommission(models.Model):
     confirm_uid = fields.Many2one('res.users', string='Approved By')
     sale_id = fields.Many2one(
         'sale.order', string='Origin Sale Order', readonly=True)
+    active = fields.Boolean(string='Active')
 
     def name_get(self):
         return [(rec.id, f'{rec.employee_id.name} {rec.invoice_id.name}') for rec in self]
