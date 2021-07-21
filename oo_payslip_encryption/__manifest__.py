@@ -10,7 +10,7 @@
 
 
     'author': "@the-macharia",
-    'website': "sailotech.com",
+    'website': "github.com",
     'license': 'LGPL-3',
 
     'category': 'Extra Tools',
