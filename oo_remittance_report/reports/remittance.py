@@ -4,7 +4,7 @@ from odoo.exceptions import ValidationError
 
 
 class RemittanceAdvice(models.AbstractModel):
-    _name = 'report.remittance_report.remittance_advice_report'
+    _name = 'report.oo_remittance_report.remittance_advice_report'
     _description = 'Remittance Advice Report'
 
     def _compute_wht_tax(self):

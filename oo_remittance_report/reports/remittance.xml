@@ -168,7 +168,7 @@
 
         <template id="remittance_advice_report">
             <t t-foreach="data" t-as="d">
-                <t t-call="remittance_report.remittance_advice_report_document" />
+                <t t-call="oo_remittance_report.remittance_advice_report_document" />
             </t>
         </template>
     </data>
