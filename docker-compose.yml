@@ -1,0 +1,24 @@
+version: '2'
+services:
+   db:
+        image: postgres:13
+        environment:
+                - POSTGRES_USER=odoo
+                - POSTGRES_PASSWORD=odoo
+                - POSTGRES_DB=postgres
+                - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+                - db12-data=/var/lib/postgresql/data/pgdata
+   odoo11:
+        image: odoo:12
+        command: --dev=all
+        ports:
+                - 8012:8069
+        links:
+                - db:db
+        volumes:
+                - /home/b14/Desktop/odoo-addons:/mnt/extra-addons
+                - odoo12-data:/var/lib/odoo
+volumes:
+        odoo12-data:
+        db12-data:
