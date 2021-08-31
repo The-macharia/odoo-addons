@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="0">
+        <template id="payslip_template_document1">
+            <div class="row m-0 p-0">
+                <img t-if="res_company.logo" t-att-src="'data:image/png;base64,%s' %res_company.logo" />
+            </div>
+            <div class="row m-0 p-0">
+                <div class="col-12 text-center">
+                    <u>
+                        <p t-field="o.name" />
+                    </u>
+                </div>
+            </div>
+            <div class="row m-0 p-0">
+                <div class="col-6">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Date:</b>
+                                </td>
+                                <td class="text-center">
+                                    <p t-field="o.date_to" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Employee Name:</b>
+                                </td>
+                                <td>
+                                    <p t-field="o.employee_id.name" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Payroll No:</b>
+                                </td>
+                                <td>
+                                    <p t-field="o.employee_id.payroll_no" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col-6">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td class="text-left">
+                                </td>
+                                <td class="text-center">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>KRA PIN:</b>
+                                </td>
+                                <td>
+                                    <p t-field="o.employee_id.tax_pin" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>National ID:</b>
+                                </td>
+                                <td>
+                                    <p t-field="o.employee_id.identification_id" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <hr style="border: 1px solid #aaa;" />
+
+            <div class="row m-0 p-0">
+                <t t-set="line" t-value="o.line_ids" />
+
+                <div class="col-6">
+                    <h6>EARNINGS/BENEFITS</h6>
+                    <table class="table m-0 p-0 table-sm" style="border:1px solid #ddd; width:100%;">
+                        <tbody>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Basic Pay</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P010').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>House Allowance</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P017').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>OT Pay</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P013').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Bonus</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P011').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Service</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P036').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Leave Days</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P015').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Gross Pay</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P030').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Contribution Benefit</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P109').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Gross Taxable</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P045').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <br />
+                            <br />
+                            <tr>
+                                <td class="text-left">
+                                    <b>Net Salary</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P120').total) or 0.00" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col-6">
+                    <h6>STATUTOTY DEDUCTIONS</h6>
+                    <table class="table m-0 p-0 table-sm" style="border:1px solid #ddd; width:100%;">
+                        <tbody>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Income Tax</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P041').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>Tax Relief</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P091').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>P.A.Y.E</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P086').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>NSSF</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P050').total) or 0.00" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">
+                                    <b>NHIF</b>
+                                </td>
+                                <td class="text-right">
+                                    <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P106').total) or 0.00" />
+                                </td>
+                            </tr>
+                        </tbody>
+                        <h6>OTHER DEDUCTIONS</h6>
+                        <tr>
+                            <td>
+                                <b>Late/Absent</b>
+                            </td>
+                            <td>
+                                <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P076').total) or 0.00" />
+                            </td>
+                        </tr>
+                        <br />
+                        <tr>
+                            <td>
+                                <b>Total Stat. Deduction</b>
+                            </td>
+                            <td>
+                                <t t-esc="'{:,.2f}'.format(line.filtered(lambda l: l.code == 'P115').total) or 0.00" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <hr />
+            <div class="row m-0 p-0">
+                <div class="col-6 text-left">
+                    <p>______________________________</p>
+                    <b>
+                        <p>Approved By:</p>
+                    </b>
+                </div>
+                <div class="col-6 text-left">
+                    <p>______________________________</p>
+                    <b>
+                        <p>Approved By:</p>
+                    </b>
+                </div>
+            </div>
+        </template>
+
+        <template id="payslip_template">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="web.basic_layout">
+                        <div class="page" t-attf-style="width:100% !important; font-size: 12px !important;">
+                            <div class="row m-0 p-0">
+                                <div class="col-6">
+                                    <t t-call="custom_payslip.payslip_template_document1" />
+                                </div>
+                                <div class="col-6">
+                                    <t t-call="custom_payslip.payslip_template_document1" />
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>
