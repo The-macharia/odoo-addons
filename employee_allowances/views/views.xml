@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+  <data noupdate="0">
+    <!-- ADD RECURRING FIELDS FOR CASH ALLOWANCES -->
+    <!-- ke.cash.allowance.type inherit form view -->
+    <record id="ke_cash_allownce_type_inherit" model="ir.ui.view">
+      <field name="name">ke.cash.allowance.type.inherit.view.form</field>
+      <field name="model">ke.cash.allowances.type</field>
+      <field name="inherit_id" ref="hr_ke.ke_cash_allowances_type_form" />
+      <field name="arch" type="xml">
+
+        <xpath expr="//group[@name='allowances_type']" position="after">
+          <group name="recurring">
+            <field name="is_recurring" />
+          </group>
+
+        </xpath>
+
+      </field>
+    </record>
+
+
+    <!-- ke.deduction.type inherit form view -->
+    <record id="employee_allowance_ke_deductions_type_form" model="ir.ui.view">
+      <field name="name">ke.deductions.type.inherit.view.form</field>
+      <field name="model">ke.deductions.type</field>
+      <field name="inherit_id" ref="hr_ke.ke_deductions_type_form" />
+      <field name="arch" type="xml">
+
+        <xpath expr="//group[@name='deduction_type']" position="after">
+          <group name="recurring">
+            <field name="is_recurring" />
+          </group>
+        </xpath>
+
+      </field>
+    </record>
+
+    <record id="hr_employee_bank_details_form_inherit" model="ir.ui.view">
+      <field name="name">hr.employee.inherit.view.form</field>
+      <field name="model">hr.employee</field>
+      <field name="inherit_id" ref="hr.view_employee_form" />
+      <field name="arch" type="xml">
+
+        <xpath expr="//sheet" position="before">
+          <header>
+            <button type="action" name="%(action_single_p9_employee_form)d" string='P9 Form' class="oe_secondary" />
+          </header>
+        </xpath>
+
+      </field>
+    </record>
+
+    <record id="action_batch_deduction" model="ir.actions.act_window">
+      <field name="type">ir.actions.act_window</field>
+      <field name="name">Batch Deductions</field>
+      <field name="res_model">ke.batch.deduction</field>
+      <field name="view_mode">tree,form</field>
+      <field name="target">current</field>
+      <field name="domain">[]</field>
+      <field name="context">\{}</field>
+      <field name="help" type="html">
+        <p class="oe_view_nocontent_create">Perform batch allocation of employee(s) after tax deductions.</p>
+      </field>
+    </record>
+
+    <menuitem id="hr_employee_employee_p9" name="P9 Forms" parent="hr.menu_hr_root" sequence="9" action="action_hr_p9_employee_form" />
+
+    <menuitem id="hr_employee_cash_allowance_menu" name="Allowances" parent="hr.menu_hr_root" sequence="9" />
+    <menuitem id="hr_employee_batch_deductions_menu" name="Deductions" parent="hr.menu_hr_root" sequence="9" action="action_batch_deduction" />
+
+    <menuitem id="hr_employee_bonus_and_commission" name="Cash Allowances" parent="hr_employee_cash_allowance_menu" action="action_bonus_and_commission" sequence="2" />
+    <menuitem id="hr_ke.ke_menu_overtime" name="Overtime" parent="hr_employee_cash_allowance_menu" sequence="3" />
+  </data>
+</odoo>
