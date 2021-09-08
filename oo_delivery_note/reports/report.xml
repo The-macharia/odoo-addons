@@ -5,5 +5,13 @@
         <report id="action_report_delivery_note" model="stock.picking" string="Delivery Slip" report_type="qweb-pdf" name="oo_delivery_note.delivery_note_report" file="oo_delivery_note.delivery_note_report" />
 
         <report id="stock.action_report_delivery" model="stock.picking" string="Delivery Slip" report_type="qweb-pdf" name="stock.report_deliveryslip" file="stock.report_deliveryslip" menu="False" />
+
+        <report id="account.account_invoices" model="account.move" string="Invoices" report_type="qweb-pdf" name="account.report_invoice_with_payments" file="account.report_invoice_with_payments" menu="False" />
+
+        <report id="action_report_invoice_report" model="account.move" string="Invoices" report_type="qweb-pdf" name="oo_delivery_note.invoice_report" file="oo_delivery_note.invoice_report" />
+
+        <report id="sale.action_report_saleorder" model="sale.order" string="Quotation / Order" report_type="qweb-pdf" name="sale.report_saleorder" file="sale.report_saleorder" menu="False" />
+
+        <report id="action_report_sale_order_report" model="sale.order" string="Quotation / Order" report_type="qweb-pdf" name="oo_delivery_note.sale_order_report" file="oo_delivery_note.sale_order_report" />
     </data>
 </odoo>

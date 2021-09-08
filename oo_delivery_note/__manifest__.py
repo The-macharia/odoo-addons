@@ -21,7 +21,9 @@
     # always loaded
     'data': [
         'reports/report.xml',
-        'reports/template.xml',
+        'reports/delivery.xml',
+        'reports/sale.xml',
+        'reports/invoice.xml',
     ],
 
 }
