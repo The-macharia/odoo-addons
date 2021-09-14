@@ -6,6 +6,19 @@
             <br />
             <div class="container">
                 <div class="row">
+                    <div class="col-6" style="width: 50% !important;" />
+                    <div class="col-6 text-right" style="width: 50% !important;">
+                        <p t-field="doc.partner_id.name" />
+                        <p t-field="doc.partner_id.street" />
+                        <p>
+                            <span t-field="doc.partner_id.city" />
+                            <span t-field="doc.partner_id.zip" />
+                        </p>
+                        <p t-field="doc.partner_id.country_id.name" />
+                    </div>
+                </div>
+                <br />
+                <div class="row">
                     <div class="col-3" t-if="doc.name" name="div_name">
                         <strong>Delivery No:</strong>
                         <p class="m-0" t-field="doc.name" />
@@ -26,19 +39,6 @@
                 <br />
 
                 <div class="row">
-                    <div class="col-6" style="width: 50% !important;" />
-                    <div class="col-6" style="width: 50% !important;">
-                        <p t-field="doc.partner_id.name" />
-                        <p t-field="doc.partner_id.street" />
-                        <p>
-                            <span t-field="doc.partner_id.city" />
-                            <span t-field="doc.partner_id.zip" />
-                        </p>
-                        <p t-field="doc.partner_id.country_id.name" />
-                    </div>
-                </div>
-                <br />
-                <div class="row">
                     <table class="table table-sm o_main_table mt16" style="border:1px solid #ddd; width:100%;">
                         <thead style="background: #eee;">
                             <tr>
@@ -50,7 +50,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr t-foreach="doc.move_line_ids_without_package" t-as="line">
+                            <tr t-foreach="doc.move_ids_without_package" t-as="line">
                                 <td style="border:1px solid #ddd; text-align:left; color: #000;">
                                     <span t-esc="line_index + 1" />
                                 </td>
@@ -61,7 +61,7 @@
                                     <span t-field="line.product_id.name" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
-                                    <span t-field="line.qty_done" />
+                                    <span t-field="line.quantity_done" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-field="line.product_id.uom_id.name" />
