@@ -25,22 +25,8 @@
                 <br />
 
                 <div class="row">
+                    <div class="col-6" style="width: 50% !important;" />
                     <div class="col-6" style="width: 50% !important;">
-                        <p style="font-size: 14px; !important; background: #eee;">
-                            <b>Sold To</b>
-                        </p>
-                        <p t-field="doc.partner_id.name" />
-                        <p t-field="doc.partner_id.street" />
-                        <p>
-                            <span t-field="doc.partner_id.city" />
-                            <span t-field="doc.partner_id.zip" />
-                        </p>
-                        <p t-field="doc.partner_id.country_id.name" />
-                    </div>
-                    <div class="col-6" style="width: 50% !important;">
-                        <p style="font-size: 14px; !important; background: #eee;">
-                            <b>Delivered To</b>
-                        </p>
                         <p t-field="doc.partner_id.name" />
                         <p t-field="doc.partner_id.street" />
                         <p>
@@ -61,19 +47,20 @@
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">QUANTITY</th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">UNIT</th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">UNIT PRICE</th>
-                                <th style="border:1px solid #ddd; text-align:center; color: #000;">TOTAL PRICE</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">TAXES</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">AMOUNT</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr t-foreach="doc.order_line" t-as="line">
-                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
-                                    <span t-field="line.product_id.name" />
+                                <td style="border:1px solid #ddd; text-align:left; color: #000;">
+                                    <span t-esc="line_index + 1" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-field="line.product_id.default_code" />
                                 </td>
                                 <td style="border:1px solid #ddd; color: #000;">
-                                    <span t-field="line.name" />
+                                    <span t-field="line.product_id.name" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-field="line.product_uom_qty" />
@@ -85,23 +72,67 @@
                                     <span t-field="line.price_unit" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
-                                    <span t-field="line.price_subtotal" />
+                                    <span t-esc="', '.join(map(lambda x: (x.description or x.name), line.tax_id))" />
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span class="text-nowrap" t-field="line.price_subtotal" />
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <br />
-                <br />
-                <br />
-                <div class="row">
-                    <div class="col">
-                        <p class="text-muted">
-                            ATTENTION: These goods are being supplied in accordance with the terms and conditions stated on the reverse side of this document or on our website at
-                            <span t-field="doc.company_id.website" />
-                        </p>
+                <div class="clearfix" name="so_total_summary">
+                    <div id="total" class="row" name="total">
+                        <div t-attf-class="#{'col-4' if report_type != 'html' else 'col-sm-7 col-md-5'} ml-auto">
+                            <table class="table table-sm">
+                                <tr class="border-black o_subtotal" style="">
+                                    <td name="td_amount_untaxed_label">
+                                        <strong>Subtotal</strong>
+                                    </td>
+                                    <td name="td_amount_untaxed" class="text-right">
+                                        <span t-field="doc.amount_untaxed" />
+                                    </td>
+                                </tr>
+                                <t t-foreach="doc.amount_by_group" t-as="amount_by_group">
+                                    <tr style="">
+                                        <t t-if="amount_by_group[5] == 1 and doc.amount_untaxed == amount_by_group[2]">
+                                            <td name="td_amount_by_group_label_3">
+                                                <span t-esc="amount_by_group[0]" />
+                                                <span>
+                                                    &amp;nbsp;
+                                                    <span>on</span>
+                                                    &amp;nbsp;
+                                                    <t t-esc="amount_by_group[2]" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: doc.pricelist_id.currency_id}" />
+                                                </span>
+                                            </td>
+                                            <td name="td_amount_by_group_3" class="text-right o_price_total">
+                                                <span t-esc="amount_by_group[1]" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: doc.pricelist_id.currency_id}" />
+                                            </td>
+                                        </t>
+                                        <t t-else="">
+                                            <td name="td_amount_by_group_label">
+                                                <span t-esc="amount_by_group[0]" />
+                                            </td>
+                                            <td name="td_amount_by_group" class="text-right o_price_total">
+                                                <span t-esc="amount_by_group[1]" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: doc.pricelist_id.currency_id}" />
+                                            </td>
+                                        </t>
+                                    </tr>
+                                </t>
+                                <tr class="border-black o_total">
+                                    <td name="td_amount_total_label">
+                                        <strong>Total</strong>
+                                    </td>
+                                    <td name="td_amount_total" class="text-right">
+                                        <span t-field="doc.amount_total" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
                 </div>
+                <br />
+                <div class="oe_structure" />
             </div>
         </template>
 

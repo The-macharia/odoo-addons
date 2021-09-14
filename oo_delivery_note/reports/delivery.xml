@@ -26,22 +26,8 @@
                 <br />
 
                 <div class="row">
+                    <div class="col-6" style="width: 50% !important;" />
                     <div class="col-6" style="width: 50% !important;">
-                        <p style="font-size: 14px; !important; background: #eee;">
-                            <b>Sold To</b>
-                        </p>
-                        <p t-field="doc.partner_id.name" />
-                        <p t-field="doc.partner_id.street" />
-                        <p>
-                            <span t-field="doc.partner_id.city" />
-                            <span t-field="doc.partner_id.zip" />
-                        </p>
-                        <p t-field="doc.partner_id.country_id.name" />
-                    </div>
-                    <div class="col-6" style="width: 50% !important;">
-                        <p style="font-size: 14px; !important; background: #eee;">
-                            <b>Delivered To</b>
-                        </p>
                         <p t-field="doc.partner_id.name" />
                         <p t-field="doc.partner_id.street" />
                         <p>
@@ -61,19 +47,18 @@
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">DESCRIPTION</th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">QUANTITY</th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">UNIT</th>
-                                <th style="border:1px solid #ddd; text-align:center; color: #000;">UNIT PRICE</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr t-foreach="doc.move_line_ids_without_package" t-as="line">
-                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
-                                    <span t-field="line.product_id.name" />
+                                <td style="border:1px solid #ddd; text-align:left; color: #000;">
+                                    <span t-esc="line_index + 1" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-field="line.product_id.default_code" />
                                 </td>
                                 <td style="border:1px solid #ddd; color: #000;">
-                                    <span t-field="line.description_picking" />
+                                    <span t-field="line.product_id.name" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-field="line.qty_done" />
@@ -81,25 +66,13 @@
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-field="line.product_id.uom_id.name" />
                                 </td>
-                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
-                                    <!-- <span t-field="line.move_id.sale_line_id.price_subtotal" /> -->
-                                    <span t-field="line.move_id.sale_line_id.price_unit" />
-                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
                 <br />
-                <br />
-                <br />
-                <div class="row">
-                    <div class="col">
-                        <p class="text-muted">
-                            ATTENTION: These goods are being supplied in accordance with the terms and conditions stated on the reverse side of this document or on our website at
-                            <span t-field="doc.company_id.website" />
-                        </p>
-                    </div>
-                </div>
+                <div class="oe_structure" />
+
             </div>
         </template>
 

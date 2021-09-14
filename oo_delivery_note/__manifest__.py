@@ -16,7 +16,7 @@
     'version': '14.0.0.1.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['stock'],
+    'depends': ['stock', 'sale', 'account'],
 
     # always loaded
     'data': [
