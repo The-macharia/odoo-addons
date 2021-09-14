@@ -57,6 +57,50 @@
                     </div>
                 </section>
 
+                <section class="features">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-4 icon_box_col">
+                                <div class="icon_box d-flex flex-column align-items-center justify-content-start text-center">
+                                    <div class="icon_box_icon">
+                                        <i class="las la-hotel" />
+                                    </div>
+                                    <div class="icon_box_title">
+                                        <h2>Fabulous Resort</h2>
+                                    </div>
+                                    <div class="icon_box_text">
+                                        <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Suspendisse nec faucibus velit. Quisque eleifend orci ipsum, a bibendum.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4 icon_box_col">
+                                <div class="icon_box d-flex flex-column align-items-center justify-content-start text-center">
+                                    <div class="icon_box_icon" />
+                                    <div class="icon_box_title">
+                                        <h2>Infinity Pool</h2>
+                                    </div>
+                                    <div class="icon_box_text">
+                                        <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Suspendisse nec faucibus velit. Quisque eleifend orci ipsum, a bibendum.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4 icon_box_col">
+                                <div class="icon_box d-flex flex-column align-items-center justify-content-start text-center">
+                                    <div class="icon_box_icon" />
+                                    <div class="icon_box_title">
+                                        <h2>Luxury Rooms</h2>
+                                    </div>
+                                    <div class="icon_box_text">
+                                        <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Suspendisse nec faucibus velit. Quisque eleifend orci ipsum, a bibendum.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
             </t>
         </template>
     </data>
