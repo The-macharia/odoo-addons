@@ -1,0 +1,253 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data noupdate="0">
+        <template id="delivery_note_report_document">
+            <br />
+            <div class="container">
+                <div class="row">
+                    <div class="col-2" t-if="doc.name" name="div_name">
+                        <strong>Order No:</strong>
+                        <p class="m-0" t-field="doc.name" />
+                    </div>
+                    <div class="col-2" t-if="doc.scheduled_date" name="div_date">
+                        <strong>Date:</strong>
+                        <p class="m-0" t-esc="doc.scheduled_date.strftime('%d %B, %Y')" />
+                    </div>
+                </div>
+                <div class="row">
+                    <h3 class="text-center w-100">
+                        <b>Pre-Order Acknoledgement</b>
+                    </h3>
+                </div>
+                <br />
+
+                <div class="row d-flex">
+                    <div class="col-auto">
+                        <p style="font-size: 14px; !important; background: #eee;">
+                            <b>Sold To</b>
+                        </p>
+                        <p t-field="doc.partner_id.name" />
+                        <p t-field="doc.partner_id.street" />
+                        <p>
+                            <span t-field="doc.partner_id.city" />
+                            <span t-field="doc.partner_id.zip" />
+                        </p>
+                        <p t-field="doc.partner_id.country_id.name" />
+                    </div>
+                    <div class="col-auto">
+                        <p style="font-size: 14px; !important; background: #eee;">
+                            <b>Delivered To</b>
+                        </p>
+                        <p t-field="doc.partner_id.name" />
+                        <p t-field="doc.partner_id.street" />
+                        <p>
+                            <span t-field="doc.partner_id.city" />
+                            <span t-field="doc.partner_id.zip" />
+                        </p>
+                        <p t-field="doc.partner_id.country_id.name" />
+                    </div>
+                </div>
+                <br />
+
+                <div class="row">
+                    <table class="table table-sm o_main_table mt16" style="border:1px solid #ddd; width:100%;">
+                        <thead>
+
+                            <tr>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">CUST NO</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">CUST PO NO</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">DATE ENTERED</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">REQ SHIP DATE</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">REV</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <b>Ship Mode / Carrier</b>
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">Representative/ Salesman/ Telephone</td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">No.</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-esc="' '" />
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-field="doc.user_id.name" />
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-esc="' '" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <br />
+                <div class="row">
+                    <table class="table table-sm o_main_table mt16" style="border:1px solid #ddd; width:100%;">
+                        <thead>
+                            <tr>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">ITEM</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">ORDERED</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">PART NO / DESCRIPTION</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">CoO</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">UNIT PRICE (USD)</th>
+                                <th style="border:1px solid #ddd; text-align:center; color: #000;">AMOUNT (USD)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="doc.move_line_ids_without_package" t-as="line">
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-field="line.product_id.name" />
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-field="line.qty_done" />
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-field="line.description_picking" />
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">US</td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-esc="round(line.move_id.price_unit / line.qty_done,2)" />
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-field="line.move_id.price_unit" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <br />
+                <div class="row">
+                    <table class="table table-sm o_main_table mt16" style="border:1px solid #ddd; width:100%;">
+                        <thead>
+                            <tr>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <b>Sub Total (USD)</b>
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <b>Freight/ Others (USD)</b>
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <b>Tax Rate</b>
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <b>Tax Amount</b>
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <b>COD/INUSR (USD)</b>
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <b>C.O.D Amount (USD)</b>
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <b>Total Amount Due (USD)</b>
+                                </td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-esc="sum(doc.move_line_ids_without_package.mapped('move_id.price_unit'))" />
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-esc="' '" />
+
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-esc="' '" />
+
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-esc="' '" />
+
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-esc="' '" />
+
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-esc="' '" />
+
+                                </td>
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span t-esc="sum(doc.move_line_ids_without_package.mapped('move_id.price_unit'))" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <br />
+                <div class="row">
+                    <table class="table table-sm o_main_table mt16" style="border:1px solid #ddd; width:100%;">
+                        <tr>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <b>INCOTERMS</b>
+                            </td>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <span>&amp;nbsp;&amp;nbsp;&amp;nbsp;</span>
+                            </td>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <b>Payment Terms</b>
+                            </td>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <span t-esc="doc.sale_id and doc.sale_id.payment_term_id.name or ' '" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <b>BANK ID</b>
+                            </td>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <span />
+                            </td>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <b>Payment Due Date</b>
+                            </td>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <span />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <b>VAT / TAX ID</b>
+                            </td>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <span t-field="doc.partner_id.vat" />
+                            </td>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <b>Total Amount Due</b>
+                            </td>
+                            <td style="border:1px solid #ddd; color: #000;">
+                                <span t-esc="sum(doc.move_line_ids_without_package.mapped('move_id.price_unit'))" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col">
+                        <p class="text-muted">
+                            ATTENTION: These goods are being supplied in accordance with the terms and conditions stated on the reverse side of this document or on our website at
+                            <span t-field="doc.company_id.website" />
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template id="delivery_note_report">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <t t-call="web.external_layout">
+                        <div class="page" style="font-size: 14px !important;">
+                            <t t-call="oo_delivery_note.delivery_note_report_document" t-lang="doc.partner_id.lang" />
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+    </data>
+</odoo>

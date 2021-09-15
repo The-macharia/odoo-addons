@@ -23,6 +23,7 @@
         'reports/report.xml',
         'reports/delivery.xml',
         'reports/sale.xml',
+        'reports/purchase.xml',
         'reports/invoice.xml',
     ],
 

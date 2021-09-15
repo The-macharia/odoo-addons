@@ -6,7 +6,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-6" style="width: 50% !important;" />
-                    <div class="col-6 text-right" style="width: 50% !important;">
+                    <div class="col-6 text-left" style="width: 50% !important;">
                         <p t-field="doc.partner_id.name" />
                         <p t-field="doc.partner_id.street" />
                         <p>
@@ -39,6 +39,8 @@
 
                 <br />
                 <div class="row">
+                    <!-- Is there a discount on at least one line? -->
+                    <t t-set="display_discount" t-value="any(l.discount for l in doc.order_line)" />
                     <table class="table table-sm o_main_table mt16" style="border:1px solid #ddd; width:100%;">
                         <thead style="background: #eee;">
                             <tr>
@@ -48,13 +50,16 @@
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">QUANTITY</th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">UNIT</th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">UNIT PRICE</th>
+                                <th t-if="display_discount" style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span>DISC.%</span>
+                                </th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">TAXES</th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">AMOUNT</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr t-foreach="doc.order_line" t-as="line">
-                                <td style="border:1px solid #ddd; text-align:left; color: #000;">
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-esc="line_index + 1" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
@@ -71,6 +76,9 @@
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-field="line.price_unit" />
+                                </td>
+                                <td t-if="display_discount" class="text-right">
+                                    <span t-field="line.discount" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-esc="', '.join(map(lambda x: (x.description or x.name), line.tax_id))" />

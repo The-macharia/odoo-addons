@@ -6,7 +6,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-6" style="width: 50% !important;" />
-                    <div class="col-6 text-right" style="width: 50% !important;">
+                    <div class="col-6 text-left" style="width: 50% !important;">
                         <p t-field="doc.partner_id.name" />
                         <p t-field="doc.partner_id.street" />
                         <p>
@@ -34,6 +34,8 @@
                 <br />
 
                 <div class="row">
+                    <!-- Is there a discount on at least one line? -->
+                    <t t-set="display_discount" t-value="any(l.discount for l in doc.invoice_line_ids)" />
                     <table class="table table-sm o_main_table mt16" style="border:1px solid #ddd; width:100%;">
                         <thead style="background: #eee;">
                             <tr>
@@ -43,13 +45,16 @@
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">QUANTITY</th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">UNIT</th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">UNIT PRICE</th>
+                                <th t-if="display_discount" style="border:1px solid #ddd; text-align:center; color: #000;">
+                                    <span>DISC.%</span>
+                                </th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">TAXES</th>
                                 <th style="border:1px solid #ddd; text-align:center; color: #000;">AMOUNT</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr t-foreach="doc.invoice_line_ids" t-as="line">
-                                <td style="border:1px solid #ddd; text-align:left; color: #000;">
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-esc="line_index + 1" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
@@ -66,6 +71,9 @@
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-field="line.price_unit" />
+                                </td>
+                                <td t-if="display_discount" class="text-right">
+                                    <span t-field="line.discount" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-esc="', '.join(map(lambda x: (x.description or x.name), line.tax_ids))" id="line_tax_ids" />
@@ -126,7 +134,35 @@
                     </div>
                 </div>
                 <br />
-
+                <p t-if="o.move_type in ('out_invoice', 'in_refund') and o.payment_reference" name="payment_communication">
+                    Please use the following communication for your payment :
+                    <b>
+                        <span t-field="o.payment_reference" />
+                    </b>
+                </p>
+                <p t-if="o.invoice_payment_term_id" name="payment_term">
+                    <span t-field="o.invoice_payment_term_id.note" />
+                </p>
+                <p t-if="o.narration" name="comment">
+                    <span t-field="o.narration" />
+                </p>
+                <p t-if="o.fiscal_position_id.note" name="note">
+                    <span t-field="o.fiscal_position_id.note" />
+                </p>
+                <p t-if="o.invoice_incoterm_id" name="incoterm">
+                    <strong>Incoterm: </strong>
+                    <span t-field="o.invoice_incoterm_id.code" />
+                    -
+                    <span t-field="o.invoice_incoterm_id.name" />
+                </p>
+                <div id="qrcode" t-if="o.display_qr_code">
+                    <p t-if="qr_code_urls.get(o.id)">
+                        <strong class="text-center">Scan me with your banking app.</strong>
+                        <br />
+                        <br />
+                        <img class="border border-dark rounded" t-att-src="qr_code_urls[o.id]" />
+                    </p>
+                </div>
             </div>
         </template>
 

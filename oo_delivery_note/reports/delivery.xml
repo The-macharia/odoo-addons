@@ -7,7 +7,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-6" style="width: 50% !important;" />
-                    <div class="col-6 text-right" style="width: 50% !important;">
+                    <div class="col-6 text-left" style="width: 50% !important;">
                         <p t-field="doc.partner_id.name" />
                         <p t-field="doc.partner_id.street" />
                         <p>
@@ -51,7 +51,7 @@
                         </thead>
                         <tbody>
                             <tr t-foreach="doc.move_ids_without_package" t-as="line">
-                                <td style="border:1px solid #ddd; text-align:left; color: #000;">
+                                <td style="border:1px solid #ddd; text-align:center; color: #000;">
                                     <span t-esc="line_index + 1" />
                                 </td>
                                 <td style="border:1px solid #ddd; text-align:center; color: #000;">
