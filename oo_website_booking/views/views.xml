@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data noupdate="0">
+        <!-- Add you code here -->
+        <!-- hotel.room.type inherit form view -->
+        <record id="view_hotel_room_type_form_inherit" model="ir.ui.view">
+            <field name="name">hotel.room.type.inherit.view.form</field>
+            <field name="model">hotel.room.type</field>
+            <field name="inherit_id" ref="hotel.view_hotel_room_type_form" />
+            <field name="arch" type="xml">
+
+                <field name="categ_id" position="after">
+                    <field name="currency_id" invisible="0" />
+                    <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}" />
+                    <field name="image" />
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>

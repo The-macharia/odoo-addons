@@ -20,7 +20,7 @@
                             </div>
                         </div>
 
-                        <div class="row justify-content-center">
+                        <div class="input-row row justify-content-center">
                             <form action="" class="form">
                                 <div class="form-row">
                                     <div class="form-group col-md-3 col-sm-12">
@@ -53,17 +53,23 @@
 
                 <section class="results">
                     <div class="container">
+                        <div class="row results-heading">
+                            <h3 class="text-center">Available Rooms</h3>
+                        </div>
                         <div class="row" name="results" id="results" />
                     </div>
                 </section>
+                <br />
 
                 <section class="features">
                     <div class="container">
+                        <br />
+                        <br />
                         <div class="row">
                             <div class="col-lg-4 icon_box_col">
                                 <div class="icon_box d-flex flex-column align-items-center justify-content-start text-center">
                                     <div class="icon_box_icon">
-                                        <i class="las la-hotel" />
+                                        <img src="/oo_website_booking/static/src/img/svg3.webp" alt="Svg 1" />
                                     </div>
                                     <div class="icon_box_title">
                                         <h2>Fabulous Resort</h2>
@@ -76,7 +82,9 @@
 
                             <div class="col-lg-4 icon_box_col">
                                 <div class="icon_box d-flex flex-column align-items-center justify-content-start text-center">
-                                    <div class="icon_box_icon" />
+                                    <div class="icon_box_icon">
+                                        <img src="/oo_website_booking/static/src/img/svg1.webp" alt="Svg 1" />
+                                    </div>
                                     <div class="icon_box_title">
                                         <h2>Infinity Pool</h2>
                                     </div>
@@ -88,7 +96,9 @@
 
                             <div class="col-lg-4 icon_box_col">
                                 <div class="icon_box d-flex flex-column align-items-center justify-content-start text-center">
-                                    <div class="icon_box_icon" />
+                                    <div class="icon_box_icon">
+                                        <img src="/oo_website_booking/static/src/img/svg2.webp" alt="Svg 1" />
+                                    </div>
                                     <div class="icon_box_title">
                                         <h2>Luxury Rooms</h2>
                                     </div>

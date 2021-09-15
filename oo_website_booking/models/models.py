@@ -2,14 +2,13 @@
 
 from odoo import models, fields, api
 
-# class oo_website_booking(models.Model):
-#     _name = 'oo_website_booking.oo_website_booking'
 
-#     name = fields.Char()
-#     value = fields.Integer()
-#     value2 = fields.Float(compute="_value_pc", store=True)
-#     description = fields.Text()
-#
-#     @api.depends('value')
-#     def _value_pc(self):
-#         self.value2 = float(self.value) / 100
+class Hotel(models.Model):
+    _inherit = 'hotel.room.type'
+
+    price = fields.Monetary(string='Price/ Night', required=True)
+    currency_id = fields.Many2one(
+        'res.currency', string='Currency', required=True)
+    currency_symbol = fields.Char(
+        related='currency_id.symbol', string='Currency Symbol')
+    image = fields.Binary(string='Image')

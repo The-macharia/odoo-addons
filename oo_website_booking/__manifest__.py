@@ -16,7 +16,7 @@
     'version': '12.0.0.1.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['website'],
+    'depends': ['website', 'hotel'],
 
     # always loaded
     'data': [
@@ -24,6 +24,7 @@
         'views/menus.xml',
         'views/nav.xml',
         'views/home.xml',
-        'views/rooms.xml',
+
+        'views/views.xml',
     ]
 }
