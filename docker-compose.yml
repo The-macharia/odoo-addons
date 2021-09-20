@@ -8,19 +8,29 @@ services:
                 - POSTGRES_DB=postgres
                 - PGDATA=/var/lib/postgresql/data/pgdata
         volumes:
-                - db12-data=/var/lib/postgresql/data/pgdata
-   odoo12:
-        image: odoo:12
-        command: --dev=all
+                - db-data=/var/lib/postgresql/data/pgdata
+   odoo1:
+        image: odoo:14
         ports:
-                - 8012:8069
+                - 8069:8069
         links:
                 - db:db
         volumes:
                 - ./config:/etc/odoo
-                - /home/b14/Desktop/odoo-addons:/mnt/extra-addons
-                - /home/b14/odoo-dev/12addons:/mnt/third  
-                - odoo12-data:/var/lib/odoo
+                - .:/mnt/extra-addons  
+                - odoo1-data:/var/lib/odoo
+   odoo2:
+        image: odoo:14
+        ports:
+                - 8014:8069
+        links:
+                - db:db
+        volumes:
+                - ./config:/etc/odoo
+                - .:/mnt/extra-addons              
+                - odoo2-data:/var/lib/odoo
+
 volumes:
-        odoo12-data:
-        db12-data:
+        odoo1-data:
+        odoo2-data:
+        db-data:
