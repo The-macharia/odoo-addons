@@ -1,0 +1,26 @@
+version: '2'
+services:
+   db:
+        image: postgres:13-alpine
+        environment:
+                - POSTGRES_USER=odoo
+                - POSTGRES_PASSWORD=odoo
+                - POSTGRES_DB=postgres
+                - PGDATA=/var/lib/postgresql14/data/pgdata
+        volumes:
+                - db13-data=/var/lib/postgresql14/data/pgdata
+   odoo14:
+        image: odoo:14
+        command: --dev=all
+        ports:
+                - 8014:8069
+        links:
+                - db:db
+        volumes:
+                - ./config:/etc/odoo
+                - /home/b14/Desktop/odoo-addons:/mnt/extra-addons
+                - /home/b14/odoo-dev/14addons/enterprise:/mnt/enterprise
+                - odoo13-data:/var/lib/odoo
+volumes:
+        odoo13-data:
+        db13-data:
