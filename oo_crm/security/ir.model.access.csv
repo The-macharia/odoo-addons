@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_crm_region,crm.region.user,model_crm_region,,1,1,1,1
+access_crm_region_territory,crm.region.territory.user,model_crm_region_territory,,1,1,1,1
+access_crm_region_subterritory,crm.region.subterritory.user,model_crm_region_subterritory,,1,1,1,1

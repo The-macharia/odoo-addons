@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+  <data noupdate="0">
+
+    <!-- crm.lead inherit form view -->
+    <record id="oo_crm_lead_view_form" model="ir.ui.view">
+      <field name="name">crm.lead.inherit.view.form</field>
+      <field name="model">crm.lead</field>
+      <field name="inherit_id" ref="crm.crm_lead_view_form" />
+      <field name="arch" type="xml">
+
+        <field name="team_id" position="after">
+          <field name="region_id" widget="selection" />
+          <field name="territory_id" widget="selection" domain="[('region_id','=',region_id)]" />
+          <field name="subterritory_id" widget="selection" domain="[('territory_id','=',territory_id)]" />
+        </field>
+
+      </field>
+    </record>
+
+
+    <!-- crm.region form view -->
+    <record id="crm_region_view_form" model="ir.ui.view">
+      <field name="name">crm.region.view.form</field>
+      <field name="model">crm.region</field>
+      <field name="arch" type="xml">
+        <form string="">
+          <sheet>
+            <group>
+              <field name="name" />
+            </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <!-- crm.region.territory form view -->
+    <record id="crm_region_territory_view_form" model="ir.ui.view">
+      <field name="name">crm.region.territory.view.form</field>
+      <field name="model">crm.region.territory</field>
+      <field name="arch" type="xml">
+        <form string="">
+          <sheet>
+            <group>
+              <field name="name" />
+              <field name="region_id" />
+            </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <!-- crm.region.subterritory form view -->
+    <record id="crm_region_subterritory_view_form" model="ir.ui.view">
+      <field name="name">crm.region.subterritory.view.form</field>
+      <field name="model">crm.region.subterritory</field>
+      <field name="arch" type="xml">
+        <form string="">
+          <sheet>
+            <group>
+              <!-- Add your fields here -->
+              <field name="name" />
+              <field name="territory_id" />
+              <field name="region_id" />
+            </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+  </data>
+</odoo>
