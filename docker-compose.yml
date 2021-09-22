@@ -13,7 +13,7 @@ services:
         image: odoo:14
         command: --dev=all
         ports:
-                - 8014:8069
+                - 8013:8069
         links:
                 - db:db
         volumes:
