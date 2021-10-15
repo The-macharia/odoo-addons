@@ -1,7 +1,7 @@
 version: '2'
 services:
    db:
-        image: postgres:13
+        image: postgres:13-alpine
         environment:
                 - POSTGRES_USER=odoo
                 - POSTGRES_PASSWORD=odoo
@@ -9,7 +9,7 @@ services:
                 - PGDATA=/var/lib/postgresql/data/pgdata
         volumes:
                 - db12-data=/var/lib/postgresql/data/pgdata
-   odoo12:
+   odoo:
         image: odoo:12
         command: --dev=all
         ports:

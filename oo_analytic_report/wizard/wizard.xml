@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <data noupdate="0">
+
+
+    <record id="analytic_excel_report_form" model="ir.ui.view">
+      <field name="name">Analytic Report</field>
+      <field name="model">analytic.excel.report</field>
+      <field name="arch" type="xml">
+        <form string="Aanlytic Report Form">
+          <sheet>
+            <group>
+              <span colspan="4" nolabel="1">Choose a date or month to get the report for.</span>
+            </group>
+
+            <group colspan="2">
+              <field name="report_type" />
+              <field name="day_of" attrs="{'invisible':[('report_type','=','monthly')],'required':[('report_type','=','daily')]}" />
+              <field name="month_of" attrs="{'invisible':[('report_type','=','daily')],'required':[('report_type','=','monthly')]}" />
+            </group>
+          </sheet>
+
+          <footer>
+            <button name="action_generate_report" string="Generate Report" type="object" class="btn-primary" />
+            <button string="Cancel" class="btn-secondary" special="cancel" />
+          </footer>
+
+        </form>
+      </field>
+    </record>
+
+    <record id="action_analytic_excel_report_wizard" model="ir.actions.act_window">
+      <field name="name">Analytic Report</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">analytic.excel.report</field>
+      <field name="view_mode">form</field>
+      <field name="view_id" ref="analytic_excel_report_form" />
+      <field name="target">new</field>
+    </record>
+
+
+    <record id="wizard_excel_report_form" model="ir.ui.view">
+      <field name="name">Partner Report Download</field>
+      <field name="model">excel.wizard</field>
+      <field name="arch" type="xml">
+        <form string="Excel Report">
+          <sheet>
+
+            <group>
+              <field name="name" invisible="1" />
+              <field name="report" readonly="1" filename="name" />
+            </group>
+
+          </sheet>
+          <footer>
+            <button string="Cancel" class="btn-default" special="cancel" />
+          </footer>
+        </form>
+      </field>
+    </record>
+
+  </data>
+</odoo>
