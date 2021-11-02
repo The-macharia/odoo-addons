@@ -1,0 +1,16 @@
+body {background-color:#000;}
+
+.loan-custom .o_form_label {min-width: 175px!important;}
+.loan-extended .o_form_label {min-width: 209px!important;}
+
+.loan-details .o_project_kanban_boxes {display:block!important;}
+
+
+.repayment-section {display: block; width:100%;
+    margin-right: 15px!important;
+    margin-bottom: 15px!important;}  
+    
+.repayment-section .o_horizontal_separator {display: inline-block;
+    margin-right: 12px;}    
+
+#payment_generate_id {margin-top: -8px;}

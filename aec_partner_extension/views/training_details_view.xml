@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<odoo>
+	<data>
+		<record model="ir.ui.view" id="view_educational_level_form">
+			<field name="name">educational.level.form</field>
+			<field name="model">educational.level</field>
+			<field name="arch" type="xml">
+				<form string="Educational Level">
+					<group col="2" colspan="4">
+						<field name="name" />
+					</group>
+				</form>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="view_educational_level_tree">
+			<field name="name">educational.level.tree</field>
+			<field name="model">educational.level</field>
+			<field name="arch" type="xml">
+				<tree string="Educational Level">
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+		<record model="ir.actions.act_window" id="action_educational_level">
+			<field name="name">Educational Level</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">educational.level</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+		
+            
+       <menuitem id="menu_traning_details_id" name="Training Details" parent="sale.menu_sale_config" sequence="6" groups="sales_team.group_sale_salesman,sales_team.group_sale_manager"/>
+       <menuitem id="menu_educational_details_id" action="action_educational_level" name="Educational Level" parent="menu_traning_details_id" sequence="1"/>
+       
+       
+       <record model="ir.ui.view" id="view_business_registration_status_form">
+			<field name="name">business.registration.status.form</field>
+			<field name="model">business.registration.status</field>
+			<field name="arch" type="xml">
+				<form string="Business Registration Status">
+					<group col="2" colspan="4">
+						<field name="name" />
+					</group>
+				</form>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="view_business_registration_status_tree">
+			<field name="name">business.registration.status.tree</field>
+			<field name="model">business.registration.status</field>
+			<field name="arch" type="xml">
+				<tree string="Business Registration Status">
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+		
+		<record model="ir.actions.act_window" id="action_business_registration_status">
+			<field name="name">Business Registration Status</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">business.registration.status</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+		
+            
+       <menuitem id="menu_business_registration_status_id" action="action_business_registration_status" name="Business Registration Status" parent="menu_traning_details_id" sequence="2"/>
+       
+       <record model="ir.ui.view" id="view_camp_details_form">
+			<field name="name">camp.details.form</field>
+			<field name="model">camp.details</field>
+			<field name="arch" type="xml">
+				<form string="Camp Details">
+					<group col="2" colspan="4">
+						<field name="name" />
+					</group>
+				</form>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="view_camp_details_tree">
+			<field name="name">camp.details.tree</field>
+			<field name="model">camp.details</field>
+			<field name="arch" type="xml">
+				<tree string="Camp Details">
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+		
+		<record model="ir.actions.act_window" id="action_camp_details_status">
+			<field name="name">Camp Details</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">camp.details</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+            
+       <menuitem id="menu_camp_details_id" action="action_camp_details_status" name="Camp Details" parent="menu_traning_details_id" sequence="3"/>/>    
+	</data>
+</odoo>

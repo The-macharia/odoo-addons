@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <record id="loan_extended_form" model="ir.ui.view">
+            <field name="name">loan.extended.form</field>
+            <field name="model">loan.extended</field>
+            <field name="arch" type="xml">
+                <form string="Loan Extended">
+                	 <group  class="loan-extended" col="4" colspan="4" string="Allow To Loan Extension">
+	                    	<field name="loan_extension"/>
+	                    	<field  name="gp_with_no_extension"/>
+	                    	<field name="gp_with_extension"/>
+                    </group>
+                    <group>
+                        <!-- <field name="date" class="oe_inline"/> -->
+                        <field name="period_id" class="oe_inline" attrs="{'required':[('loan_extension','=',True)],'invisible':['|',('gp_with_no_extension','=',True),('gp_with_extension','=',True)]}" />
+                        <field name="grc_period" class="oe_inline" attrs="{'invisible':[('loan_extension','=',True)], 'required':['|',('gp_with_no_extension','=',True),('gp_with_extension','=',True)]}" />
+                        <field name="installment_id" required="1" domain="[('loan_id', '=', context.get('active_id')), ('state','in',['draft'])]"/>
+                        <!-- <field name="payment_freq" readonly="1"/> -->
+                    </group>
+                   
+                    <footer>
+                        <button name="extend_period" type="object" string="Extended Period" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    
+        <record id="action_loan_extended" model="ir.actions.act_window">
+            <field name="name">Loan Extended</field>
+            <field name="res_model">loan.extended</field>
+            <field name="type">ir.actions.act_window</field>
+            <!--<field name="view_type">form</field>-->
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="loan_extended_form"/>
+            <field name="target">new</field>
+        </record>
+</odoo>

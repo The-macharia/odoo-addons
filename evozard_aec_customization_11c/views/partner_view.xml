@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record model="ir.actions.act_window" id="open_industry_selection">
+            <field name="name">Industry</field>
+            <field name="res_model">business.industry</field>
+            <!--<field name="view_type">form</field>-->
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <record model="ir.actions.act_window" id="open_business_operating_status">
+            <field name="name">Business Operating Status</field>
+            <field name="res_model">business.operating.status</field>
+            <!--<field name="view_type">form</field>-->
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <record model="ir.actions.act_window" id="open_business_stage">
+            <field name="name">Business Stage</field>
+            <field name="res_model">business.stage</field>
+            <!--<field name="view_type">form</field>-->
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <record model="ir.actions.act_window" id="open_credit_check_status">
+            <field name="name">Credit Check Status</field>
+            <field name="res_model">credit.status</field>
+            <!--<field name="view_type">form</field>-->
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <record model="ir.actions.act_window" id="open_loan_application_status">
+            <field name="name">Loan Application Status</field>
+            <field name="res_model">loan.application.status</field>
+            <!--<field name="view_type">form</field>-->
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <record model="ir.actions.act_window" id="open_loan_status">
+            <field name="name">Loan Status</field>
+            <field name="res_model">loan.status</field>
+            <!--<field name="view_type">form</field>-->
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <record model="ir.actions.act_window" id="open_source_type">
+            <field name="name">Source Type</field>
+            <field name="res_model">source.type</field>
+            <!--<field name="view_type">form</field>-->
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <record model="ir.actions.act_window" id="open_contact_source">
+            <field name="name">Contact Source</field>
+            <field name="res_model">lead.source</field>
+            <!--<field name="view_type">form</field>-->
+            <field name="view_mode">tree,form</field>
+        </record>
+
+<!--
+    Partner Form View
+-->
+        <record model="ir.ui.view" id="view_partner_form_ext">
+            <field name="name">res_partner_mainsection_fields</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='ref']" position="after">
+                    <field name="lead_source_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                    <field name="source_type_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                    <field name="referal_contact_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                </xpath>
+                
+                <xpath expr="//field[@name='street2']" position="after">
+                    <field name="district" placeholder="District"/>
+                </xpath>
+                <xpath expr="//page[@name='internal_notes']" position="before">
+                    <page string="General Information">
+                        <group>
+                            <group>
+                                <field name="id_no"/>
+                                <field name="business_description"/>
+                                <field name="credit_check_details"/>
+                                <field name="nationality_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                                <field name="business_industry_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                                <field name="credit_status_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                                <field name="business_stage_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                                <field name="business_operating_status_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                            </group>
+                            <group>
+                                <field name="full_time_employees"/>
+                                <field name="casual_employees"/>
+                                <field name="other_employees"/>
+                                <field name="growth_revenue"/>
+                                <field name="gender"/>
+                                <field name="account_manager_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+                <xpath expr="//page[@name='internal_notes']" position="before">
+                    <page string="Loans">
+                        <group>
+                            <group>
+                                <field name="application_status_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                                <field name="loan_status_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                                <field name="aec_loan_amt"/>
+                                <field name="ext_loan_amt"/>
+                            </group>
+                            <group>
+                                <field name="start_date"/>
+                                <field name="end_date"/>
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+<!--
+      Sale Form View  
+-->
+        <record model="ir.ui.view" id="sale_order_fields">
+            <field name="name">sale_order_fields</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='note']" position="after">
+                    <group>
+                        <group>
+                            <field name="service_start_date"/>
+                            <field name="service_end_date"/>
+                        </group>
+                        <group>
+                            
+                        </group>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="industry_selection_tree_view">
+            <field name="name">industry_selection_treeview</field>
+            <field name="model">business.industry</field>
+            <field name="type">tree</field> 
+            <field name="arch" type="xml">
+                <tree  editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="business_operating_status_tree_view">
+            <field name="name">business.operating.status.tree</field>
+            <field name="model">business.operating.status</field>
+            <field name="type">tree</field> 
+            <field name="arch" type="xml">
+                <tree  editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="business_stage_tree_view">
+            <field name="name">business_stage_treeview</field>
+            <field name="model">business.stage</field>
+            <field name="type">tree</field> 
+            <field name="arch" type="xml">
+                <tree  editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="credit_check_status_tree_view">
+            <field name="name">credit_check_status_treeview</field>
+            <field name="model">credit.status</field>
+            <field name="type">tree</field> 
+            <field name="arch" type="xml">
+                <tree  editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="loan_application_status_tree_view">
+            <field name="name">loan_application_status_treeview</field>
+            <field name="model">loan.application.status</field>
+            <field name="type">tree</field> 
+            <field name="arch" type="xml">
+                <tree  editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="loan_status_tree_view">
+            <field name="name">loan_status_treeview</field>
+            <field name="model">loan.status</field>
+            <field name="type">tree</field> 
+            <field name="arch" type="xml">
+                <tree  editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="source_type_tree_view">
+            <field name="name">source_type_treeview</field>
+            <field name="model">source.type</field>
+            <field name="type">tree</field> 
+            <field name="arch" type="xml">
+                <tree  editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="contact_source_tree_view">
+            <field name="name">contact_source_treeview</field>
+            <field name="model">lead.source</field>
+            <field name="type">tree</field> 
+            <field name="arch" type="xml">
+                <tree  editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <menuitem id="menu_account_config" name="User Configuration" parent="sale.menu_sale_config" sequence="1"/>
+        <menuitem id="industry_selection" name="Industry Selection" parent="menu_account_config" sequence="0" action="open_industry_selection"/>
+        <menuitem id="business_stage" name="Business Stage" parent="menu_account_config" sequence="1" action="open_business_stage"/>
+        <menuitem id="credit_check_status" name="Credit Check Status" parent="menu_account_config" sequence="2" action="open_credit_check_status"/>
+        <menuitem id="loan_application_status" name="Loan Application Status" parent="menu_account_config" sequence="5" action="open_loan_application_status"/>
+        <menuitem id="loan_status" name="Loan Status" parent="menu_account_config" sequence="6" action="open_loan_status"/>
+        <menuitem id="source_type" name="Source Type" parent="menu_account_config" sequence="7" action="open_source_type"/>
+        <menuitem id="contact_source" name="Contact Source" parent="menu_account_config" sequence="8" action="open_contact_source"/>
+        <menuitem id="business_operating_status_selection" name="Business Operating Status" parent="menu_account_config" sequence="10" action="open_business_operating_status"/>
+
+    </data>
+</openerp>

@@ -1,0 +1,52 @@
+.aec_province{
+	width: 50%!important;
+}
+
+.aec_city{
+	width: 48%!important;
+}
+
+.aec_state{
+	width: 48%!important;
+}
+
+.aec_sector{
+	width: 50%!important;
+    margin-left: 0px!important;
+}
+
+.aec_cell{
+	width: 48%!important;
+}
+
+.aec_village{
+    width: 50%!important;
+    margin-left: 7px!important;
+}
+
+.aec_plot{
+    width: 48%!important;
+    margin-right: 7px!important;
+}
+
+.aec_block
+{
+width: 50%!important;
+margin-left: 0px!important;
+}
+
+.aec_district{
+	width: 50%!important;
+}
+
+.aec_zip{
+	width: 48%!important;
+}
+
+.aec_country{
+    width: 48%!important;
+    display: block!important;
+}
+
+
+

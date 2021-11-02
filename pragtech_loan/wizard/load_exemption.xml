@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+
+        <act_window id="module_exsumetion_tax_id_action"
+            name="Exempt Tax"
+            src_model="account.loan"
+            res_model="load.exemption"
+            view_type="form" view_mode="form"
+            key2="client_action_multi" target="new"
+           />
+
+
+
+        <record id="module_Exemption_tax" model="ir.ui.view">
+            <field name="name">Exemption Tax</field>
+            <field name="model">load.exemption</field>
+            <field name="arch" type="xml">
+                <form string="load  Order">
+                    <group>
+                        <label string="This action will remove the tax collection amount from the interest and Fees on Instalment lines. Do you want to continue ?"/>
+                    </group>
+                    <footer>
+                        <button name="update_tax_loan" string="Yes" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

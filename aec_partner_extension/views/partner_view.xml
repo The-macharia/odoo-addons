@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record model="ir.ui.view" id="view_province_form">
+			<field name="name">res.country.province.form</field>
+			<field name="model">res.country.province</field>
+			<field name="arch" type="xml">
+				<form string="Province">
+					<group col="2" colspan="2">
+						<group>
+							<field name="name" />
+						</group>
+					</group>
+				</form>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="view_province_tree">
+			<field name="name">res.country.province.tree</field>
+			<field name="model">res.country.province</field>
+			<field name="arch" type="xml">
+				<tree string="Province">
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+
+		<record model="ir.actions.act_window" id="action_res_province">
+			<field name="name">Province</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">res.country.province</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+
+		<menuitem id="menu_country_province" action="action_res_province"
+			name="Province" parent="contacts.menu_localisation" sequence="4" />
+
+
+		<record model="ir.ui.view" id="view_sector_form">
+			<field name="name">res.country.sector.form</field>
+			<field name="model">res.country.sector</field>
+			<field name="arch" type="xml">
+				<form string="Sector">
+					<group col="2" colspan="4">
+						<group>
+							<field name="name" />
+						</group>
+					</group>
+				</form>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="view_sector_tree">
+			<field name="name">res.country.sector.tree</field>
+			<field name="model">res.country.sector</field>
+			<field name="arch" type="xml">
+				<tree string="Sector">
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+
+		<record model="ir.actions.act_window" id="action_res_sector">
+			<field name="name">Sector</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">res.country.sector</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+
+		<menuitem id="menu_country_sector" action="action_res_sector"
+			name="Sector" parent="contacts.menu_localisation" sequence="5" />
+
+
+		<record model="ir.ui.view" id="view_cell_form">
+			<field name="name">res.country.cell.form</field>
+			<field name="model">res.country.cell</field>
+			<field name="arch" type="xml">
+				<form string="Cell">
+					<group col="2" colspan="4">
+						<group>
+							<field name="name" />
+						</group>
+					</group>
+				</form>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="view_cell_tree">
+			<field name="name">res.country.cell.tree</field>
+			<field name="model">res.country.cell</field>
+			<field name="arch" type="xml">
+				<tree string="Cell">
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+
+		<record model="ir.actions.act_window" id="action_res_cell">
+			<field name="name">Cell</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">res.country.cell</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+		<record model="ir.ui.view" id="view_inherited_partner_form">
+			<field name="name">res.partner.form.inherited</field>
+			<field name="model">res.partner</field>
+			<field name="inherit_id" ref="base.view_partner_form" />
+			<field name="arch" type="xml">
+				
+				<xpath expr="//notebook/page[@name='sales_purchases']" position="after">
+					<page string="Training Details">
+						<group col="2" colspan="2">
+								<field name="program_type"/>
+								<field name="training_attend"/>
+								<field name="educational_id"/>
+								<field name="registration_id"/>
+								<field name="bus_gen_opr"/>
+								<field name="year_of_opr"/>
+								<field name="business_nature"/>
+								<field name="no_of_emp"/>
+								<field name="fina_book_kep"/>
+								<field name="lst_year_revenue"/>
+								<field name="camp_id"/>
+								<field name="inkomoko" string="How many years have you worked with Inkomoko?"/>
+								<field name="ft_fp_reco"/>
+								<field name="cohort_registration_year" options="{'no_create': True, 'no_open': True}" widget="many2many_tags" />
+								<field name="evalue_sample"/>
+								<br></br>
+						</group>
+						<group string="Type of Training" col="4" colspan="4">
+							<field name="intro_bcm_training"/>
+							<field name="dbc_training"/>
+							<field name="bktt_training"/>
+							<field name="cash_flow_inv_mgt"/>
+							<field name="db_in_rwanda"/>
+							<field name="cn_days"/>
+							<field name="taxation"/>
+							<field name="marketing"/>
+							<field name="finance_fr_growth"/>
+					</group>
+					<group string="Evaluation Sample">
+						<field name="baseline"/>
+						<field name="end_line"/>
+						<field name="first_folloup"/>
+						<field name="second_folloup"/>
+						<field name="third_folloup"/>
+					</group>
+					</page>
+				</xpath>
+				<field name="state_id" position="attributes">
+					<attribute name="class">o_address_state aec_state</attribute>
+				</field>
+				<field name="city" position="attributes">
+					<attribute name="class">o_address_city aec_city</attribute>
+					<attribute name="required">1</attribute>
+				</field>
+				<field name="state_id" position="before">
+					<field name="province_id" placeholder="Province" required="1" class="aec_province" />
+				</field>
+				<field name="state_id" position="after">
+					<field name="sector_id" placeholder="Sector" required="1" class="aec_sector" />
+					<field name="cell_id" placeholder="Cell" required="1" class="aec_cell" />
+					<field name="village" placeholder="Village" required="1" class="aec_village" />
+					<field name="Plot" placeholder="Plot" class="aec_plot" />
+					<field name="district"  required="1" placeholder="District" class="aec_district" />
+				</field>
+				<field name="zip" position="attributes">
+					<attribute name="class">o_address_zip aec_zip</attribute>
+				</field>
+				<field name="zip" position="after">
+					<field name="block" placeholder="Block" class="aec_block"/>
+				</field>
+
+				<field name="country_id" position="attributes">
+					<attribute name="class">o_address_country aec_country</attribute>
+					<attribute name="required">1</attribute>
+				</field>
+				<field name="phone" position="attributes">
+					<attribute name="required">1</attribute>
+				</field>
+				
+			</field>
+		</record>
+
+		<menuitem id="menu_country_cell" action="action_res_cell"
+			name="Cell" parent="contacts.menu_localisation" sequence="6" />
+	</data>
+
+	<record model="ir.ui.view" id="view_partner_form_ext_inherited">
+		<field name="name">res_partner_mainsection_fields</field>
+		<field name="model">res.partner</field>
+		<field name="inherit_id" ref="evozard_aec_customization_11c.view_partner_form_ext" />
+		<field name="arch" type="xml">
+				<xpath expr="//field[@name='district']" position="replace">
+                </xpath>
+                <xpath expr="//field[@name='business_industry_id']" position="attributes">
+                	<attribute name="required">1</attribute>
+                </xpath>
+                
+                <xpath expr="//field[@name='gender']" position="attributes">
+                	<attribute name="required">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='nationality_id']" position="attributes">
+					<attribute name="required">1</attribute>
+				</xpath>
+				<xpath expr="//field[@name='business_description']" position="attributes">
+					<attribute name="required">1</attribute>
+				</xpath>
+				
+		</field>
+	</record>
+
+	<template id="loan_assets_backend" name="account loan assets"
+		inherit_id="web.assets_backend">
+		<xpath expr="." position="inside">
+			<link rel="stylesheet"
+				href="/aec_partner_extension/static/src/css/partner_form.css" />
+		</xpath>
+	</template>
+	
+	
+	
+	<record model="ir.ui.view" id="custom_view_res_partner_filter_inherit_id">
+		<field name="name">res.partner.form.inherited</field>
+			<field name="model">res.partner</field>
+			<field name="inherit_id" ref="base.view_res_partner_filter" />
+			<field name="arch" type="xml">
+				<xpath expr="/search/group/filter[@name='group_country']" position="after">
+					<filter name="group_city" string="City" context="{'group_by': 'city'}"/>
+					<filter name="group_business_industry_id" string="Industry Sector" context="{'group_by': 'business_industry_id'}"/>
+					<filter name="group_gender" string="Gender" context="{'group_by': 'gender'}"/>
+				</xpath>
+			</field>
+	</record>
+</odoo>
+
+
+
+
+

@@ -1,0 +1,9 @@
+<odoo>
+	<data>
+	
+		<record id="can_edit_name" model="res.groups">
+			<field name="name">Can Edit Customer Name</field>
+		</record>
+
+	</data>
+</odoo>

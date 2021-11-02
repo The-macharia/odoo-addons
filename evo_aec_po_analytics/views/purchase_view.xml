@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<odoo>
+    <data>
+        <!-- Purchase Form View  -->
+        <record id="purchase_order_form_inh" model="ir.ui.view">
+            <field name="name">purchase.order.form.inh</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+
+                <!--    Hide Account Analytic & Tags field      -->
+                <xpath expr="//field[@name='order_line']/tree/field[@name='date_planned']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='order_line']/tree/field[@name='account_analytic_id']" position="after" >
+                    <field name="department_id" domain="[('category', '=', 'dept')]" options="{'no_quick_create': True, 'no_open': True}"/>
+                    <field name="activity_ids" domain="[('category', '=', 'actv')]" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                    <field name="location_ids" domain="[('category', '=', 'loct')]" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                    <field name="partner_ids" domain="[('category', '=', 'part')]" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                </xpath>
+
+            </field>
+        </record>
+        
+    </data>
+</odoo>

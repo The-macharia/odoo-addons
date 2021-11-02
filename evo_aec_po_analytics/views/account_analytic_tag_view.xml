@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<odoo>
+    <data>
+        <!-- Analytical Account Tag Form View  -->
+        <record id="account_analytic_tag_form_view_inh" model="ir.ui.view">
+            <field name="name">analytic.analytic.tag.form.inh</field>
+            <field name="model">account.analytic.tag</field>
+            <field name="inherit_id" ref="analytic.account_analytic_tag_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="category"/>
+                </xpath>
+            </field>
+        </record>
+        
+        <!-- Analytical Account Tag Tree View  -->
+        
+        <record id="account_analytic_tag_tree_view_inh" model="ir.ui.view">
+            <field name="name">analytic.analytic.tag.tree.inh</field>
+            <field name="model">account.analytic.tag</field>
+            <field name="inherit_id" ref="analytic.account_analytic_tag_tree_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="category"/>
+                </xpath>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

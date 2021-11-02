@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+	<data>
+		<record model="ir.ui.view" id="invoice_form_inherit">
+			<field name="name">account.move.form.view.inh</field>
+			<field name="model">account.move</field>
+			<field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='narration']" position="after">
+                    <group>
+                        <group>
+                            <field name="service_start_date"/>
+                            <field name="service_end_date"/>
+                        </group>
+                    </group>
+                </xpath>
+            </field>
+		</record>
+        
+    </data>
+</openerp>

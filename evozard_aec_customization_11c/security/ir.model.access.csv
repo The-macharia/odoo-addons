@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_business_industry_user,business.industry.user,evozard_aec_customization_11c.model_business_industry,,1,1,1,1
+access_business_stage_user,business.stage.user,evozard_aec_customization_11c.model_business_stage,,1,1,1,1
+access_credit_status_user,credit.status.user,evozard_aec_customization_11c.model_credit_status,,1,1,1,1
+access_loan_application_status_user,loan.application.status.user,evozard_aec_customization_11c.model_loan_application_status,,1,1,1,1
+access_loan_status_user,loan.status.user,evozard_aec_customization_11c.model_loan_status,,1,1,1,1
+access_source_type_user,source.type.user,evozard_aec_customization_11c.model_source_type,,1,1,1,1
+access_lead_source_user,lead.source.user,evozard_aec_customization_11c.model_lead_source,,1,1,1,1
+access_revenue_level_user,revenue.level.user,evozard_aec_customization_11c.model_revenue_level,,1,1,1,1
+business_operating_status_user,business.operating.status.user,evozard_aec_customization_11c.model_business_operating_status,,1,1,1,1
