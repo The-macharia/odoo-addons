@@ -20,11 +20,11 @@ final_total_interest = 0.00
 final_total_fees = 0.00
 
 
-    
+
 class account_loan_dashboard(models.Model):
     _name = 'account.loan.dashboard'
-    
-    
+
+
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
         res = super(account_loan_dashboard, self).fields_view_get(
@@ -49,8 +49,8 @@ class account_loan_dashboard(models.Model):
         final_total_interest = 0.00
         global final_total_fees
         final_total_fees = 0.00
-        return res   
-     
+        return res
+
     #@api.one
     def _get_count(self):
         '''
@@ -78,7 +78,7 @@ class account_loan_dashboard(models.Model):
                 loan_done_count = loan_done_count1[0]
             else:
                 loan_done_count = loan_done_count1[0]
-                
+
 #             loan_done_count = loan_obj.sudo().search([('state', '=', 'done'),('company_id','=',self.env.user.company_id.id)])
             self._cr.execute("select count(id) from account_loan where company_id={} and state='apply'".format(self.env.user.company_id.id))
             loan_sanctioned_count1 = self._cr.fetchone()
@@ -166,7 +166,7 @@ class account_loan_dashboard(models.Model):
         self.loan_partial_count = loan_partial_count
         self.loan_cancel_count = loan_cancel_count
         self.new_loan = new_loan
-    
+
     #@api.one
     def _get_total_amount(self):
         current_date = datetime.now()
@@ -176,7 +176,7 @@ class account_loan_dashboard(models.Model):
             loan_obj = self.env['account.loan'].sudo().search([('state', 'in', ['partial', 'approved', 'done'])])
         total = 0.00
         cur_id = None
-        
+
         for loan in loan_obj:
             cur_id = None
             if loan.journal_disburse_id:
@@ -193,8 +193,8 @@ class account_loan_dashboard(models.Model):
 #                                 total += loan.company_id.currency_id.with_context(date=current_date).compute(l1, line.journal_id.currency_id)
 #                             else:
                             total += l1
-                            
-                            
+
+
 #                 l1 = [line.credit for dis in loan.disbursement_details if dis.release_number.state == 'posted' for line in dis.release_number.line_ids]
 #                 total += sum(l1)
         if cur_id:
@@ -206,35 +206,35 @@ class account_loan_dashboard(models.Model):
             self.total_amt = formatLang(self.env, cur_id.round(total) + 0.0, currency_obj=cur_id)
         else:
             self.total_amt = 0.00
-            
+
     #@api.one
     def _kanban_dashboard_graph(self):
         self.kanban_dashboard_graph = json.dumps(self.get_bar_graph_datas())
-    
+
     #@api.one
     def _sector_graph(self):
         self.sector_graph = json.dumps(self.get_sector_datas())
-    
+
     #@api.one
     def _delinquency_graph(self):
         self.delinquency_graph = json.dumps(self.get_delinquency_datas())
-    
+
     #@api.one
     def _par_graph(self):
         self.par_graph = json.dumps(self.get_par_datas())
-        
+
     #@api.one
     def _gender_graph(self):
         self.gender_graph = json.dumps(self.get_gender_datas())
-    
+
     #@api.one
     def _out_graph(self):
         self.outstanding_graph = json.dumps(self.get_out_datas())
-        
+
     #@api.one
     def _realization_graph(self):
         self.realization_graph = json.dumps(self.get_realization_datas())
-        
+
     #@api.one
     def _get_loan_decline_amt(self):
         cur_id = None
@@ -263,7 +263,7 @@ class account_loan_dashboard(models.Model):
             self.loan_cancel_total = formatLang(self.env, cur_id.round(total) + 0.0, currency_obj=cur_id)
         else:
             self.loan_cancel_total = 0.00
-        
+
     #@api.one
     def _get_loan_partially_amt(self):
         cur_id = None
@@ -293,8 +293,8 @@ class account_loan_dashboard(models.Model):
             self.loan_partial_total = formatLang(self.env, cur_id.round(total) + 0.0, currency_obj=cur_id)
         else:
             self.loan_partial_total = 0.00
-        
-        
+
+
     #@api.one
     def _get_loan_done_amt(self):
         cur_id = None
@@ -324,9 +324,9 @@ class account_loan_dashboard(models.Model):
             self.loan_done_total = formatLang(self.env, cur_id.round(total) + 0.0, currency_obj=cur_id)
         else:
             self.loan_done_total = 0.00
-        
-        
-    #@api.one    
+
+
+    #@api.one
     def _get_loan_disbursed_amt(self):
         cur_id = None
         if not (self._uid == SUPERUSER_ID or self.env.user.has_group('base.group_system')):
@@ -355,7 +355,7 @@ class account_loan_dashboard(models.Model):
             self.loan_disbursed_total = formatLang(self.env, cur_id.round(total) + 0.0, currency_obj=cur_id)
         else:
             self.loan_disbursed_total = 0.00
-            
+
     sector_graph = fields.Text(compute='_sector_graph')
     delinquency_graph = fields.Text(compute='_delinquency_graph')
     par_graph = fields.Text(compute='_par_graph')
@@ -386,10 +386,10 @@ class account_loan_dashboard(models.Model):
     loan_done_total = fields.Char(compute='_get_loan_done_amt')
     loan_partial_total = fields.Char(compute='_get_loan_partially_amt')
     loan_cancel_total = fields.Char(compute='_get_loan_decline_amt')
-    
+
     def _graph_title_and_key(self):
         return ['', _('Loan: Disbursed Amount')]
-    
+
     #@api.multi
     def get_bar_graph_datas(self):
         '''
@@ -406,7 +406,7 @@ class account_loan_dashboard(models.Model):
 #             loan_obj = self.env['account.loan'].sudo().search([('company_id','=',self.env.user.company_id.id)])
 #         else:
 #             loan_obj = self.env['account.loan'].sudo().search([])
-#         
+#
         if not (self._uid == SUPERUSER_ID or self.env.user.has_group('base.group_system')):
             loan_obj = self.env['account.loan'].sudo().search([('state', 'in', ['partial', 'approved', 'done']),('company_id','=',self.env.user.company_id.id)])
         else:
@@ -434,16 +434,16 @@ class account_loan_dashboard(models.Model):
                     if dis.release_number.state == 'posted':
                         for line in dis.release_number.line_ids:
                             past_total += line.credit
-                    
+
         data = [{'value': past_total, 'label': 'Past'},
                 {'value': ps3, 'label': str(dt.year - 3)},
                 {'value': ps2, 'label': str(dt.year - 2)},
                 {'value': ps1, 'label': str(dt.year - 1)},
                 {'value': present, 'label': 'This Year'}]
-        
+
         [graph_title, graph_key] = self._graph_title_and_key()
         return [{'values': data, 'title': graph_title, 'key': graph_key}]
-    
+
     #@api.multi
     def get_realization_datas(self):
         '''
@@ -451,7 +451,7 @@ class account_loan_dashboard(models.Model):
             params : self
             return : a list of dictionary that needs to be dumped into JSON format
         '''
-        global realization_graph_flag 
+        global realization_graph_flag
         if realization_graph_flag == False:
             global final_total_principle, final_total_interest, final_total_fees, realization_graph_data, rel_currency
             realization_graph_flag = True
@@ -468,8 +468,8 @@ class account_loan_dashboard(models.Model):
                 loan_obj = self.env['account.loan'].sudo().search([('state', 'in', ['partial', 'approved']), ('company_id','=',self.env.user.company_id.id)])
             else:
                 loan_obj = self.env['account.loan'].sudo().search([('state', 'in', ['partial', 'approved'])])
-            cur_id = None 
-            prin_am_tot = 0.0 
+            cur_id = None
+            prin_am_tot = 0.0
             for loan in loan_obj:
                 local_total_principle = 0.0
                 local_total_interest = 0.0
@@ -483,7 +483,7 @@ class account_loan_dashboard(models.Model):
                 local_exp_pri = local_exp_int = local_exp_fees = 0
 #                 self._cr.execute("select id, outstanding_prin, outstanding_int, outstanding_fees from account_loan_installment where date >= '{}' and date <= '{}' and loan_id = '{}'".format(start_date, end_date, loan.id))
 #                 installment_ids = self._cr.fetchall()
-                
+
                 self._cr.execute("select id from payment_schedule_line where date >= '{}' and date <= '{}' and loan_id = '{}'".format(start_date, end_date, loan.id))
                 schedule_ids = self._cr.fetchall()
                 installments = [[0,0,0]]
@@ -512,17 +512,17 @@ class account_loan_dashboard(models.Model):
                     total_principle += local_exp_pri
                     total_interest += local_exp_int
                     total_fees += local_exp_fees
-                    
+
                 else:
                     total_principle += round(local_total_principle,2)
                     total_interest += round(local_total_interest,2)
                     total_fees += round(local_total_fees,2)
-                
+
                 last_currency = loan.company_id.currency_id
 #             self._cr.execute("select sum(outstanding_prin),sum(outstanding_int),sum(outstanding_fees) from account_loan_installment where id in (select account_loan_installment_id from account_loan_installment_payment_schedule_line_rel where payment_schedule_line_id in (select id from payment_schedule_line where date >=%s and date <=%s and loan_id in (select id from account_loan where state in ('partial', 'approved'))))",(start_date, end_date))
 #             aa = self._cr.fetchone()
 #             print (aa,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-                   
+
             #Set Global Variable Values
             final_total_principle = total_principle
             final_total_interest = total_interest
@@ -548,7 +548,7 @@ class account_loan_dashboard(models.Model):
                 self.total_interest = final_total_interest
                 self.total_fees = final_total_fees
             return realization_graph_data
-        
+
     #@api.multi
     def get_out_datas(self):
         '''
@@ -556,7 +556,7 @@ class account_loan_dashboard(models.Model):
             params : self
             return : a list of dictionary that needs to be dumped into JSON format
         '''
-        global out_graph_flag 
+        global out_graph_flag
         if out_graph_flag == False:
             out_graph_flag = True
             date_new = datetime.now()
@@ -576,7 +576,7 @@ class account_loan_dashboard(models.Model):
                 loan_obj = self.env['account.loan'].sudo().search([('state', 'in', ['partial', 'approved', 'done']),('approve_date','<=',datetime.strptime(today, "%Y-%m-%d")),('company_id','=',self.env.user.company_id.id)])
             else:
                 loan_obj = self.env['account.loan'].sudo().search([('state', 'in', ['partial', 'approved', 'done']),('approve_date','<=',datetime.strptime(today, "%Y-%m-%d"))])
-            cur_id = None 
+            cur_id = None
             for loan in loan_obj:
                 cur_id = None
                 tot_bal_pri = 0.0
@@ -591,23 +591,23 @@ class account_loan_dashboard(models.Model):
                 bal_lst_30_prin = 0.0
                 bal_pri1 = 0.0
                 bal_pri30day = 0.0
-                tot_prin = 0.0 
+                tot_prin = 0.0
                 tot_prin_30day = 0.0
                 arrear_day = 0
 #                 tot_ff = 0.0
-                
+
                 if loan.journal_disburse_id:
                     if loan.journal_disburse_id.currency_id:
                         cur_id = loan.journal_disburse_id.currency_id
                     else:
                         cur_id = loan.journal_disburse_id.company_id.currency_id
-                
+
                 if loan.journal_disburse_id:
                     if loan.journal_disburse_id.currency_id:
                         cur_id = loan.journal_disburse_id.currency_id
                     else:
                         cur_id = loan.journal_disburse_id.company_id.currency_id
-                        
+
                 for pay in loan.payment_schedule_ids:
                     final_date = pay.date
                     pay_flag = 0
@@ -619,14 +619,14 @@ class account_loan_dashboard(models.Model):
                 if arrear_day:
                         arrear_day = datetime.strptime(arrear_day, "%Y-%m-%d")
                         arrear_day = date_new - arrear_day
-                        arrear_day = arrear_day.days   
-                              
+                        arrear_day = arrear_day.days
+
                 for inst in loan.installment_id:
                     tot_bal_pri += inst.capital
                     tot_bal_int += inst.interest
-                    tot_bal_fees += inst.fees 
-                    tot_bal_late_fees += inst.late_fee  
-                    
+                    tot_bal_fees += inst.fees
+                    tot_bal_late_fees += inst.late_fee
+
 #                     date_inst = datetime.strptime(inst.date, "%Y-%m-%d")
                     self._cr.execute("select prin_amt, int_amt, fees_amt, late_fee_amt from payment_details where pay_date <= '{}' and line_id = {} and state != '{}'".format(current_date, inst.id, 'cancel'))
                     paid_line_ids = self._cr.fetchall()
@@ -639,7 +639,7 @@ class account_loan_dashboard(models.Model):
                             paid_fee += paid_line[2]
                         if paid_line[3] is not None:
                             paid_late_fee += paid_line[3]
-                            
+
                     schedule_line_ids = self.env['payment.schedule.line'].search([('date','<=',datetime.strptime(today, "%Y-%m-%d")),('installment_id','in', [inst.id])])
                     if schedule_line_ids:
                         l1 = [l.capital for l in schedule_line_ids.installment_id if inst.id == l.id]
@@ -653,7 +653,7 @@ class account_loan_dashboard(models.Model):
 #                                 pay_line30day = self.env['payment.details'].search([('line_id','=',l.id),('state','!=','cancel')])
 #                                 l2_30day = [pline.prin_amt for pline in pay_line30day if pline.pay_date if datetime.strptime(pline.pay_date, "%Y-%m-%d").date() <= datetime.strptime(today, "%Y-%m-%d").date()]
 #                                 bal_pri30day += sum(l2_30day)
-                    ##exactly calculated by installment linesssssssssssssss..............        
+                    ##exactly calculated by installment linesssssssssssssss..............
 #                     if inst.date and datetime.strptime(inst.date, "%Y-%m-%d") >= previous_date and datetime.strptime(inst.date, "%Y-%m-%d") <= current_date:
 #                         tot_prin_30day += inst.capital
 #                         self._cr.execute("select prin_amt from payment_details where pay_date >= '{}' and pay_date <= '{}'and line_id = {} and state != '{}'".format(previous_date, current_date, inst.id, 'cancel'))
@@ -661,7 +661,7 @@ class account_loan_dashboard(models.Model):
 #                         for paid_line in paid_lines:
 #                             if paid_line[0] is not None:
 #                                 bal_pri30day += paid_line[0]
-                                
+
                     if inst.date and datetime.strptime(inst.date, "%Y-%m-%d").date() <= datetime.strptime(today, "%Y-%m-%d").date():
                         pay_line = self.env['payment.details'].search([('line_id','=',inst.id),('state','!=','cancel')])
                         if pay_line:
@@ -678,7 +678,7 @@ class account_loan_dashboard(models.Model):
 #                         if pay_line:
 #                             ld2 = [pline.prin_amt for pline in pay_line if pline.pay_date if datetime.strptime(pline.pay_date, "%Y-%m-%d") >= previous_date and datetime.strptime(pline.pay_date, "%Y-%m-%d") <= current_date]
 #                             bal_pri30day += sum(ld2)
-                        
+
 #                     if inst.date and  datetime.strptime(inst.date, "%Y-%m-%d") <= datetime.strptime(today, "%Y-%m-%d") and inst.state != 'paid':  # == 'draft'
 #                                 '''Get Amount Past Due'''
 #                                 schedule_line = self.env['payment.schedule.line'].search([('date','<=',datetime.strptime(today, "%Y-%m-%d")),('installment_id','in', [inst.id])])
@@ -693,24 +693,24 @@ class account_loan_dashboard(models.Model):
                 int_to_bal = paid_interest
                 paid_fee_to_bal = paid_fee
                 paid_late_fee_bal = paid_late_fee
-                  
+
                 current_date = datetime.strptime(today, "%Y-%m-%d")
-                self._cr.execute("select waived_off, is_carry_forward, amount from waived_entries where is_cancel = {} and loan_id = {} and date <= '{}'".format(False, loan.id, current_date))
-                waived_line_ids = self._cr.fetchall()
-                for waived_line in waived_line_ids:
-                    if (waived_line[0] is not None) and (waived_line[1] is not None): 
-                        if waived_line[0] == 'Interest' and (not waived_line[1]):
-                            int_to_bal += waived_line[2]
-                        if waived_line[0] == 'Fees' and (not waived_line[1]):
-                            paid_fee_to_bal += waived_line[2]
-                        if waived_line[0] == 'Late Fees' and (not waived_line[1]):
-                            paid_late_fee_bal += waived_line[2]
-                
+                # self._cr.execute("select waived_off, is_carry_forward, amount from waived_entries where is_cancel = {} and loan_id = {} and date <= '{}'".format(False, loan.id, current_date))
+                # waived_line_ids = self._cr.fetchall()
+                # for waived_line in waived_line_ids:
+                #     if (waived_line[0] is not None) and (waived_line[1] is not None):
+                #         if waived_line[0] == 'Interest' and (not waived_line[1]):
+                #             int_to_bal += waived_line[2]
+                #         if waived_line[0] == 'Fees' and (not waived_line[1]):
+                #             paid_fee_to_bal += waived_line[2]
+                #         if waived_line[0] == 'Late Fees' and (not waived_line[1]):
+                #             paid_late_fee_bal += waived_line[2]
+
                 if tot_prin > bal_pri1:
                     bal_due_prin = round(tot_prin - bal_pri1,2)
                 if tot_prin_30day > bal_pri30day:
                     bal_lst_30_prin = round(tot_prin_30day - bal_pri30day, 2)
-                
+
                 bal_pri = round(tot_bal_pri - paid_capital, 2)
                 bal_int = round(tot_bal_int - int_to_bal, 2)
                 bal_fees = round(tot_bal_fees - paid_fee_to_bal, 2)
@@ -744,7 +744,7 @@ class account_loan_dashboard(models.Model):
                     {'value': late_fees, 'label': 'Late Fees'},
 #                     {'value': due_prin, 'label': 'Due Prin'}
                     ]
-            
+
             out_graph_data = [{'values': data, 'due_prin':due_prin, 'par_30':par30, 'title': '', 'key': _('Outstanding Amount')}]
             return out_graph_data
         else:
@@ -753,7 +753,7 @@ class account_loan_dashboard(models.Model):
             else:
                 self.total_out_amt = total_outstanding_amt
             return out_graph_data
-    
+
 #     #@api.multi
 #     def get_out_datas(self):
 #         '''
@@ -788,14 +788,14 @@ class account_loan_dashboard(models.Model):
 #                     intr += ins.outstanding_int
 #                     fees += ins.outstanding_fees
 #                     late_fees += ins.late_fee
-#                   
+#
 #         data = [{'value': pri, 'label': 'Principle'},
 #                 {'value': intr, 'label': 'Interest'},
 #                 {'value': fees, 'label': 'Fees'},
 #                 {'value': late_fees, 'label': 'Late Fees'}
 #                 ]
 #         return [{'values': data, 'title': '', 'key': _('Outstanding Amount')}]
-    
+
     #@api.multi
     def get_sector_datas(self):
         '''
@@ -813,10 +813,10 @@ class account_loan_dashboard(models.Model):
             loan_obj = self.env['account.loan'].sudo().search([('state', 'in', ['partial', 'approved', 'done']),('company_id','=',self.env.user.company_id.id)])
         else:
             loan_obj = self.env['account.loan'].sudo().search([('state', 'in', ['partial', 'approved', 'done'])])
-        
+
         for loan in loan_obj:
             dis_tot = 0.00
-                    
+
             if loan.disbursement_details:
                 for dis in loan.disbursement_details:
                     if dis.release_number.state == 'posted':
@@ -835,7 +835,7 @@ class account_loan_dashboard(models.Model):
                     sec_dict.update({loan.partner_id.business_industry_id.name : dis_tot})
             else:
                 rest_dict['Undefined'] += dis_tot
-            
+
             so = sorted(sec_dict.items(), key=lambda kv: kv[1])
             if len(so) > 0:
                 t1 = so[-1]
@@ -843,20 +843,20 @@ class account_loan_dashboard(models.Model):
                 t2 = so[-2]
             if len(so) > 2:
                 t3 = so[-3]
-            
+
             data = [{'value':t1[1], 'label':t1[0]},
                     {'value':t2[1], 'label':t2[0]},
                     {'value':t3[1], 'label':t3[0]}]
         if len(so) > 3:
             for item in so[:-3]:
                 rest_dict['Rest'] += item[1]
-        
+
         data.append({'value':rest_dict['Rest'], 'label':'Rest'})
         data.append({'value':rest_dict['Undefined'], 'label':'Undefined'})
-        
+
         [graph_title, graph_key] = self._graph_title_and_key()
         return [{'values': data, 'title': graph_title, 'key': graph_key}]
-        
+
     def get_amount_dict(self):
         '''
             This method is used to get disbursed amount and principal amount
@@ -878,9 +878,9 @@ class account_loan_dashboard(models.Model):
                         pri += ins.due_principal
                     disb += ins.outstanding_prin
         return {'disbursed':disb,'principal':pri}
-    
+
     def get_gender_dict(self):
-        
+
         if not (self._uid == SUPERUSER_ID or self.env.user.has_group('base.group_system')):
             loan_obj = self.env['account.loan'].sudo().search([('state','not in',['cancel']),('company_id','=',self.env.user.company_id.id)])
         else:
@@ -897,14 +897,14 @@ class account_loan_dashboard(models.Model):
                 if loan.partner_id.gender == 'female':
                     f_l += 1.00
                     if appr_year == year:
-                        this_year +=1 
+                        this_year +=1
                     else:
                         hst_year += 1
 #             else:
 #                 all_l += 1.00
         return {'cur':this_year,'his':hst_year, 'all_loan': all_l, 'female_loan':f_l}
-    
-    
+
+
     #@api.multi
     def get_delinquency_datas(self):
         '''
@@ -922,18 +922,18 @@ class account_loan_dashboard(models.Model):
 #                 if data_line['label'] == 'Due Prin':
 #                     due_due = data_line['value']
             due_due = amount[0]['due_prin']
-        
+
         try:
             self.delinquency_percent = round((due_due / out_prin ) * 100, 2)
         except ZeroDivisionError:
             self.delinquency_percent = 0.0
-                
+
         data = [{'value': due_due, 'label': 'Total Principal Due'},
                 {'value': out_prin, 'label':'Total Principal Outstanding'}
                 ]
         return [{'values': data, 'title': '', 'key': _('Principal Amount')}]
-    
-    
+
+
     #@api.multi
     def get_par_datas(self):
         '''
@@ -951,37 +951,37 @@ class account_loan_dashboard(models.Model):
 #                 if data_line['label'] == 'Due Prin':
 #                     due_due = data_line['value']
             due_due = amount[0]['par_30']
-        
+
         try:
             self.par_percent = round((due_due / out_prin ) * 100, 2)
         except ZeroDivisionError:
             self.par_percent = 0.0
-                
+
         data = [{'value': due_due, 'label': 'Total Principal Due'},
                 {'value': out_prin, 'label':'Total Principal Outstanding'}
                 ]
         return [{'values': data, 'title': '', 'key': _('Principal Amount')}]
-    
-    
+
+
     #@api.multi
     def get_gender_datas(self):
         '''
-            Called from Compute method to calculate data for gender(women) 
+            Called from Compute method to calculate data for gender(women)
             params : self
             return : a list of dictionary that needs to be dumped into JSON format
         '''
         amount = self.get_gender_dict()
-        
+
         data = [
                 {'value': amount['his'], 'label':'Past Years'},
                 {'value': amount['cur'], 'label': 'Current Year'}
                 ]
         return [{'values': data, 'title': '', 'key': _('Women owners')}]
-    
+
     #@api.multi
     def _get_gender_percent(self):
         '''
-            a compute method that calculates the gender percentage and assigns 
+            a compute method that calculates the gender percentage and assigns
             to delinquency_percent
             params : self
         '''
