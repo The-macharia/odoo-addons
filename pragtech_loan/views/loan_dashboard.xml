@@ -4,19 +4,29 @@
 		<field name="name">account.loan.dashboard.view</field>
 		<field name="model">account.loan.dashboard</field>
 		<field name="arch" type="xml">
-			<kanban
-				class="oe_background_grey o_kanban_dashboard o_salesteam_kanban o_project_kanban "
-				create="0">
+			<kanban class="oe_background_grey o_kanban_dashboard o_salesteam_kanban o_project_kanban " create="0">
 				<field name="color" />
 				<field name="name" />
 				<templates>
 					<t t-name="kanban-box">
 						<div t-attf-class="#{kanban_color(record.color.raw_value)}">
 							<t t-value="record.name.raw_value" t-set="val" />
-							<div class="o_project_kanban_manage">
-								<a class="o_kanban_manage_toggle_button" href="#">
-									<i class="fa fa-ellipsis-v" />
+							<!-- <div class="o_project_kanban_manage"> <a class="o_kanban_manage_toggle_button" href="#"> <i class="fa fa-ellipsis-v" /> </a> </div> -->
+							<div class="o_dropdown_kanban dropdown">
+								<a class="dropdown-toggle o-no-caret btn" role="button" data-toggle="dropdown" data-display="static" href="#" aria-label="Dropdown menu" title="Dropdown menu">
+									<span class="fa fa-ellipsis-v" />
 								</a>
+								<div class="dropdown-menu" role="menu">
+									<t t-if="widget.editable">
+										<a role="menuitem" type="edit" class="dropdown-item">Edit</a>
+									</t>
+									<t t-if="widget.deletable">
+										<a role="menuitem" type="delete" class="dropdown-item">Delete</a>
+									</t>
+									<div role="separator" class="dropdown-divider" />
+									<div role="separator" class="dropdown-header">Colour</div>
+									<ul class="oe_kanban_colorpicker" data-field="color" />
+								</div>
 							</div>
 							<div class="container o_kanban_card_content">
 								<div class="row">
@@ -24,115 +34,105 @@
 									<t t-if="(val == 'Loan Disbursement Details')" t-call="AccountLoanGraph" />
 									<t t-if="(val == 'Sector Details')" t-call="SectorGraph" />
 									<t t-if="(val == 'Outstanding Details')" t-call="OutstandingDetails" />
-									<t t-if="(val == 'Delinquency Rate')" t-call="DelinquencyRate"/>
-									<t t-if="(val == 'Gender of owner')" t-call="Gender"/>
-									<t t-if="(val == 'Realization')" t-call="Realization"/>
-									<t t-if="(val == 'PAR30')" t-call="PAR30"/>
+									<t t-if="(val == 'Delinquency Rate')" t-call="DelinquencyRate" />
+									<t t-if="(val == 'Gender of owner')" t-call="Gender" />
+									<t t-if="(val == 'Realization')" t-call="Realization" />
+									<t t-if="(val == 'PAR30')" t-call="PAR30" />
 								</div>
 							</div>
-							<div class="container o_kanban_card_manage_pane">
-								<div t-if="widget.editable" class="o_project_kanban_colorpicker">
-									<ul class="oe_kanban_colorpicker" data-field="color" />
-									
-								</div>
-							</div>
+							<!-- <div class="container o_kanban_card_manage_pane"> <div t-if="widget.editable" class="o_project_kanban_colorpicker"> <ul class="oe_kanban_colorpicker" data-field="color" /> </div> </div> -->
 						</div>
 					</t>
-					
+
 					<t t-name="DelinquencyRate">
 						<div t-attf-class="o_kanban_card_header">
 							<div class="o_kanban_card_header_title">
 								<div class="o_primary">
 									<h3>Delinquency Rate</h3>
 								</div>
-								<div class="o_secondary">
-								</div>
+								<div class="o_secondary"></div>
 							</div>
 						</div>
 						<div class="row" style="margin-bottom: 6%;">
 							<div class="col-xs-6 o_kanban_primary_left"></div>
 							<div class="col-xs-6 o_kanban_primary_right text-right">
-								<h1><strong>
-									<field name="delinquency_percent" /> <span>%</span>
-								</strong></h1>
+								<h1>
+									<strong>
+										<field name="delinquency_percent" />
+										<span>%</span>
+									</strong>
+								</h1>
 							</div>
 						</div>
 						<div style="margin-bottom: -3%;margin-top: 9%;">
-							<field name="delinquency_graph" t-att-graph_type="'bar'"
-								widget="dashboard_graph" />
+							<field name="delinquency_graph" t-att-graph_type="'bar'" widget="dashboard_graph" />
 						</div>
 					</t>
-					
+
 					<t t-name="Gender">
 						<div t-attf-class="o_kanban_card_header">
 							<div class="o_kanban_card_header_title">
 								<div class="o_primary">
 									<h3>Gender of owner</h3>
 								</div>
-								<div class="o_secondary">
-								</div>
+								<div class="o_secondary"></div>
 							</div>
 						</div>
 						<div class="row" style="margin-bottom: 6%;">
 							<div class="col-xs-6 o_kanban_primary_left"></div>
 							<div class="col-xs-6 o_kanban_primary_right text-right">
-								<h1><strong>
-									<field name="gender_percent" /> <span>%</span>
-								</strong></h1>
+								<h1>
+									<strong>
+										<field name="gender_percent" />
+										<span>%</span>
+									</strong>
+								</h1>
 							</div>
 						</div>
 						<div style="margin-bottom: -3%;margin-top: 9%;">
-							<field name="gender_graph" t-att-graph_type="'bar'"
-								widget="dashboard_graph" />
+							<field name="gender_graph" t-att-graph_type="'bar'" widget="dashboard_graph" />
 						</div>
 					</t>
 					<t t-name="OutstandingDetails">
 						<div t-attf-class="o_kanban_card_header">
 							<div class="o_kanban_card_header_title">
 								<div class="o_primary">
-									<h2>Outstanding Details </h2>
+									<h2>Outstanding Details</h2>
 								</div>
-								<div class="o_secondary">
-								</div>
+								<div class="o_secondary"></div>
 							</div>
 						</div>
 						<div class="row" style="margin-bottom: 6%;">
 							<div class="col-xs-6 o_kanban_primary_left"></div>
 							<div class="col-xs-6 o_kanban_primary_right text-right">
-								<span>Total Outstanding Amount :
-								</span>
+								<span>Total Outstanding Amount :</span>
 								<field name="total_out_amt" />
 							</div>
 						</div>
 						<div style="margin-bottom: -3%;margin-top: 9%;">
-							<field name="outstanding_graph" t-att-graph_type="'bar'"
-								widget="dashboard_graph" />
+							<field name="outstanding_graph" t-att-graph_type="'bar'" widget="dashboard_graph" />
 						</div>
-					 </t>
-					
-					
+					</t>
+
+
 					<t t-name="SectorGraph">
 						<div t-attf-class="o_kanban_card_header">
 							<div class="o_kanban_card_header_title">
 								<div class="o_primary">
-									<h3>Sector Details </h3>
+									<h3>Sector Details</h3>
 								</div>
-								<div class="o_secondary">
-								</div>
+								<div class="o_secondary"></div>
 							</div>
 						</div>
 						<div class="row" style="margin-bottom: 6%;">
 							<div class="col-xs-6 o_kanban_primary_left"></div>
 							<div class="col-xs-6 o_kanban_primary_right text-right">
-								<span>Total Disbursed
-									Amount :
-								</span>
+								<span>Total Disbursed Amount :</span>
 								<field name="total_amt" />
 							</div>
 						</div>
 						<div style="margin-bottom: -3%;margin-top: 9%;">
-							<field name="sector_graph" t-att-graph_type="'bar'"
-								widget="dashboard_graph" />
+							<field name="sector_graph" t-att-graph_type="'bar'" widget="dashboard_graph" />
 						</div>
 					</t>
 
@@ -145,8 +145,7 @@
 							</div>
 						</div>
 						<div class="col-xs-5 o_kanban_primary_left">
-							<button style="margin-bottom: 10px;" type="action" name="%(pragtech_loan.action_new_loan_details)d"
-								context="{}" class="btn btn-primary btn-sm">
+							<button style="margin-bottom: 10px;" type="action" name="%(pragtech_loan.action_new_loan_details)d" context="{}" class="btn btn-primary btn-sm">
 								<span>New Loan Application</span>
 							</button>
 						</div>
@@ -159,49 +158,42 @@
 						<div t-attf-class="o_kanban_card_header">
 							<div class="o_kanban_card_header_title">
 								<div class="o_primary">
-									<h3>Loan Disbursement Details </h3>
+									<h3>Loan Disbursement Details</h3>
 								</div>
 								<div class="o_secondary">
-									<!-- <span>Total Disbursed Amount : </span> <field name="total_amt" 
-										/> -->
+									<!-- <span>Total Disbursed Amount : </span> <field name="total_amt" /> -->
 								</div>
 							</div>
 						</div>
 						<div class="row" style="margin-bottom: 6%;">
 							<div class="col-xs-6 o_kanban_primary_left"></div>
 							<div class="col-xs-6 o_kanban_primary_right text-right">
-								<span>Total Disbursed
-									Amount :
-								</span>
+								<span>Total Disbursed Amount :</span>
 								<field name="total_amt" />
 							</div>
 						</div>
-						<!-- <div class="col-xs-6 o_kanban_primary_left"> <span>Total Disbursed 
-							Amount : </span> <field name="total_amt" /> </div> -->
+						<!-- <div class="col-xs-6 o_kanban_primary_left"> <span>Total Disbursed Amount : </span> <field name="total_amt" /> </div> -->
 						<div style="margin-bottom: -3%;margin-top: 9%;">
-							<field name="kanban_dashboard_graph" t-att-graph_type="'bar'"
-								widget="dashboard_graph" />
+							<field name="kanban_dashboard_graph" t-att-graph_type="'bar'" widget="dashboard_graph" />
 						</div>
 					</t>
 
 					<t t-name="LoandetailsRight">
-						<div style="display:block;" >
+						<div style="display:block;">
 							<a name="%(pragtech_loan.action_account_loan_tree_small)d" type="action">
 								<span class="o_value pull-right" style="width: 190px; text-align:right;">
-									 <field name="total_amt" />
+									<field name="total_amt" />
 									<!-- 12345678900.00 RWF -->
 								</span>
 								<span class="o_value pull-right" style="width: 29px;">
 									<field name="loan_count" />
 								</span>
 								<span class="o_label" style="overflow:visible !important">Total Loans</span>
-								
+
 							</a>
 							<br />
 							<a name="%(pragtech_loan.action_draft_state_loan)d" type="action">
-								<span class="o_value pull-right" style="width: 190px; text-align:right;">
-									0.00 
-								</span>
+								<span class="o_value pull-right" style="width: 190px; text-align:right;">0.00</span>
 								<span class="o_value pull-right" style="width: 29px;">
 									<field name="new_loan" />
 								</span>
@@ -211,9 +203,7 @@
 
 
 							<a name="%(pragtech_loan.action_apply_state_loan)d" type="action">
-								<span class="o_value pull-right" style="width: 190px; text-align:right;">
-									0.00 
-								</span>
+								<span class="o_value pull-right" style="width: 190px; text-align:right;">0.00</span>
 								<span class="o_value pull-right" style="width: 29px;">
 									<field name="loan_sanctioned_count" />
 								</span>
@@ -228,8 +218,7 @@
 								<span class="o_value pull-right" style="width: 29px;">
 									<field name="loan_partial_count" />
 								</span>
-								<span class="o_label" style="overflow:visible !important">Partially Disbursed Loans
-								</span>
+								<span class="o_label" style="overflow:visible !important">Partially Disbursed Loans</span>
 							</a>
 							<br />
 
@@ -272,53 +261,61 @@
 								<div class="o_primary">
 									<h2>Next 1 Month Realization</h2>
 								</div>
-								<div class="o_secondary">
-								</div>
+								<div class="o_secondary"></div>
 							</div>
 						</div>
 						<div class="row" style="margin-bottom: 6%;">
 							<div class="col-xs-6 o_kanban_primary_left"></div>
 							<div class="col-xs-6 o_kanban_primary_right text-right">
 								<table width="100%">
-				                	<tr>
-				                		<th>Principle</th><td><field name="total_principle" /></td>
-				                	</tr>
-				                	<tr>
-				                		<th>Interest</th><td><field name="total_interest" /></td>
-				                	</tr>
-				                	<tr>
-				                		<th>Fees</th><td><field name="total_fees" /></td>
-				                	</tr>
-			                	</table>
+									<tr>
+										<th>Principle</th>
+										<td>
+											<field name="total_principle" />
+										</td>
+									</tr>
+									<tr>
+										<th>Interest</th>
+										<td>
+											<field name="total_interest" />
+										</td>
+									</tr>
+									<tr>
+										<th>Fees</th>
+										<td>
+											<field name="total_fees" />
+										</td>
+									</tr>
+								</table>
 							</div>
 						</div>
 						<div style="margin-bottom: -3%;margin-top: 9%;">
-							<field name="realization_graph" t-att-graph_type="'bar'"
-								widget="dashboard_graph" />
+							<field name="realization_graph" t-att-graph_type="'bar'" widget="dashboard_graph" />
 						</div>
 					</t>
-					
+
 					<t t-name="PAR30">
 						<div t-attf-class="o_kanban_card_header">
 							<div class="o_kanban_card_header_title">
 								<div class="o_primary">
 									<h3>PAR30</h3>
 								</div>
-								<div class="o_secondary">
-								</div>
+								<div class="o_secondary"></div>
 							</div>
 						</div>
 						<div class="row" style="margin-bottom: 6%;">
 							<div class="col-xs-6 o_kanban_primary_left"></div>
 							<div class="col-xs-6 o_kanban_primary_right text-right">
-								<h1><strong>
-									<field name="par_percent" /> <span>%</span>
-								</strong></h1>
+								<h1>
+									<strong>
+										<field name="par_percent" />
+										<span>%</span>
+									</strong>
+								</h1>
 							</div>
 						</div>
 						<div style="margin-bottom: -3%;margin-top: 9%;">
-							<field name="par_graph" t-att-graph_type="'bar'"
-								widget="dashboard_graph" />
+							<field name="par_graph" t-att-graph_type="'bar'" widget="dashboard_graph" />
 						</div>
 					</t>
 				</templates>
@@ -329,20 +326,15 @@
 	<record id="open_account_loan_dashboard_kanban" model="ir.actions.act_window">
 		<field name="name">Loan Dashboard</field>
 		<field name="res_model">account.loan.dashboard</field>
-		<!--<field name="view_type">form</field>-->
 		<field name="view_mode">kanban,form</field>
 		<field name="view_id" ref="account_loan_dashboard_kanban_view" />
 		<field name="usage">menu</field>
 		<field name="context">{}</field>
 		<field name="help" type="html">
-			<p>
-				This is the Loan dashboard.
-			</p>
+			<p>Welcome To Your Loan Dashboard.</p>
 		</field>
 	</record>
 
 
-	<menuitem id="menu_loan_dash_board" name="Dashboard"
-		action="open_account_loan_dashboard_kanban" parent="main_root_loan"
-		sequence="1" />
+	<menuitem id="menu_loan_dash_board" name="Dashboard" action="open_account_loan_dashboard_kanban" parent="main_root_loan" sequence="1" />
 </odoo>

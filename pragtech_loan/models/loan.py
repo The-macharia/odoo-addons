@@ -9,16 +9,19 @@ from odoo.exceptions import UserError, ValidationError, Warning
 from odoo.tools.safe_eval import safe_eval
 from dateutil.relativedelta import relativedelta
 
+
 class LoanCustomer(models.Model):
     _name = 'res.partner'
     _inherit = 'res.partner'
     incom = fields.Float('Monthly Incom', digits=(12, 2))
-    is_group = fields.Boolean(string='Is Group',store=True)
+    is_group = fields.Boolean(string='Is Group', store=True)
+
 
 class LoanPartnerBank(models.Model):
     _name = 'res.partner.bank'
     _inherit = 'res.partner.bank'
     account_id = fields.Many2one('account.account', 'Account')
+
 
 class PartnerLine(models.Model):
     _name = 'res.partner.loan.line'
@@ -28,47 +31,48 @@ class PartnerLine(models.Model):
     principal = fields.Float('Principal', digits=(12, 2),)
     interest = fields.Float('Interest', digits=(12, 2),)
 
+
 class CollateralType(models.Model):
     _name = 'collateral.type'
 
     name = fields.Char('Collateral Type')
 
+
 class CollateralLine(models.Model):
     _name = 'collateral.line'
 
     loan_id = fields.Many2one('account.loan')
-    type_id = fields.Many2one('collateral.type','Collateral Type')
+    type_id = fields.Many2one('collateral.type', 'Collateral Type')
     value = fields.Float('Collateral Value')
     last_date = fields.Date('Collateral Last Valuation Date')
     expiry_date = fields.Date('Collateral Expiry Date')
     is_registered = fields.Boolean('Is Registered with RBD')
 
+
 class AccountLoan(models.Model):
 
-    #@api.multi
+    # @api.multi
     def _loan_period_get(self):
         obj = self.env['loan.installment.period']
         ids = obj.search([('name', 'ilike', '')])
         res = obj.read(['name', 'period'])
         return [(r['name'], r['name']) for r in res]
 
-    #@api.multi
+    # @api.multi
     def _loan_type_get(self):
         obj = self.env['account.loan.loantype']
         ids = obj.search([('name', 'ilike', '')])
         res = obj.read(['name', 'calculation'])
         return [(r['name'], r['name']) for r in res]
 
-    #@api.multi
+    # @api.multi
     def reset_values(self):
         self.write({
-                      'emi_cal':0.0,'tot_amt':0,'flat_pa':0.0,\
-                      'flat_pm':0.0,'tot_int_amt':0.0,'yr_int_amt':0.0,\
-                      'flat_emi_cal':0.0,'flat_tot_amt':0.0,'flat_tot_int_amt':0.0,\
-                      'flat_yr_int_amt':0.0
-            })
-
-
+            'emi_cal': 0.0, 'tot_amt': 0, 'flat_pa': 0.0,
+            'flat_pm': 0.0, 'tot_int_amt': 0.0, 'yr_int_amt': 0.0,
+            'flat_emi_cal': 0.0, 'flat_tot_amt': 0.0, 'flat_tot_int_amt': 0.0,
+            'flat_yr_int_amt': 0.0
+        })
 
     def get_reducing(self, amt, mth, intr):
         try:
@@ -82,22 +86,19 @@ class AccountLoan(models.Model):
             yr_amt = (tot_int_amt * k) / mth
             flat_pa = (yr_amt * 100) / amt
             flat_pm = flat_pa / k
-            self.write({'emi_cal':emi, 'tot_amt':tot_amt,\
-                        'flat_pa':flat_pa, 'flat_pm':flat_pm,\
-                        'tot_int_amt':tot_int_amt, 'yr_int_amt':yr_amt})
+            self.write({'emi_cal': emi, 'tot_amt': tot_amt,
+                        'flat_pa': flat_pa, 'flat_pm': flat_pm,
+                        'tot_int_amt': tot_int_amt, 'yr_int_amt': yr_amt})
         except ZeroDivisionError:
             flat_pm = 0
-
 
     def convert_month_to_year(self, mth):
         if mth:
             return mth / 12
 
-
-
     def get_flat(self, amt, mth, intr):
-        print ("calcuation for flat loan")
-        year  = self.convert_month_to_year(mth)
+        print("calcuation for flat loan")
+        year = self.convert_month_to_year(mth)
 
         interest_amount = (amt * intr) / 100
         if year:
@@ -105,13 +106,13 @@ class AccountLoan(models.Model):
             moth_int = (amt / mth) + (total_interest / mth)
             total_amt_with_int = amt + total_interest
             year_int = total_interest / year
-            self.write({'flat_tot_int_amt':total_interest,\
-                        'flat_emi_cal':moth_int,'flat_tot_amt':total_amt_with_int,\
-                        'flat_yr_int_amt':year_int,
+            self.write({'flat_tot_int_amt': total_interest,
+                        'flat_emi_cal': moth_int, 'flat_tot_amt': total_amt_with_int,
+                        'flat_yr_int_amt': year_int,
                         })
 
+    # @api.multi
 
-    #@api.multi
     def cal_amt(self):
         read_obj = self.read()
         for read_id in read_obj:
@@ -121,12 +122,13 @@ class AccountLoan(models.Model):
             self.get_reducing(amt, mth, intr)
             self.get_flat(amt, mth, intr)
 
+    # @api.multi
 
-    #@api.multi
     def re_set(self, vals):
-        self.write({'loan_amt':0.00, 'month':0, 'int_rate':0.00, 'emi_cal':0.00, 'tot_amt':0.00, 'flat_pa':0.00, 'flat_pm':0.00, 'tot_int_amt':0.00, 'yr_int_amt':0.00})
+        self.write({'loan_amt': 0.00, 'month': 0, 'int_rate': 0.00, 'emi_cal': 0.00, 'tot_amt': 0.00,
+                    'flat_pa': 0.00, 'flat_pm': 0.00, 'tot_int_amt': 0.00, 'yr_int_amt': 0.00})
 
-    #@api.one
+    # @api.one
     @api.depends('apply_date', 'total_installment', 'loan_amount', 'loan_type')
     def compute_loan_interest(self):
         res = {}
@@ -137,65 +139,66 @@ class AccountLoan(models.Model):
             rate = 0.0
 
             for int_version in loan.loan_type.interestversion_ids:
-                if int_version.start_date and int_version.end_date:
-                    if loan.apply_date >= int_version.start_date and loan.apply_date <= int_version.end_date:
-                        date_check = 1
-                    else:
-                        date_check = 0
-                elif int_version.start_date:
-
-                    if loan.apply_date >= int_version.start_date:
-                        date_check = 1
-                    else:
-                        date_check = 0
-                elif int_version.end_date:
-
-                    if loan.apply_date <= int_version.end_date:
-                        date_check = 1
-                    else:
-                        date_check = 0
-                else:
-                    date_check = 1
-                if date_check:
-                    for int_version_line in int_version.interestversionline_ids:
-                        if int_version_line.min_month and int_version_line.max_month:
-
-                            if loan.total_installment >= int_version_line.min_month and loan.total_installment <= int_version_line.max_month:
-                                month_check = 1
-                            else:
-                                month_check = 0
-                        elif int_version_line.min_month:
-
-                            if loan.total_installment >= int_version_line.min_month:
-                                month_check = 1
-                            else:
-                                month_check = 0
-                        elif int_version_line.max_month:
-
-                            if loan.total_installment <= int_version_line.max_month:
-                                month_check = 1
-                            else:
-                                month_check = 0
+                if loan.apply_date:
+                    if int_version.start_date and int_version.end_date:
+                        if loan.apply_date >= int_version.start_date and loan.apply_date <= int_version.end_date:
+                            date_check = 1
                         else:
-                            month_check = 1
-                        if month_check:
-                            if int_version_line.min_amount and int_version_line.max_amount:
-                                if loan.loan_amount >= int_version_line.min_amount and loan.loan_amount <= int_version_line.max_amount:
-                                    rate = int_version_line.rate
-                                    break
-                            elif int_version_line.min_amount:
+                            date_check = 0
+                    elif int_version.start_date:
 
-                                if loan.loan_amount >= int_version_line.min_amount:
-                                    rate = int_version_line.rate
-                                    break
-                            elif int_version_line.max_amount:
+                        if loan.apply_date >= int_version.start_date:
+                            date_check = 1
+                        else:
+                            date_check = 0
+                    elif int_version.end_date:
 
-                                if loan.loan_amount <= int_version_line.max_amount:
-                                    rate = int_version_line.rate
-                                    break
+                        if loan.apply_date <= int_version.end_date:
+                            date_check = 1
+                        else:
+                            date_check = 0
+                    else:
+                        date_check = 1
+                    if date_check:
+                        for int_version_line in int_version.interestversionline_ids:
+                            if int_version_line.min_month and int_version_line.max_month:
+
+                                if loan.total_installment >= int_version_line.min_month and loan.total_installment <= int_version_line.max_month:
+                                    month_check = 1
+                                else:
+                                    month_check = 0
+                            elif int_version_line.min_month:
+
+                                if loan.total_installment >= int_version_line.min_month:
+                                    month_check = 1
+                                else:
+                                    month_check = 0
+                            elif int_version_line.max_month:
+
+                                if loan.total_installment <= int_version_line.max_month:
+                                    month_check = 1
+                                else:
+                                    month_check = 0
                             else:
-                                rate = int_version_line.rate
-                                break
+                                month_check = 1
+                            if month_check:
+                                if int_version_line.min_amount and int_version_line.max_amount:
+                                    if loan.loan_amount >= int_version_line.min_amount and loan.loan_amount <= int_version_line.max_amount:
+                                        rate = int_version_line.rate
+                                        break
+                                elif int_version_line.min_amount:
+
+                                    if loan.loan_amount >= int_version_line.min_amount:
+                                        rate = int_version_line.rate
+                                        break
+                                elif int_version_line.max_amount:
+
+                                    if loan.loan_amount <= int_version_line.max_amount:
+                                        rate = int_version_line.rate
+                                        break
+                                else:
+                                    rate = int_version_line.rate
+                                    break
 
                 date_check = 0
                 month_check = 0
@@ -217,10 +220,11 @@ class AccountLoan(models.Model):
 #                             rate = int_version_line.rate
 #             res[loan.id]['interest_rate'] = rate
 #         return res
-    #@api.one
-    @api.depends('total_principal_paid1', 'total_interest_paid1', 'total_fees_paid1', 'total_late_fee_paid1','total_excess_paid1')
+    # @api.one
+    @api.depends('total_principal_paid1', 'total_interest_paid1', 'total_fees_paid1', 'total_late_fee_paid1', 'total_excess_paid1')
     def _compute_payment_total(self):
-        self.total_payment1 = self.total_principal_paid1 + self.total_interest_paid1 + self.total_fees_paid1 + self.total_late_fee_paid1 + self.total_excess_paid1
+        self.total_payment1 = self.total_principal_paid1 + self.total_interest_paid1 + \
+            self.total_fees_paid1 + self.total_late_fee_paid1 + self.total_excess_paid1
 
     def _compute_payment(self):
         for ele in self:
@@ -239,12 +243,14 @@ class AccountLoan(models.Model):
 
             for py_line in ele.repayment_details:
                 if py_line.release_number:
-                    line_id = self.env['account.move.line'].search([('name','=','Excess Payment'), ('move_id','=',py_line.release_number.id)])
+                    line_id = self.env['account.move.line'].search(
+                        [('name', '=', 'Excess Payment'), ('move_id', '=', py_line.release_number.id)])
                     if line_id:
                         excess_paid = sum(list(line_id.mapped('credit')))
 
             for line in ele.installment_id:
-                paid_line = self.env['payment.details'].search([('line_id','=',line.id),('state','!=','cancel')])
+                paid_line = self.env['payment.details'].search(
+                    [('line_id', '=', line.id), ('state', '!=', 'cancel')])
                 for o in paid_line:
                     if o.prin_amt:
                         paid_capital += o.prin_amt
@@ -262,7 +268,8 @@ class AccountLoan(models.Model):
 #                 paid_late_fee = ele.company_id.currency_id.with_context(date=datetime.datetime.now()).compute(paid_late_fee, cur_id)
 #                 excess_paid = ele.company_id.currency_id.with_context(date=datetime.datetime.now()).compute(excess_paid, cur_id)
 
-            ele.total_payment = paid_capital + paid_interest + paid_fee + paid_late_fee + excess_paid
+            ele.total_payment = paid_capital + paid_interest + \
+                paid_fee + paid_late_fee + excess_paid
             ele.total_principal_paid = paid_capital
             ele.total_interest_paid = paid_interest
             ele.total_fees_paid = paid_fee
@@ -327,7 +334,6 @@ class AccountLoan(models.Model):
 #             fees = fees_total - fees_paid
 #             ele.total_late_fees_paid = round(total,2) - (round(prin,2) + round(inte,2) + round(fees,2))
 
-
     _name = 'account.loan'
 
     _inherit = ['mail.thread']
@@ -335,70 +341,100 @@ class AccountLoan(models.Model):
     _order = 'id desc'
 
     id = fields.Integer('ID', readonly=True, track_visibility='always')
-    loan_id = fields.Char('Loan Id', size=32, readonly=True, track_visibility='onchange')
+    loan_id = fields.Char('Loan Id', size=32, readonly=True,
+                          track_visibility='onchange')
     proof_id = fields.One2many('account.loan.proof', 'loan_id', 'Proof Detail')
 #     auto_id = fields.Integer('Auto Id', size=32, default=lambda self: self.env['ir.sequence'].next_by_code('loan.id'), track_visibility='onchange')
-    name = fields.Char('Purpose', size=128, required=True, track_visibility='onchange')
-    partner_id = fields.Many2one('res.partner', 'Customer', required=True,track_visibility='onchange')
-    proof_1 = fields.Many2one('res.partner', 'Guarantor/Co-Signer 1', track_visibility='onchange')
-    proof_2 = fields.Many2one('res.partner', 'Guarantor/Co-Signer 2', track_visibility='onchange')
-    loan_type = fields.Many2one('account.loan.loantype', 'Loan Type', required=True, track_visibility='onchange',ondelete='restrict')
+    name = fields.Char('Purpose', size=128, required=True,
+                       track_visibility='onchange')
+    partner_id = fields.Many2one(
+        'res.partner', 'Customer', required=True, track_visibility='onchange')
+    proof_1 = fields.Many2one(
+        'res.partner', 'Guarantor/Co-Signer 1', track_visibility='onchange')
+    proof_2 = fields.Many2one(
+        'res.partner', 'Guarantor/Co-Signer 2', track_visibility='onchange')
+    loan_type = fields.Many2one('account.loan.loantype', 'Loan Type',
+                                required=True, track_visibility='onchange', ondelete='restrict')
 #         'loan_type':fields.selection(_loan_type_get,'Loan Type', size=32 ,select=True, required=True),
 #         'loan_period':fields.selection(_loan_period_get,'Loan Period',select=True, required=True),
-    loan_period = fields.Many2one('loan.installment.period', 'Loan Period', required=True, track_visibility='onchange')
-    loan_amount = fields.Float('Loan Amount', digits=(12, 2), required=True, states={'draft':[('readonly', False)]}, track_visibility='onchange')
-    approve_amount = fields.Float('Disbursement Amount', digits=(12, 2), readonly=True, track_visibility='onchange')
-    process_fee = fields.Float('Processing Fee', digits=(12, 2), track_visibility='onchange')
-    total_installment = fields.Integer('Total Installment', readonly=False, required=True, default=0.0, track_visibility='onchange')
+    loan_period = fields.Many2one(
+        'loan.installment.period', 'Loan Period', required=True, track_visibility='onchange')
+    loan_amount = fields.Float('Loan Amount', digits=(12, 2), required=True, states={
+                               'draft': [('readonly', False)]}, track_visibility='onchange')
+    approve_amount = fields.Float('Disbursement Amount', digits=(
+        12, 2), readonly=True, track_visibility='onchange')
+    process_fee = fields.Float('Processing Fee', digits=(
+        12, 2), track_visibility='onchange')
+    total_installment = fields.Integer(
+        'Total Installment', readonly=False, required=True, default=0.0, track_visibility='onchange')
 #         'interest_rate': fields.float('Interest Rate',digits=(10,2),readonly=True,required=True,),
-    interest_rate = fields.Float(compute='compute_loan_interest', string='Interest Rate (%)', store=True, track_visibility='onchange')
+    interest_rate = fields.Float(compute='compute_loan_interest',
+                                 string='Interest Rate (%)', store=True, track_visibility='onchange')
 
 #   'interest_rate': fields.function(compute_loan_interest,string='Interest Rate', track_visibility='always',multi='all',store=True),
 
-    department =fields.Selection([('mbs','Micro Business Solutions'),('sme','SME Growth')],string="Department")
-    is_refugee = fields.Selection([('ref','Refugee'),('non_ref','Non Refugee')])
-
-
+    department = fields.Selection([
+        ('263', 'COVID-19 Recovery'),
+        ('228', 'Micro-enterprise'),
+        ('98', 'SME'),
+        ('29', 'Vulnerable Populations'),
+        ('246', 'Vulnerable Populations (Refugees Kenya)')])
+#     is_refugee = fields.Selection([('ref','Refugee'),('non_ref','Non Refugee')])
     kiva_id = fields.Char('KIVA Client ID')
     kiva_loan_id = fields.Char('KIVA Loan ID', copy=False)
-    apply_date = fields.Date('Apply Date', states={'draft':[('readonly', False)]}, default=time.strftime('%Y-%m-%d'),track_visibility='onchange')
-    approve_date = fields.Date('Approve Date', readonly=False, track_visibility='onchange')
-    cheque_ids = fields.One2many('account.loan.bank.cheque', 'loan_id', 'Cheque Detail', track_visibility='onchange')
+    apply_date = fields.Date('Apply Date', states={'draft': [(
+        'readonly', False)]}, default=time.strftime('%Y-%m-%d'), track_visibility='onchange')
+    approve_date = fields.Date(
+        'Approve Date', readonly=False, track_visibility='onchange')
+    cheque_ids = fields.One2many(
+        'account.loan.bank.cheque', 'loan_id', 'Cheque Detail', track_visibility='onchange')
     state = fields.Selection([
-       ('draft', 'Application Review'),
-       ('apply', 'Application Approved'),
-       ('to_approve','To Approve'),
-       ('partial', 'Partially Disbursed'),
-       ('approved', 'Disbursed'),
-       ('done', 'Closed'),
-       ('cancel', 'Declined'),
-       ('writeoff', 'Write Off'),
+        ('draft', 'Application Review'),
+        ('apply', 'Application Approved'),
+        ('to_approve', 'To Approve'),
+        ('partial', 'Partially Disbursed'),
+        ('approved', 'Disbursed'),
+        ('done', 'Closed'),
+        ('cancel', 'Declined'),
+        ('writeoff', 'Write Off'),
     ], 'State', readonly=True, index=True, default='draft', track_visibility='onchange')
     return_type = fields.Selection([
-       ('cash', 'By Cash'),
-       ('cheque', 'By Cheque'),
-       ('automatic', 'Electronic Clearing'),
+        ('cash', 'By Cash'),
+        ('cheque', 'By Cheque'),
+        ('automatic', 'Electronic Clearing'),
     ], 'Payment Type', index=True, default='automatic', track_visibility='onchange')
-    pricelist_id = fields.Many2one('product.pricelist', 'Pricelist', required=False, readonly=True, states={'draft':[('readonly', False)]},track_visibility='onchange')
+    pricelist_id = fields.Many2one('product.pricelist', 'Pricelist', required=False, readonly=True, states={
+                                   'draft': [('readonly', False)]}, track_visibility='onchange')
 #     running_loan = fields.Many2many('account.loan', 'account_loan_running', 'loan_id', 'auto_id', 'Current Loans',track_visibility='onchange')
-    installment_id = fields.One2many('account.loan.installment', 'loan_id', 'Installments', track_visibility='onchange')
-    interest = fields.Float('Interest', digits=(12, 2),track_visibility='onchange', copy=False)
-    voucher_id = fields.Many2one('sale.coupon', 'Voucher', readonly=True, track_visibility='onchange')
+    installment_id = fields.One2many(
+        'account.loan.installment', 'loan_id', 'Installments', track_visibility='onchange')
+    interest = fields.Float('Interest', digits=(
+        12, 2), track_visibility='onchange', copy=False)
+    voucher_id = fields.Many2one(
+        'sale.coupon', 'Voucher', readonly=True, track_visibility='onchange')
     notes = fields.Text('Description', track_visibility='onchange')
 
-    cus_pay_acc = fields.Many2one('account.account', method=True, string="Customer Loan Account", company_dependent=True,  track_visibility='onchange')
-    int_acc = fields.Many2one('account.account', method=True, string="Interest Account", company_dependent=True,  track_visibility='onchange')
-    bank_acc = fields.Many2one('account.account', method=True, string="Bank Account", company_dependent=True,  track_visibility='onchange')
-    proc_fee = fields.Many2one('account.account', method=True, string="Processing Fee Account", company_dependent=True,  track_visibility='onchange')
-    anal_acc = fields.Many2one('account.analytic.account', method=True, string="Analytic Account", company_dependent=True, help="This analytic account will be used", track_visibility='onchange')
+    cus_pay_acc = fields.Many2one('account.account', method=True, string="Customer Loan Account",
+                                  company_dependent=True,  track_visibility='onchange')
+    int_acc = fields.Many2one('account.account', method=True, string="Interest Account",
+                              company_dependent=True,  track_visibility='onchange')
+    bank_acc = fields.Many2one('account.account', method=True, string="Bank Account",
+                               company_dependent=True,  track_visibility='onchange')
+    proc_fee = fields.Many2one('account.account', method=True, string="Processing Fee Account",
+                               company_dependent=True,  track_visibility='onchange')
+    anal_acc = fields.Many2one('account.analytic.account', method=True, string="Analytic Account",
+                               company_dependent=True, help="This analytic account will be used", track_visibility='onchange')
 
-    move_id = fields.One2many('account.move.line', 'acc_loan_id', 'Move Line', readonly=True, track_visibility='onchange')
+    move_id = fields.One2many('account.move.line', 'acc_loan_id',
+                              'Move Line', readonly=True, track_visibility='onchange')
 
-    loan_amt = fields.Float('Loan Amount', digits=(12, 2), required=True, track_visibility='onchange')
+    loan_amt = fields.Float('Loan Amount', digits=(
+        12, 2), required=True, track_visibility='onchange')
     req_amt = fields.Float('Amount of Loan Required', digits=(12, 2))
 
     month = fields.Integer('Loan Tenure (Months)', track_visibility='onchange')
-    int_rate = fields.Float('Interest Rate', digits=(12, 2), default=1, track_visibility='onchange')
+    int_rate = fields.Float('Interest Rate', digits=(
+        12, 2), default=1, track_visibility='onchange')
     emi_cal = fields.Float('Calculated Monthly EMI', readonly=True)
     tot_amt = fields.Float('Total Amount with Interest', readonly=True)
     flat_pa = fields.Float('Flat Interest Rate PA', readonly=True)
@@ -412,30 +448,41 @@ class AccountLoan(models.Model):
     flat_pm1 = fields.Float('Flat Interest Rate PM', readonly=True)
     flat_tot_int_amt = fields.Float('Total Interest Amount', readonly=True)
     flat_yr_int_amt = fields.Float('Yearly Interest Amount', readonly=True)
-    bank_id = fields.Many2one("res.partner.bank", string = "Customer Bank")
+    bank_id = fields.Many2one("res.partner.bank", string="Customer Bank")
 
-    disbursement_details = fields.One2many("account.loan.disbursement",'loan_id',readonly=True)
+    disbursement_details = fields.One2many(
+        "account.loan.disbursement", 'loan_id', readonly=True)
     old_disburse_amt = fields.Float("Remain amt")
-    journal_disburse_id = fields.Many2one('account.journal', "Disbursement Journal")
-    journal_repayment_id = fields.Many2one('account.journal', "Repayment Journal")
-    payment_freq = fields.Selection([('monthly','Monthly'), ('quarterly','Quarterly'), ('half_yearly','Half-Yearly'),('yearly','Yearly')], "Payment Frequency", default="monthly")
-    payment_schedule_ids = fields.One2many('payment.schedule.line', 'loan_id', 'Payment Schedule', track_visibility='onchange')
+    journal_disburse_id = fields.Many2one(
+        'account.journal', "Disbursement Journal")
+    journal_repayment_id = fields.Many2one(
+        'account.journal', "Repayment Journal")
+    payment_freq = fields.Selection([('monthly', 'Monthly'), ('quarterly', 'Quarterly'), (
+        'half_yearly', 'Half-Yearly'), ('yearly', 'Yearly')], "Payment Frequency", default="monthly")
+    payment_schedule_ids = fields.One2many(
+        'payment.schedule.line', 'loan_id', 'Payment Schedule', track_visibility='onchange')
 
-    company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env['res.company']._company_default_get('account.loan'))
-    group_members = fields.One2many('res.partner.loan.line','loan_id','Group Members')
-    is_group = fields.Boolean(related="partner_id.is_group",store=True)
+    company_id = fields.Many2one(
+        'res.company', 'Company', default=lambda self: self.env['res.company']._company_default_get('account.loan'))
+    group_members = fields.One2many(
+        'res.partner.loan.line', 'loan_id', 'Group Members')
+    is_group = fields.Boolean(related="partner_id.is_group", store=True)
     is_collateral = fields.Boolean(default=False)
-    user_id = fields.Many2one('res.users', string='Salesperson', index=True, track_visibility='onchange', default=lambda self: self.env.user)
-    date_done = fields.Date('Date Done',readonly=True)
-    collateral_lines = fields.One2many('collateral.line','loan_id','Collateral Lines')
+    user_id = fields.Many2one('res.users', string='Salesperson', index=True,
+                              track_visibility='onchange', default=lambda self: self.env.user)
+    date_done = fields.Date('Date Done', readonly=True)
+    collateral_lines = fields.One2many(
+        'collateral.line', 'loan_id', 'Collateral Lines')
 
-    repayment_details = fields.One2many("account.loan.repayment",'loan_id',readonly=True)
-    repayment_basis = fields.Selection([('disbursed_amt','Disbursed Amount'), ('sanctioned_amt','Sanctioned Amount')], "Repayment Basis", default="sanctioned_amt")
+    repayment_details = fields.One2many(
+        "account.loan.repayment", 'loan_id', readonly=True)
+    repayment_basis = fields.Selection([('disbursed_amt', 'Disbursed Amount'), (
+        'sanctioned_amt', 'Sanctioned Amount')], "Repayment Basis", default="sanctioned_amt")
     grace_period = fields.Integer("Grace Period (Days)")
     classification = fields.Char(string="Classification")
-    interest_type = fields.Selection(related="loan_type.calculation", string='Interest Type', readonly=True, store=True, track_visibility='onchange')
+    interest_type = fields.Selection(related="loan_type.calculation", string='Interest Type',
+                                     readonly=True, store=True, track_visibility='onchange')
     city = fields.Char(related='partner_id.city', string='City', store=True)
-
 
     total_payment = fields.Float(compute='_compute_payment')
     total_principal_paid = fields.Float(compute='_compute_payment')
@@ -454,12 +501,12 @@ class AccountLoan(models.Model):
 
 #     total_late_fees_paid = fields.Float(compute='_compute_total_late_fees_paid')
 
-
     @api.model
     def create(self, vals):
         vals['loan_id'] = self.env['ir.sequence'].next_by_code('loan.number')
         if 'kiva_loan_id' in vals and vals.get('kiva_loan_id'):
-            is_kiva_exist = self.search([('kiva_loan_id', '=', vals.get('kiva_loan_id'))])
+            is_kiva_exist = self.search(
+                [('kiva_loan_id', '=', vals.get('kiva_loan_id'))])
             if is_kiva_exist:
                 raise Warning("Kiva loan id can not be duplicated")
         res = super(AccountLoan, self).create(vals)
@@ -473,10 +520,11 @@ class AccountLoan(models.Model):
                     mail_obj.sudo().send_mail(res.id)
         return res
 
-    #@api.multi
+    # @api.multi
     def write(self, vals):
         if 'kiva_loan_id' in vals and vals.get('kiva_loan_id'):
-            is_kiva_exist = self.search([('kiva_loan_id', '=', vals.get('kiva_loan_id'))])
+            is_kiva_exist = self.search(
+                [('kiva_loan_id', '=', vals.get('kiva_loan_id'))])
             if is_kiva_exist:
                 raise Warning("Kiva loan id can not be duplicated")
         return super(AccountLoan, self).write(vals)
@@ -490,56 +538,53 @@ class AccountLoan(models.Model):
             self.total_late_fee_paid1 = self.total_late_fee_paid
             self.total_excess_paid1 = self.total_excess_paid
 
-
     @api.onchange('partner_id')
     def onchange_partner_id(self):
 
         bank_ids = []
         if not self.partner_id:
-            return {'value':{'contact': False, 'bank_id':False}}
+            return {'value': {'contact': False, 'bank_id': False}}
         addr = self.env['res.partner'].address_get(['default', 'invoice'])
-        ptr_bank_ids = self.env['res.partner.bank'].search([('partner_id', '=', self.partner_id.id)])
+        ptr_bank_ids = self.env['res.partner.bank'].search(
+            [('partner_id', '=', self.partner_id.id)])
         for bnk_id in ptr_bank_ids:
             bank_ids.append(bnk_id.id)
 
-        return {'value':{'contact': addr['default']}, 'domain':{'bank_id':[('id', 'in', bank_ids)]}}
+        return {'value': {'contact': addr['default']}, 'domain': {'bank_id': [('id', 'in', bank_ids)]}}
 
     @api.onchange('loan_period')
     def onchange_loan_period(self):
         res = {}
         if self.loan_period:
             res = {'total_installment': self.loan_period.period}
-        return {'value':res}
-
+        return {'value': res}
 
     @api.onchange('loan_amount')
     def onchange_loan_amount(self):
         res = {}
         if self.loan_amount:
             res = {'loan_amt': self.loan_amount}
-        return {'value':res}
+        return {'value': res}
 
     @api.onchange('total_installment')
     def onchange_total_installment(self):
         res = {}
         if self.total_installment:
             res = {'month': self.total_installment}
-        return {'value':res}
+        return {'value': res}
 
     @api.onchange('interest_rate')
     def onchange_interest_rate(self):
         res = {}
         if self.interest_rate:
             res = {'int_rate': self.interest_rate}
-        return {'value':res}
-
+        return {'value': res}
 
     @api.onchange('apply_date', 'total_installment', 'loan_amount', 'loan_type')
     def onchange_loan_type(self):
         date_check = 0
         month_check = 0
         amount_check = 0
-
 
         res = {}
         if not self.apply_date:
@@ -551,7 +596,7 @@ class AccountLoan(models.Model):
         if not self.loan_type:
             return False
         if self.loan_type:
-#             loan_type = self.env['account.loan.loantype'].browse()
+            #             loan_type = self.env['account.loan.loantype'].browse()
             rate = 0.0
             for int_version in self.loan_type.interestversion_ids:
                 if int_version.start_date and int_version.end_date:
@@ -614,14 +659,16 @@ class AccountLoan(models.Model):
                 month_check = 0
 
             if not rate:
-                raise exceptions.except_orm(_('Information Required'), _('Interest Rate is Not Defined.'))
+                raise exceptions.except_orm(
+                    _('Information Required'), _('Interest Rate is Not Defined.'))
             res = {'interest_rate': rate}
-        return {'value':res}
+        return {'value': res}
 
-    #@api.multi
+    # @api.multi
     def loan_interest_get(self):
         for loan in self:
-            self.write({'approve_amount':loan.loan_amount - loan.process_fee, 'approve_date':time.strftime('%Y/%m/%d')})
+            self.write({'approve_amount': loan.loan_amount -
+                        loan.process_fee, 'approve_date': time.strftime('%Y/%m/%d')})
         return True
 
     def calculate_eir(self, e, t, n, i, o):
@@ -653,7 +700,7 @@ class AccountLoan(models.Model):
 
         g = l - p / m
 
-        for v  in range(0, 7):
+        for v in range(0, 7):
             y = g * float(i)
             E = g
             b = 1 + E
@@ -664,7 +711,8 @@ class AccountLoan(models.Model):
 
         I = 12 * g * 100
         return I
-    ## total calculatin of tax for fee calculation in installment ................
+    # total calculatin of tax for fee calculation in installment ................
+
     def get_tax_total(self, tx_ids, amount):
         tax_amt = 0.0
         for tx in tx_ids:
@@ -674,11 +722,11 @@ class AccountLoan(models.Model):
                     tax_amt = tax_amt + tax
 
             else:
-                tax = round(amount - ((amount * 100) / (100 + tx.amount)),2)
+                tax = round(amount - ((amount * 100) / (100 + tx.amount)), 2)
                 tax_amt = tax_amt + tax
         return tax_amt
 
-    ## late fee tax calculations .........................
+    # late fee tax calculations .........................
     def get_late_fee_tax_total(self, tx_ids, amount):
         tax_amt = 0.0
         dict_include_tx = {}
@@ -691,10 +739,10 @@ class AccountLoan(models.Model):
                     tax = (amount) - (amount * 100) / (100 + tx.amount)
                     tax_amt = tax_amt + tax
                     if tax_amt:
-                        dict_include_tx.update({'include':tax_amt})
+                        dict_include_tx.update({'include': tax_amt})
 
             else:
-                tax = round(amount - ((amount * 100) / (100 + tx.amount)),2)
+                tax = round(amount - ((amount * 100) / (100 + tx.amount)), 2)
                 tax_amt = tax_amt + tax
 
         if dict_include_tx:
@@ -702,8 +750,8 @@ class AccountLoan(models.Model):
 
         return tax_amt
 
+    # total calculatin of tax for fee calculation in installment ................
 
-    ## total calculatin of tax for fee calculation in installment ................
     def get_tax_total_incl_exl(self, tx_ids, amount):
         tax_amt = 0.0
         for tx in tx_ids:
@@ -713,13 +761,13 @@ class AccountLoan(models.Model):
                     tax_amt = round(tax_amt + tax, 2)
                 else:
                     tax = (amount) - (amount * 100) / (100 + tx.amount)
-                    tax_amt = round(tax_amt + tax,2)
+                    tax_amt = round(tax_amt + tax, 2)
             else:
-                tax = round(amount - ((amount * 100) / (100 + tx.amount)),2)
+                tax = round(amount - ((amount * 100) / (100 + tx.amount)), 2)
                 tax_amt = tax_amt + tax
         return tax_amt
 
-    ##getting fees values basis of principle, interest and fees products ................
+    # getting fees values basis of principle, interest and fees products ................
     def _get_fees_amount(self, loan_type, approve_amt, interest_amt):
         amt = 0.0
         if not loan_type.loan_component_ids:
@@ -755,8 +803,7 @@ class AccountLoan(models.Model):
                 if line.product_id.id not in fees_list:
                     global_list.append(line.product_id.id)
                     fees_list.append(line.product_id.id)
-                    global_dict.update({line.product_id.id:line})
-
+                    global_dict.update({line.product_id.id: line})
 
         for line in loan_type.loan_component_ids:
             if line.type == 'fees':
@@ -771,44 +818,61 @@ class AccountLoan(models.Model):
                                 sum_amt = sum_amt + amt
 #                                 for tx_line in line.tax_id:
                                 if line.tax_id:
-                                    tx_tot = self.get_tax_total(line.tax_id, sum_amt)
+                                    tx_tot = self.get_tax_total(
+                                        line.tax_id, sum_amt)
                                 if tx_tot:
-                                    line.write({'product_amt':sum_amt, 'tax_amount':tx_tot})
+                                    line.write(
+                                        {'product_amt': sum_amt, 'tax_amount': tx_tot})
                                     sum_amt = sum_amt + tx_tot
-                                    line.write({'outstanding_product_amt':sum_amt})
+                                    line.write(
+                                        {'outstanding_product_amt': sum_amt})
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 else:
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    line.write({'product_amt':sum_amt, 'outstanding_product_amt':sum_amt})
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    line.write(
+                                        {'product_amt': sum_amt, 'outstanding_product_amt': sum_amt})
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 global_add1 = global_add1 + sum_amt
                                 sum_amt = 0
 
                         elif product.id in interest_list:
                             if line.amount_percentage and flag1:
                                 percent = line.amount_percentage * line.quantity
-                                amt1 = (interest_amt * line.amount_percentage) / 100
+                                amt1 = (interest_amt *
+                                        line.amount_percentage) / 100
                                 sum_amt = sum_amt + amt1
 #                                 for tx_line in line.tax_id:
 #                                     if tx_line.amount:
 #                                         tx_tot = self.get_tax_total(tx_line, sum_amt)
                                 if line.tax_id:
-                                    tx_tot = self.get_tax_total(line.tax_id, sum_amt)
+                                    tx_tot = self.get_tax_total(
+                                        line.tax_id, sum_amt)
                                 if tx_tot:
-                                    line.write({'product_amt':sum_amt, 'tax_amount':tx_tot})
+                                    line.write(
+                                        {'product_amt': sum_amt, 'tax_amount': tx_tot})
                                     sum_amt = sum_amt + tx_tot
-                                    line.write({'outstanding_product_amt':sum_amt})
+                                    line.write(
+                                        {'outstanding_product_amt': sum_amt})
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 else:
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    line.write({'product_amt':sum_amt, 'outstanding_product_amt':sum_amt})
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    line.write(
+                                        {'product_amt': sum_amt, 'outstanding_product_amt': sum_amt})
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 global_add2 = global_add2 + sum_amt
                                 sum_amt = 0
 
@@ -816,7 +880,7 @@ class AccountLoan(models.Model):
                             amt_tot = 0.0
                             for o in global_dict[product.id]:
                                 if o.amount_select == 'percentage':
-#                                     for f in o.amount_percentage_base:
+                                    #                                     for f in o.amount_percentage_base:
                                     if o.product_id.id in internal_dict:
                                         amt_tot = internal_dict[o.product_id.id]
                                 elif o.amount_select == 'fix':
@@ -830,19 +894,27 @@ class AccountLoan(models.Model):
 #                                     if tx_line.amount:
 #                                         tx_tot = self.get_tax_total(tx_line, sum_amt)
                                 if line.tax_id:
-                                    tx_tot = self.get_tax_total(line.tax_id, sum_amt)
+                                    tx_tot = self.get_tax_total(
+                                        line.tax_id, sum_amt)
                                 if tx_tot:
-                                    line.write({'product_amt':sum_amt, 'tax_amount':tx_tot})
+                                    line.write(
+                                        {'product_amt': sum_amt, 'tax_amount': tx_tot})
                                     sum_amt = sum_amt + tx_tot
-                                    line.write({'outstanding_product_amt':sum_amt})
+                                    line.write(
+                                        {'outstanding_product_amt': sum_amt})
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 else:
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    line.write({'product_amt':sum_amt, 'outstanding_product_amt':sum_amt})
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    line.write(
+                                        {'product_amt': sum_amt, 'outstanding_product_amt': sum_amt})
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 global_add3 = global_add3 + sum_amt
                                 sum_amt = 0
 
@@ -855,40 +927,49 @@ class AccountLoan(models.Model):
                     if line.tax_id:
                         tx_tot = self.get_tax_total(line.tax_id, sum_amt)
                     if tx_tot:
-                        line.write({'product_amt':sum_amt,'outstanding_product_amt':sum_amt, 'tax_amount':tx_tot})
+                        line.write(
+                            {'product_amt': sum_amt, 'outstanding_product_amt': sum_amt, 'tax_amount': tx_tot})
                         sum_amt = sum_amt + tx_tot
-                        line.write({'outstanding_product_amt':sum_amt})
+                        line.write({'outstanding_product_amt': sum_amt})
                         if line.product_id.id in internal_dict:
-                            sum_amt = sum_amt + internal_dict[line.product_id.id]
-                        internal_dict.update({line.product_id.id : sum_amt})
+                            sum_amt = sum_amt + \
+                                internal_dict[line.product_id.id]
+                        internal_dict.update({line.product_id.id: sum_amt})
                     else:
                         if line.product_id.id in internal_dict:
-                            sum_amt = sum_amt + internal_dict[line.product_id.id]
-                        line.write({'product_amt':sum_amt, 'outstanding_product_amt':sum_amt})
-                        internal_dict.update({line.product_id.id : sum_amt})
+                            sum_amt = sum_amt + \
+                                internal_dict[line.product_id.id]
+                        line.write({'product_amt': sum_amt,
+                                    'outstanding_product_amt': sum_amt})
+                        internal_dict.update({line.product_id.id: sum_amt})
 
                     global_add4 = global_add4 + sum_amt
                     sum_amt = 0
 
                 elif line.amount_select == 'code':
-                    sum_amt = self.evaluate_python_code(line.amount_python_compute, approve_amt, interest_amt)
+                    sum_amt = self.evaluate_python_code(
+                        line.amount_python_compute, approve_amt, interest_amt)
 #                     for tx_line in line.tax_id:
 #                         if tx_line.amount:
 #                             tx_tot = self.get_tax_total(tx_line, sum_amt)
                     if line.tax_id:
                         tx_tot = self.get_tax_total(line.tax_id, sum_amt)
                     if tx_tot:
-                        line.write({'product_amt':sum_amt,'outstanding_product_amt':sum_amt, 'tax_amount':tx_tot})
+                        line.write(
+                            {'product_amt': sum_amt, 'outstanding_product_amt': sum_amt, 'tax_amount': tx_tot})
                         sum_amt = sum_amt + tx_tot
-                        line.write({'outstanding_product_amt':sum_amt})
+                        line.write({'outstanding_product_amt': sum_amt})
                         if line.product_id.id in internal_dict:
-                            sum_amt = sum_amt + internal_dict[line.product_id.id]
-                        internal_dict.update({line.product_id.id : sum_amt})
+                            sum_amt = sum_amt + \
+                                internal_dict[line.product_id.id]
+                        internal_dict.update({line.product_id.id: sum_amt})
                     else:
                         if line.product_id.id in internal_dict:
-                            sum_amt = sum_amt + internal_dict[line.product_id.id]
-                        line.write({'product_amt':sum_amt,'outstanding_product_amt':sum_amt})
-                        internal_dict.update({line.product_id.id : sum_amt})
+                            sum_amt = sum_amt + \
+                                internal_dict[line.product_id.id]
+                        line.write({'product_amt': sum_amt,
+                                    'outstanding_product_amt': sum_amt})
+                        internal_dict.update({line.product_id.id: sum_amt})
                     sum_amt = 0
 
 #         print (internal_dict,'sum of dictionalryeeeeeeeeeeeeeeeeeee')
@@ -896,7 +977,7 @@ class AccountLoan(models.Model):
         total_all = sum(internal_dict.values())
         return total_all
 
-    ##python code for execute expressions.............
+    # python code for execute expressions.............
     def evaluate_python_code(self, pycode=None, approve_amt=None, interest_amt=None):
         '''
             This function will calculate/evaluavate the python code in Loan Component Lines.
@@ -905,7 +986,8 @@ class AccountLoan(models.Model):
         '''
         try:
             if pycode and approve_amt and interest_amt:
-                localdict = {'approve_amt': approve_amt, 'result':0.0, 'interest_amt':interest_amt}
+                localdict = {'approve_amt': approve_amt,
+                             'result': 0.0, 'interest_amt': interest_amt}
                 safe_eval(pycode, localdict, mode="exec", nocopy=True)
                 return localdict['result'] or 0.0
             else:
@@ -913,10 +995,11 @@ class AccountLoan(models.Model):
         except Exception as e:
             return 0.0
 
-    #@api.multi
-    def _get_simple_int_by_existed_disbursed(self, inter_rate, disbursed_amt = 0.0, disburse_date=False, currency_id = False, journal_id = False):
-#         today_date = date.today()
-        disburse_date = (datetime.datetime.strptime(disburse_date, '%Y-%m-%d').date())
+    # @api.multi
+    def _get_simple_int_by_existed_disbursed(self, inter_rate, disbursed_amt=0.0, disburse_date=False, currency_id=False, journal_id=False):
+        #         today_date = date.today()
+        disburse_date = (datetime.datetime.strptime(
+            disburse_date, '%Y-%m-%d').date())
         today_date = disburse_date
         count = 0
         installment_day = False
@@ -937,60 +1020,65 @@ class AccountLoan(models.Model):
             for l in counter_list:
                 if l.is_paid_installment == False:
                     sum_of_paid = sum_of_paid + l.outstanding_prin
-                    l.write({'is_paid_installment':True})
-                    date_of_lines = (datetime.datetime.strptime(l.date, '%Y-%m-%d').date())
+                    l.write({'is_paid_installment': True})
+                    date_of_lines = (datetime.datetime.strptime(
+                        l.date, '%Y-%m-%d').date())
                     installment_day = date_of_lines.day
 
         differ = self.old_disburse_amt - sum_of_paid
         new_disburse = differ + disbursed_amt
-        if  self._context.get('is_extended'):
+        if self._context.get('is_extended'):
             new_disburse = differ
             disbursed_amt = 0
-        total_installment =  self.total_installment - count
-        self.write({'old_disburse_amt':new_disburse})
+        total_installment = self.total_installment - count
+        self.write({'old_disburse_amt': new_disburse})
         if installment_day:
-            disburse_date = disburse_date.replace(day = installment_day)
+            disburse_date = disburse_date.replace(day=installment_day)
 
 #         print (differ, new_disburse,'Differ and disburse amount')
-        move_id = self._partial_by_disbursed(inter_rate, new_disburse, total_installment, disbursed_amt, disburse_date, currency_id, journal_id)
+        move_id = self._partial_by_disbursed(
+            inter_rate, new_disburse, total_installment, disbursed_amt, disburse_date, currency_id, journal_id)
 
         return move_id
 
-    def check_date(self,date_update,new_day,present_month):
+    def check_date(self, date_update, new_day, present_month):
         if int(present_month) == 2:
-            if int(date_update.year)%4 == 0:
-                date_update = date_update.replace(day = 29,month = present_month)
+            if int(date_update.year) % 4 == 0:
+                date_update = date_update.replace(day=29, month=present_month)
             else:
-                date_update = date_update.replace(day = 28,month = present_month)
-        elif int(present_month) in [4,6,9,11] and new_day > 30:
-            date_update = date_update.replace(day = 30,month = present_month)
+                date_update = date_update.replace(day=28, month=present_month)
+        elif int(present_month) in [4, 6, 9, 11] and new_day > 30:
+            date_update = date_update.replace(day=30, month=present_month)
         else:
-            date_update = date_update.replace(day = new_day,month = present_month)
+            date_update = date_update.replace(day=new_day, month=present_month)
         return date_update
 
-    def calculate_for_flat(self,num, date_update, disbursed_amt, total_installment, part_id):
-#         print("\n\n\n Date UPdate ::: ",date_update)
+    def calculate_for_flat(self, num, date_update, disbursed_amt, total_installment, part_id):
+        #         print("\n\n\n Date UPdate ::: ",date_update)
 
-        capital = round(disbursed_amt / float(total_installment),2)
-        interest = round(((disbursed_amt / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+        capital = round(disbursed_amt / float(total_installment), 2)
+        interest = round(((disbursed_amt / 100 * self.interest_rate)
+                          * (float(total_installment)/12.0))/float(total_installment), 2)
 
-        vals = {'name':'installment'+str(num), 'date':date_update,
-                'loan_id':self.id, 'capital':capital,
-                'interest':interest, 'total':capital+interest,
-                'partner_id':part_id,'outstanding_prin':capital,'outstanding_int':interest,}
+        vals = {'name': 'installment'+str(num), 'date': date_update,
+                'loan_id': self.id, 'capital': capital,
+                'interest': interest, 'total': capital+interest,
+                'partner_id': part_id, 'outstanding_prin': capital, 'outstanding_int': interest, }
         return vals
 
-    ## partial disbursed amount
-    #@api.multi
-    def _partial_by_disbursed(self, inter_rate, disbursed_amt = 0.0,  total_installment = 0, actual_disbursed_amt = 0.0, disburse_date=False, currency_id = False, journal_id=False):
+    # partial disbursed amount
+    # @api.multi
+    def _partial_by_disbursed(self, inter_rate, disbursed_amt=0.0,  total_installment=0, actual_disbursed_amt=0.0, disburse_date=False, currency_id=False, journal_id=False):
         if not self.repayment_basis == 'sanctioned_amt':
             if not self.journal_disburse_id:
-                raise UserError(_('Please Configure Loan Disbursement Journal'))
+                raise UserError(
+                    _('Please Configure Loan Disbursement Journal'))
             loan = self.read()
             installment_cr = self.env['account.loan.installment']
             cheque_cr = self.env['account.loan.bank.cheque']
             if not self.partner_id:
-                raise exceptions.except_orm(_('Field Required'), _('Please select Customer.'))
+                raise exceptions.except_orm(
+                    _('Field Required'), _('Please select Customer.'))
 
             part_id = self.partner_id.id
             int_rate = 0.0
@@ -1013,7 +1101,8 @@ class AccountLoan(models.Model):
             install_list = []
             check_list = []
             try:
-                installment = round(((total * (rate_interest / 12)) / (1 - ((1 + rate_interest / 12) ** -(total_installment)))))
+                installment = round(((total * (rate_interest / 12)) /
+                                     (1 - ((1 + rate_interest / 12) ** -(total_installment)))))
             except ZeroDivisionError:
                 installment = 0
 
@@ -1034,40 +1123,44 @@ class AccountLoan(models.Model):
             cnt = 0
             numbering = 1
             if self._context.get('is_extended'):
-                to_be_deleted = installment_cr.search([('state', '=', 'draft'), ('loan_id', '=', self.id)])
+                to_be_deleted = installment_cr.search(
+                    [('state', '=', 'draft'), ('loan_id', '=', self.id)])
                 to_be_deleted.unlink()
             for num in self.installment_id:
                 numbering += 1
-            for i in range(numbering,self.total_installment+1):
+            for i in range(numbering, self.total_installment+1):
                 interest_month = round(((total * rate_interest) / 12), 2)
                 principle_amount = round(installment - interest_month, 2)
                 remain_amount = round(total - principle_amount, 2)
-                installment_vals ={}
+                installment_vals = {}
                 if self.loan_type.calculation == 'reducing':
                     present_month += 1
                     if present_month > 12:
-                        present_month = 1;
+                        present_month = 1
                         s = date_update.year + 1
-                        date_update = date_update.replace(year = s);
+                        date_update = date_update.replace(year=s)
                     if new_day > 28:
-                            date_update = self.check_date(date_update,new_day,present_month)
-                    date_update = date_update.replace(month = present_month);
+                        date_update = self.check_date(
+                            date_update, new_day, present_month)
+                    date_update = date_update.replace(month=present_month)
 
-                    installment_vals = {'name':'installment' + str(i), 'date':date_update,\
-                                        'loan_id':self.id, 'capital':principle_amount,\
-                                        'interest':interest_month, 'total':principle_amount + interest_month , 'partner_id':part_id,\
-                                        'outstanding_prin':principle_amount,'outstanding_int':interest_month,}
+                    installment_vals = {'name': 'installment' + str(i), 'date': date_update,
+                                        'loan_id': self.id, 'capital': principle_amount,
+                                        'interest': interest_month, 'total': principle_amount + interest_month, 'partner_id': part_id,
+                                        'outstanding_prin': principle_amount, 'outstanding_int': interest_month, }
                 else:
                     present_month += 1
                     if present_month > 12:
-                        present_month = 1;
+                        present_month = 1
                         s = date_update.year + 1
-                        date_update = date_update.replace(year = s);
+                        date_update = date_update.replace(year=s)
                     if new_day > 28:
-                            date_update = self.check_date(date_update,new_day,present_month)
-                    date_update = date_update.replace(month = present_month);
+                        date_update = self.check_date(
+                            date_update, new_day, present_month)
+                    date_update = date_update.replace(month=present_month)
 
-                    installment_vals = self.calculate_for_flat(i, date_update, disbursed_amt, total_installment, part_id)
+                    installment_vals = self.calculate_for_flat(
+                        i, date_update, disbursed_amt, total_installment, part_id)
                     interest_month = installment_vals['interest']
                 install_id = installment_cr.create(installment_vals)
                 install_list.append(install_id)
@@ -1075,50 +1168,54 @@ class AccountLoan(models.Model):
                 interest += interest_month
     #         self.write({'interest':interest,'old_disburse_amt':disbursed_amt,});
 
-            if total and self.installment_id :
+            if total and self.installment_id:
                 self.get_rounding_amt(total, self.installment_id[-1])
             fees_vals = {}
-            fees_amt = self._get_fees_amount(self.loan_type, disbursed_amt, interest)
+            fees_amt = self._get_fees_amount(
+                self.loan_type, disbursed_amt, interest)
             if fees_amt:
                 for fees_line in self.loan_type.loan_component_ids:
                     if fees_line.type == 'fees' and fees_line.tenure == 'tenure':
-                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt, total_installment)
+                        fees_vals = self.get_fees_as_tenure(
+                            self.loan_type, fees_amt, total_installment)
                     elif fees_line.type == 'fees' and fees_line.tenure == 'month':
-                        fees_vals.update({'fees_amt':fees_amt})
+                        fees_vals.update({'fees_amt': fees_amt})
                     elif fees_line.type == 'fees' and fees_line.tenure == 'per_year':
-                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt, total_installment)
+                        fees_vals = self.get_fees_as_tenure(
+                            self.loan_type, fees_amt, total_installment)
             else:
-                fees_vals.update({'fees_amt':0.0})
+                fees_vals.update({'fees_amt': 0.0})
 
             for line in install_list:
                 total_amt = 0.0
                 vals_fee = {}
                 total_amt = round(fees_vals['fees_amt'] + line.total, 2)
                 if 'fees_amt' in fees_vals:
-                    line.write({'fees':fees_vals['fees_amt'],'total':total_amt, 'outstanding_fees':fees_vals['fees_amt']})
-                for fees_line in  line.loan_id.loan_type.loan_component_ids:
+                    line.write(
+                        {'fees': fees_vals['fees_amt'], 'total': total_amt, 'outstanding_fees': fees_vals['fees_amt']})
+                for fees_line in line.loan_id.loan_type.loan_component_ids:
                     if fees_line.type == 'fees' and fees_line.tenure == 'tenure':
-                        vals_fee.update({'installment_id':line.id,
-                                                            'product_id':fees_line.product_id.id,
-                                                            'name':fees_line.type,
-                                                            })
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         })
 
                         if 'actual_fee' in fees_vals:
-                            vals_fee.update({'base':fees_vals['actual_fee']})
+                            vals_fee.update({'base': fees_vals['actual_fee']})
 
                         if fees_line.tax_id and 'tax_amt' in fees_vals:
-                            vals_fee.update({'tax':fees_vals['tax_amt']})
+                            vals_fee.update({'tax': fees_vals['tax_amt']})
 
                         if vals_fee:
                             self.env['fees.lines'].create(vals_fee)
                     elif fees_line.type == 'fees' and fees_line.tenure == 'month':
-                        vals_fee.update({'installment_id':line.id,
-                                                            'product_id':fees_line.product_id.id,
-                                                            'name':fees_line.type,
-                                                            'base':fees_line.product_amt,})
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         'base': fees_line.product_amt, })
 
                         if fees_line.tax_id:
-                            vals_fee.update({'tax':fees_line.tax_amount})
+                            vals_fee.update({'tax': fees_line.tax_amount})
                         if vals_fee:
                             self.env['fees.lines'].create(vals_fee)
 
@@ -1132,20 +1229,20 @@ class AccountLoan(models.Model):
                 self._get_yearly()
         if self._context.get('partner_id') and self._context.get('transfer_loan'):
             return False
-        move_id = self.create_moves(actual_disbursed_amt, disburse_date, flag = False, currency_id=currency_id, journal_id = journal_id)
+        move_id = self.create_moves(actual_disbursed_amt, disburse_date,
+                                    flag=False, currency_id=currency_id, journal_id=journal_id)
         return move_id
-
 
     def get_intstallments(self, total, rate_interest, total_installment):
         try:
-            installment = round(((total * (rate_interest / 12)) / (1 - ((1 + rate_interest / 12) ** -(total_installment)))))
+            installment = round(((total * (rate_interest / 12)) /
+                                 (1 - ((1 + rate_interest / 12) ** -(total_installment)))))
         except ZeroDivisionError:
             installment = 0
         return installment
 
-
     def get_fees_as_tenure(self, loan_type, fee_amt, tot_installemnt):
-        ##code are here .....................
+        # code are here .....................
         tx_tot = 0.0
         fees_dict = {}
         for line in loan_type.loan_component_ids:
@@ -1155,9 +1252,10 @@ class AccountLoan(models.Model):
                 if line.tax_id and amt:
                     tx_tot = self.get_tax_total_incl_exl(line.tax_id, amt)
                 if tx_tot:
-#                     line.tax_amount = round(tx_tot, 2)
+                    #                     line.tax_amount = round(tx_tot, 2)
                     amt_fees = amt_fees - tx_tot
-                fees_dict.update({'fees_amt':amt, 'actual_fee':amt_fees,'tax_amt':tx_tot})
+                fees_dict.update(
+                    {'fees_amt': amt, 'actual_fee': amt_fees, 'tax_amt': tx_tot})
             elif line.type == 'fees' and line.tenure == 'per_year':
                 if tot_installemnt > 1:
                     main_amt = round((fee_amt/12)*tot_installemnt, 2)
@@ -1167,27 +1265,27 @@ class AccountLoan(models.Model):
                 if line.tax_id and amt:
                     tx_tot = self.get_tax_total_incl_exl(line.tax_id, amt)
                 if tx_tot:
-#                     line.tax_amount =
+                    #                     line.tax_amount =
                     amt_fees = amt_fees - tx_tot
-                fees_dict.update({'fees_amt':amt, 'actual_fee':amt_fees,'tax_amt':tx_tot})
+                fees_dict.update(
+                    {'fees_amt': amt, 'actual_fee': amt_fees, 'tax_amt': tx_tot})
         return fees_dict
 
     def get_grace_amount(self, tot_grc_amt, total_installment):
         amt = 0.0
         if tot_grc_amt and total_installment:
-            amt = round(tot_grc_amt / total_installment,2)
+            amt = round(tot_grc_amt / total_installment, 2)
         return amt
-
 
     def get_rounding_amt(self, total, installment):
         if installment.capital:
-            installment.capital = installment.capital +  total
+            installment.capital = installment.capital + total
             installment.outstanding_prin = installment.outstanding_prin + total
             installment.total = installment.total + total
 
-    ## for extended period ............
-    #@api.multi
-    def _simple_interest_get_by_disbursed(self, inter_rate, disbursed_amt = 0.0, disburse_date=False, currency_id = False, journal_id = False):
+    # for extended period ............
+    # @api.multi
+    def _simple_interest_get_by_disbursed(self, inter_rate, disbursed_amt=0.0, disburse_date=False, currency_id=False, journal_id=False):
         loan = self.read()
         installment_cr = self.env['account.loan.installment']
         cheque_cr = self.env['account.loan.bank.cheque']
@@ -1195,7 +1293,8 @@ class AccountLoan(models.Model):
         line_obj = self.env['account.move.line']
 
         if not self.partner_id:
-            raise exceptions.except_orm(_('Field Required'), _('Please select Customer.'))
+            raise exceptions.except_orm(
+                _('Field Required'), _('Please select Customer.'))
 
         part_id = self.partner_id.id
         int_rate = 0.0
@@ -1208,7 +1307,7 @@ class AccountLoan(models.Model):
             if inter_cal_type:
                 if inter_cal_type == 'flat':
                     if self.loan_amount > 0.0 and self.total_installment > 0:
-    #                         int_rate = self.calculate_eir(inter_rate, self.loan_amount, self.total_installment / 12 , inter_rate, 0)
+                        #                         int_rate = self.calculate_eir(inter_rate, self.loan_amount, self.total_installment / 12 , inter_rate, 0)
                         pass
                 elif inter_cal_type == 'reducing':
                     int_rate = inter_rate
@@ -1217,7 +1316,8 @@ class AccountLoan(models.Model):
         updated_loan_amount = self.loan_amount
         if self.repayment_basis == 'sanctioned_amt':
             if self._context.get('is_extended'):
-                bal_entry = installment_cr.search([('state', 'in', ['draft','open']), ('loan_id', '=', self.id)])
+                bal_entry = installment_cr.search(
+                    [('state', 'in', ['draft', 'open']), ('loan_id', '=', self.id)])
                 new_loan_amount = 0.0
                 for bl in bal_entry:
                     new_loan_amount += bl.outstanding_prin
@@ -1236,16 +1336,17 @@ class AccountLoan(models.Model):
                             bl.fees = bl.fees - bl.outstanding_fees
                             bl.outstanding_fees = 0.0
                         else:
-                             if bl.outstanding_fees == bl.fees:
-                                 bl.outstanding_fees = 0.0
-                                 bl.fees = 0.0
+                            if bl.outstanding_fees == bl.fees:
+                                bl.outstanding_fees = 0.0
+                                bl.fees = 0.0
                         if bl.outstanding_fees == 0.0 and bl.outstanding_int == 0.0 and bl.outstanding_prin == 0.0:
                             bl.state = 'paid'
                             bl.due_principal = 0.0
                             bl.due_interest = 0.0
                             bl.due_fees = 0.0
                         bl.total = bl.capital + bl.interest + bl.outstanding_fees
-                to_be_deleted = installment_cr.search([('state', '=', 'draft'), ('loan_id', '=', self.id)])
+                to_be_deleted = installment_cr.search(
+                    [('state', '=', 'draft'), ('loan_id', '=', self.id)])
                 to_be_deleted.unlink()
 #                 for line in self.installment_id:
 #                     if line.state == 'paid':
@@ -1267,7 +1368,7 @@ class AccountLoan(models.Model):
             total = disbursed_amt
             pr_total = disbursed_amt
             main_tot = disbursed_amt
-        ##changes according to grace period of component lines.===========================================
+        # changes according to grace period of component lines.===========================================
         gp_int = 0
         gp_principal = 0
         gp_fee = 0
@@ -1283,32 +1384,33 @@ class AccountLoan(models.Model):
         for loan_com_line in self.loan_type.loan_component_ids:
             if loan_com_line.type == 'principal':
                 gp_principal = loan_com_line.grace_period
-                global_dict.update({'principal':gp_principal})
+                global_dict.update({'principal': gp_principal})
                 lst_gp.append(loan_com_line.grace_period)
             if loan_com_line.type == 'int_rate':
                 gp_int = loan_com_line.grace_period
-                global_dict.update({'int_rate':gp_int})
+                global_dict.update({'int_rate': gp_int})
                 lst_gp.append(loan_com_line.grace_period)
             if loan_com_line.type == 'fees':
                 gp_fee = loan_com_line.grace_period
-                global_dict.update({'fees':gp_fee})
+                global_dict.update({'fees': gp_fee})
                 lst_gp.append(loan_com_line.grace_period)
-
 
         if lst_gp and gp_fee == gp_int == gp_principal:
             total_installment = self.total_installment - (min(lst_gp))
             grc_installment = self.total_installment - total_installment
-        ##================================================================================================
+        # ================================================================================================
         total_installment = self.total_installment - (min(lst_gp))
         grc_install = self.total_installment - total_installment
         if gp_fee == gp_int == gp_principal:
             try:
-                installment = round(((total * (rate_interest / 12)) / (1 - ((1 + rate_interest / 12) ** -(total_installment)))))
+                installment = round(((total * (rate_interest / 12)) /
+                                     (1 - ((1 + rate_interest / 12) ** -(total_installment)))))
             except ZeroDivisionError:
                 installment = 0
         else:
             try:
-                installment = round(((total * (rate_interest / 12)) / (1 - ((1 + rate_interest / 12) ** -(self.total_installment)))))
+                installment = round(((total * (rate_interest / 12)) / (1 -
+                                                                       ((1 + rate_interest / 12) ** -(self.total_installment)))))
             except ZeroDivisionError:
                 installment = 0
 
@@ -1329,7 +1431,8 @@ class AccountLoan(models.Model):
         interest = 0
         sum_of_inst = 0.0
         cnt_fees_flag = False
-        date_update = datetime.datetime.strptime(disburse_date, "%Y-%m-%d").date()
+        date_update = datetime.datetime.strptime(
+            disburse_date, "%Y-%m-%d").date()
         grc_date = datetime.datetime.strptime(disburse_date, "%Y-%m-%d").date()
         new_day = int(date_update.day)
 
@@ -1346,7 +1449,7 @@ class AccountLoan(models.Model):
         for num in self.installment_id:
             numbering += 1
         remaining_instalment = self.total_installment + 1 - numbering
-        ##for loan extended changes ...........................
+        # for loan extended changes ...........................
         if self._context.get('is_extended'):
             numbering = 1
             remaining_instalment = self.total_installment
@@ -1357,16 +1460,22 @@ class AccountLoan(models.Model):
             interest_month = 0.0
             int_for_prin = round(((total * rate_interest) / 12), 2)
             if not total_installment:
-                raise Warning('Please Check grace periods in the loan component lines total installment and grace period should not be same')
-            interest = round(((100000 / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+                raise Warning(
+                    'Please Check grace periods in the loan component lines total installment and grace period should not be same')
+            interest = round(((100000 / 100 * self.interest_rate) *
+                              (float(total_installment)/12.0))/float(total_installment), 2)
             if gp_fee == gp_int == gp_principal:
                 if self.loan_type.calculation == 'flat':
                     if self.repayment_basis == 'sanctioned_amt':
-                        capital = round(updated_loan_amount / float(remaining_instalment - global_dict.get('principal')),2)
-                        interest = round(((updated_loan_amount / 100 * self.interest_rate)*(float(self.total_installment)/12.0))/float(self.total_installment),2)
+                        capital = round(
+                            updated_loan_amount / float(remaining_instalment - global_dict.get('principal')), 2)
+                        interest = round(((updated_loan_amount / 100 * self.interest_rate)*(
+                            float(self.total_installment)/12.0))/float(self.total_installment), 2)
                     else:
-                        capital = round(disbursed_amt / float(self.total_installment - global_dict.get('principal')),2)
-                        interest = round(((disbursed_amt / 100 * self.interest_rate)*(float(self.total_installment)/12.0))/float(self.total_installment),2)
+                        capital = round(
+                            disbursed_amt / float(self.total_installment - global_dict.get('principal')), 2)
+                        interest = round(((disbursed_amt / 100 * self.interest_rate)*(
+                            float(self.total_installment)/12.0))/float(self.total_installment), 2)
                 else:
                     interest_month = round(((total * rate_interest) / 12), 2)
                     principle_amount = round(installment - interest_month, 2)
@@ -1374,12 +1483,13 @@ class AccountLoan(models.Model):
                     inst_num += 1
                     grc_prc_month += 1
                     if grc_prc_month > 12:
-                        grc_prc_month = grc_prc_month - 12;
+                        grc_prc_month = grc_prc_month - 12
                         s = grc_date.year + 1
-                        grc_date = grc_date.replace(year = s);
+                        grc_date = grc_date.replace(year=s)
                     if new_day > 28:
-                        grc_date = self.check_date(grc_date, new_day, grc_prc_month)
-                    grc_date = grc_date.replace(month = grc_prc_month);
+                        grc_date = self.check_date(
+                            grc_date, new_day, grc_prc_month)
+                    grc_date = grc_date.replace(month=grc_prc_month)
                     principle_amount = 0.0
                     if self.loan_type.calculation == 'flat':
                         tot_grc_capital = tot_grc_capital + capital
@@ -1389,42 +1499,48 @@ class AccountLoan(models.Model):
                         tot_grc_int = tot_grc_int + interest_month
                         remain_amount = round(total - principle_amount, 2)
                         total = remain_amount
-                    installment_vals = {'name':'installment'+str(inst_num), 'date':grc_date,
-                        'loan_id':self.id, 'capital':0.0,
-                        'interest':0.0, 'total':0.0,
-                        'partner_id':part_id,'outstanding_prin':0.0,'outstanding_int':0.0,}
+                    installment_vals = {'name': 'installment'+str(inst_num), 'date': grc_date,
+                                        'loan_id': self.id, 'capital': 0.0,
+                                        'interest': 0.0, 'total': 0.0,
+                                        'partner_id': part_id, 'outstanding_prin': 0.0, 'outstanding_int': 0.0, }
                     installment_cr.create(installment_vals)
                     present_month = grc_prc_month
                     continue
                 inst_num = inst_num + 1
             else:
                 cnt_fees_flag = True
-                ## for interest calculations .............................
-                if key_min == 'int_rate' :
+                # for interest calculations .............................
+                if key_min == 'int_rate':
                     if self.loan_type.calculation == 'flat':
                         if self.repayment_basis == 'sanctioned_amt':
-    #                             capital = round(disbursed_amt / float(total_installment),2)
-    #                             print ("=============v===========",updated_loan_amount)
-                            interest = round(((updated_loan_amount / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+                            #                             capital = round(disbursed_amt / float(total_installment),2)
+                            #                             print ("=============v===========",updated_loan_amount)
+                            interest = round(((updated_loan_amount / 100 * self.interest_rate)*(
+                                float(total_installment)/12.0))/float(total_installment), 2)
                             # print("\n\n\n\n INETREST 1111111111 :::: ",interest)
                         else:
-                            interest = round(((disbursed_amt / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+                            interest = round(((disbursed_amt / 100 * self.interest_rate)*(
+                                float(total_installment)/12.0))/float(total_installment), 2)
     #                             print("\n\n\n\n INETREST 2222222222 :::: ",interest)
                     else:
-                        interest_month = round(((total * rate_interest) / 12), 2)
+                        interest_month = round(
+                            ((total * rate_interest) / 12), 2)
     #                         print("\n\n\n\n INETREST 33333333333 :::: ",interest_month)
 
                 elif 'int_rate' in global_dict and cnt >= global_dict.get('int_rate'):
                     if self.loan_type.calculation == 'flat':
                         if self.repayment_basis == 'sanctioned_amt':
-    #                             capital = round(disbursed_amt / float(total_installment),2)
-                            interest = round(((updated_loan_amount / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+                            #                             capital = round(disbursed_amt / float(total_installment),2)
+                            interest = round(((updated_loan_amount / 100 * self.interest_rate)*(
+                                float(total_installment)/12.0))/float(total_installment), 2)
                             # print("\n\n\n\n INETREST 4444444444 :::: ",interest)
                         else:
-                            interest = round(((disbursed_amt / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+                            interest = round(((disbursed_amt / 100 * self.interest_rate)*(
+                                float(total_installment)/12.0))/float(total_installment), 2)
     #                             print("\n\n\n\n INETREST 555555555 :::: ",interest)
                     else:
-                        interest_month = round(((total * rate_interest) / 12), 2)
+                        interest_month = round(
+                            ((total * rate_interest) / 12), 2)
     #                         print("\n\n\n\n INETREST 6666666666 :::: ",interest_month)
                 else:
                     interest_month = 0.0
@@ -1445,18 +1561,21 @@ class AccountLoan(models.Model):
     #                     else:
     #                         tot_grc_int = tot_grc_int + temp_int_mnth
 
-                ## for principal calculations .............................
+                # for principal calculations .............................
                 if key_min == 'principal':
                     if self.loan_type.calculation == 'flat':
                         if self.repayment_basis == 'sanctioned_amt':
-                            capital = round(updated_loan_amount / float(self.total_installment - global_dict.get('principal')),2)
+                            capital = round(
+                                updated_loan_amount / float(self.total_installment - global_dict.get('principal')), 2)
                         else:
-                            capital = round(disbursed_amt / float(self.total_installment - global_dict.get('principal')),2)
+                            capital = round(
+                                disbursed_amt / float(self.total_installment - global_dict.get('principal')), 2)
                     else:
                         tot_inst = self.total_installment - i
                         if flag:
                             flag = False
-                            installment = self.get_intstallments(pr_total, rate_interest, tot_inst + 1)
+                            installment = self.get_intstallments(
+                                pr_total, rate_interest, tot_inst + 1)
                         principle_amount = round(installment - int_for_prin, 2)
 
                 elif 'principal' in global_dict and cnt >= global_dict.get('principal'):
@@ -1465,14 +1584,18 @@ class AccountLoan(models.Model):
                         if flag:
                             flag = False
                             if self.repayment_basis == 'sanctioned_amt':
-                                capital = round(updated_loan_amount / float(self.total_installment - global_dict.get('principal')),2)
+                                capital = round(
+                                    updated_loan_amount / float(self.total_installment - global_dict.get('principal')), 2)
                             else:
-                                capital = round(disbursed_amt / float(self.total_installment - global_dict.get('principal')),2)
+                                capital = round(
+                                    disbursed_amt / float(self.total_installment - global_dict.get('principal')), 2)
                     else:
                         if flag:
                             flag = False
-                            installment = self.get_intstallments(pr_total, rate_interest, tot_inst + 1)
-                            int_month = round(((pr_total * rate_interest) / 12), 2)
+                            installment = self.get_intstallments(
+                                pr_total, rate_interest, tot_inst + 1)
+                            int_month = round(
+                                ((pr_total * rate_interest) / 12), 2)
                         principle_amount = round(installment - int_for_prin, 2)
                 else:
                     principle_amount = 0.0
@@ -1507,12 +1630,13 @@ class AccountLoan(models.Model):
                     grc_prc_month += 1
                     inst_num += 1
                     if grc_prc_month > 12:
-                        grc_prc_month = grc_prc_month - 12;
+                        grc_prc_month = grc_prc_month - 12
                         s = grc_date.year + 1
-                        grc_date = grc_date.replace(year = s);
+                        grc_date = grc_date.replace(year=s)
                     if new_day > 28:
-                        grc_date = self.check_date(grc_date, new_day, grc_prc_month)
-                    grc_date = grc_date.replace(month = grc_prc_month);
+                        grc_date = self.check_date(
+                            grc_date, new_day, grc_prc_month)
+                    grc_date = grc_date.replace(month=grc_prc_month)
                     if self.loan_type.calculation == 'flat':
                         tot_grc_capital = tot_grc_capital + capital
                         tot_grc_int = tot_grc_int + interest
@@ -1524,10 +1648,10 @@ class AccountLoan(models.Model):
 #                         total = remain_amount
 #                         print(total,'totttttttttttttttttttttttttttttttttttttttttttttt')
 #                         print(ddd)
-                    installment_vals = {'name':'installment'+str(inst_num), 'date':grc_date,
-                        'loan_id':self.id, 'capital':0.0,
-                        'interest':0.0, 'total':0.0,
-                        'partner_id':part_id,'outstanding_prin':0.0,'outstanding_int':0.0,}
+                    installment_vals = {'name': 'installment'+str(inst_num), 'date': grc_date,
+                                        'loan_id': self.id, 'capital': 0.0,
+                                        'interest': 0.0, 'total': 0.0,
+                                        'partner_id': part_id, 'outstanding_prin': 0.0, 'outstanding_int': 0.0, }
                     installment_cr.create(installment_vals)
                     present_month = grc_prc_month
                     continue
@@ -1538,104 +1662,109 @@ class AccountLoan(models.Model):
             if not self._context.get('is_extended'):
                 present_month += 1
                 if present_month > 12:
-                    present_month = present_month - 12;
+                    present_month = present_month - 12
                     s = date_update.year + 1
-                    date_update = date_update.replace(year = s);
+                    date_update = date_update.replace(year=s)
                 if new_day > 28:
-                        date_update = self.check_date(date_update, new_day, present_month)
-                date_update = date_update.replace(month = present_month);
+                    date_update = self.check_date(
+                        date_update, new_day, present_month)
+                date_update = date_update.replace(month=present_month)
 
             else:
-    #                 present_month += 1
+                #                 present_month += 1
                 if present_month > 12:
-                    present_month = present_month - 12;
+                    present_month = present_month - 12
                     s = date_update.year + 1
-                    date_update = date_update.replace(year = s);
+                    date_update = date_update.replace(year=s)
                 if new_day > 28:
-                        date_update = self.check_date(date_update, new_day, present_month)
-                date_update = date_update.replace(month = present_month);
+                    date_update = self.check_date(
+                        date_update, new_day, present_month)
+                date_update = date_update.replace(month=present_month)
                 present_month += 1
-
-
 
             if self.loan_type.calculation == 'reducing':
                 remain_amount = round(total - principle_amount, 2)
                 sum_of_inst = sum_of_inst + principle_amount
                 if principle_amount <= 0:
                     count_grace_line = 0
-                    installment_vals = {'name':'installment' + str(inst_num),\
-                                    'date':date_update, 'loan_id':self.id,\
-                                    'capital':principle_amount, 'interest':grace_int,\
-                                    'total':principle_amount + interest_month, 'partner_id':part_id,\
-                                     'outstanding_prin':principle_amount,'outstanding_int':grace_int,\
-                                     }
+                    installment_vals = {'name': 'installment' + str(inst_num),
+                                        'date': date_update, 'loan_id': self.id,
+                                        'capital': principle_amount, 'interest': grace_int,
+                                        'total': principle_amount + interest_month, 'partner_id': part_id,
+                                        'outstanding_prin': principle_amount, 'outstanding_int': grace_int,
+                                        }
                 else:
                     count_grace_line += 1
                     if count_grace_line == 1:
-                        installment_vals = {'name':'installment' + str(inst_num),\
-                                    'date':date_update, 'loan_id':self.id,\
-                                    'capital':principle_amount, 'interest':grace_int,\
-                                    'total':principle_amount + interest_month, 'partner_id':part_id,\
-                                     'outstanding_prin':principle_amount,'outstanding_int':grace_int,\
-                                     }
+                        installment_vals = {'name': 'installment' + str(inst_num),
+                                            'date': date_update, 'loan_id': self.id,
+                                            'capital': principle_amount, 'interest': grace_int,
+                                            'total': principle_amount + interest_month, 'partner_id': part_id,
+                                            'outstanding_prin': principle_amount, 'outstanding_int': grace_int,
+                                            }
                     else:
-                        installment_vals = {'name':'installment' + str(inst_num),\
-                                    'date':date_update, 'loan_id':self.id,\
-                                    'capital':principle_amount, 'interest':interest_month,\
-                                    'total':principle_amount + interest_month, 'partner_id':part_id,\
-                                     'outstanding_prin':principle_amount,'outstanding_int':interest_month,\
-                                     }
+                        installment_vals = {'name': 'installment' + str(inst_num),
+                                            'date': date_update, 'loan_id': self.id,
+                                            'capital': principle_amount, 'interest': interest_month,
+                                            'total': principle_amount + interest_month, 'partner_id': part_id,
+                                            'outstanding_prin': principle_amount, 'outstanding_int': interest_month,
+                                            }
             else:
                 remain_amount = round(total - capital, 2)
                 sum_of_inst = sum_of_inst + capital
-                installment_vals = {'name':'installment'+str(inst_num), 'date':date_update,
-                        'loan_id':self.id, 'capital':capital,
-                        'interest':interest, 'total':capital+interest,
-                        'partner_id':part_id,'outstanding_prin':capital,'outstanding_int':interest,}
+                installment_vals = {'name': 'installment'+str(inst_num), 'date': date_update,
+                                    'loan_id': self.id, 'capital': capital,
+                                    'interest': interest, 'total': capital+interest,
+                                    'partner_id': part_id, 'outstanding_prin': capital, 'outstanding_int': interest, }
                 interest_month = installment_vals['interest']
             installment_cr.create(installment_vals)
             total = remain_amount
             interest += interest_month
             cnt = cnt + 1
-        self.write({'interest':interest,'old_disburse_amt':disbursed_amt,});
+        self.write({'interest': interest, 'old_disburse_amt': disbursed_amt, })
 
-        ## Fee calculation .........................
+        # Fee calculation .........................
         fees_vals = {}
         if self.repayment_basis == 'sanctioned_amt':
-            fees_amt = self._get_fees_amount(self.loan_type, updated_loan_amount, interest)
+            fees_amt = self._get_fees_amount(
+                self.loan_type, updated_loan_amount, interest)
             if fees_amt:
                 for fees_line in self.loan_type.loan_component_ids:
                     if fees_line.type == 'fees' and fees_line.tenure == 'tenure':
-                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt, self.total_installment - fees_line.grace_period)
+                        fees_vals = self.get_fees_as_tenure(
+                            self.loan_type, fees_amt, self.total_installment - fees_line.grace_period)
                     elif fees_line.type == 'fees' and fees_line.tenure == 'month':
-                        fees_vals.update({'fees_amt':fees_amt})
+                        fees_vals.update({'fees_amt': fees_amt})
                     elif fees_line.type == 'fees' and fees_line.tenure == 'per_year':
-                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt, self.total_installment-fees_line.grace_period)
+                        fees_vals = self.get_fees_as_tenure(
+                            self.loan_type, fees_amt, self.total_installment-fees_line.grace_period)
 
     #                     else:
     #                         fees_vals.update({'fees_amt':fees_amt})
             else:
-                fees_vals.update({'fees_amt':0.0})
+                fees_vals.update({'fees_amt': 0.0})
         else:
-            fees_amt = self._get_fees_amount(self.loan_type, disbursed_amt, interest)
+            fees_amt = self._get_fees_amount(
+                self.loan_type, disbursed_amt, interest)
             if fees_amt:
                 for fees_line in self.loan_type.loan_component_ids:
                     if fees_line.type == 'fees' and fees_line.tenure == 'tenure':
-                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt, self.total_installment - fees_line.grace_period)
+                        fees_vals = self.get_fees_as_tenure(
+                            self.loan_type, fees_amt, self.total_installment - fees_line.grace_period)
                     elif fees_line.type == 'fees' and fees_line.tenure == 'month':
-                        fees_vals.update({'fees_amt':fees_amt})
+                        fees_vals.update({'fees_amt': fees_amt})
                     elif fees_line.type == 'fees' and fees_line.tenure == 'per_year':
-                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt, self.total_installment-fees_line.grace_period)
+                        fees_vals = self.get_fees_as_tenure(
+                            self.loan_type, fees_amt, self.total_installment-fees_line.grace_period)
     #                     else:
     #                         fees_vals.update({'fees_amt':fees_amt})
             else:
-                fees_vals.update({'fees_amt':0.0})
+                fees_vals.update({'fees_amt': 0.0})
 
-        ##grace period principal and interest calculation ................
+        # grace period principal and interest calculation ................
         grc_cp = 0.0
         grc_int = 0.0
         grc_fees = 0.0
-
 
         if total and self.installment_id:
             self.get_rounding_amt(total, self.installment_id[-1])
@@ -1656,9 +1785,10 @@ class AccountLoan(models.Model):
     #                     grc_cp = self.get_grace_amount(tot_grc_capital, self.total_installment - p)
 
         if tot_grc_int and cnt_fees_flag:
-    #             print (tot_grc_int,'---------------------------in1233')
-    #             if min(lst_gp) == 0 and gp_int != 0:
-            grc_int = self.get_grace_amount(tot_grc_int, self.total_installment - gp_int)
+            #             print (tot_grc_int,'---------------------------in1233')
+            #             if min(lst_gp) == 0 and gp_int != 0:
+            grc_int = self.get_grace_amount(
+                tot_grc_int, self.total_installment - gp_int)
     #             else:
     #                 if gp_int != min(lst_gp):
     #                     v = abs(gp_int - min(lst_gp))
@@ -1670,13 +1800,14 @@ class AccountLoan(models.Model):
             if grc_fees:
                 grc_fees = self.get_grace_amount(grc_fees, total_installment)
             #
-        ## for random grace period to all fees, capital, interest ...................
+        # for random grace period to all fees, capital, interest ...................
         if cnt_fees_flag:
             if 'fees_amt' in fees_vals and fees_vals['fees_amt']:
                 if min(lst_gp) == 0 and gp_fee != 0:
                     grc_fees = fees_vals.get('fees_amt') * gp_fee
                     if grc_fees:
-                        grc_fees = self.get_grace_amount(grc_fees, self.total_installment - gp_fee)
+                        grc_fees = self.get_grace_amount(
+                            grc_fees, self.total_installment - gp_fee)
     #                 else:
     #                     if gp_fee != min(lst_gp):
     #                         a = abs(gp_fee - min(lst_gp))
@@ -1687,20 +1818,22 @@ class AccountLoan(models.Model):
     #                         grc_fees = self.get_grace_amount(grc_fees, self.total_installment - a)
 
     #         print (grc_fees,grc_cp,grc_int,'----------------------------11111')
-        if grc_cp  or grc_int:
+        if grc_cp or grc_int:
             for ins_line in self.installment_id:
                 if ins_line.capital:
-                    ins_line.capital = (ins_line.capital +  grc_cp)
+                    ins_line.capital = (ins_line.capital + grc_cp)
                     ins_line.total = ins_line.total + grc_cp
                 if ins_line.interest:
-                    ins_line.interest = (ins_line.interest +  grc_int)
+                    ins_line.interest = (ins_line.interest + grc_int)
                     ins_line.total = ins_line.total + grc_int
                 if ins_line.outstanding_prin:
-                    ins_line.outstanding_prin = (ins_line.outstanding_prin + grc_cp)
+                    ins_line.outstanding_prin = (
+                        ins_line.outstanding_prin + grc_cp)
                 if ins_line.outstanding_int:
-                    ins_line.outstanding_int = (ins_line.outstanding_int +  grc_int)
+                    ins_line.outstanding_int = (
+                        ins_line.outstanding_int + grc_int)
 
-        ## fee updating in installment line level ...................
+        # fee updating in installment line level ...................
         gp_fee_cnt = 0
         fee_cnt_fee = 0
         is_updated_fees = False
@@ -1714,60 +1847,68 @@ class AccountLoan(models.Model):
                 if 'fees' in global_dict and fee_cnt_fee >= global_dict.get('fees'):
                     is_updated_fees = True
                     if 'fees_amt' in fees_vals:
-                        total_amt = fees_vals['fees_amt'] + line.total + grc_fees
-                        line.write({'fees':fees_vals['fees_amt'] + grc_fees,'outstanding_fees':fees_vals['fees_amt'] + grc_fees, 'total':total_amt})
+                        total_amt = fees_vals['fees_amt'] + \
+                            line.total + grc_fees
+                        line.write(
+                            {'fees': fees_vals['fees_amt'] + grc_fees, 'outstanding_fees': fees_vals['fees_amt'] + grc_fees, 'total': total_amt})
             else:
                 if key_min == 'fees':
                     if 'fees' in global_dict and fee_cnt_fee >= global_dict.get('fees'):
                         is_updated_fees = True
                         if 'fees_amt' in fees_vals:
-                            total_amt = fees_vals['fees_amt'] + line.total + grc_fees
-                            line.write({'fees':fees_vals['fees_amt'] + grc_fees,'outstanding_fees':fees_vals['fees_amt'] + grc_fees,'total':total_amt})
+                            total_amt = fees_vals['fees_amt'] + \
+                                line.total + grc_fees
+                            line.write(
+                                {'fees': fees_vals['fees_amt'] + grc_fees, 'outstanding_fees': fees_vals['fees_amt'] + grc_fees, 'total': total_amt})
                 elif 'fees' in global_dict and gp_fee_cnt >= global_dict.get('fees'):
                     is_updated_fees = True
                     if 'fees_amt' in fees_vals:
-                        total_amt = fees_vals['fees_amt'] + line.total + grc_fees
-                        line.write({'fees':fees_vals['fees_amt'] + grc_fees,'outstanding_fees':fees_vals['fees_amt'] + grc_fees,'total':total_amt})
+                        total_amt = fees_vals['fees_amt'] + \
+                            line.total + grc_fees
+                        line.write(
+                            {'fees': fees_vals['fees_amt'] + grc_fees, 'outstanding_fees': fees_vals['fees_amt'] + grc_fees, 'total': total_amt})
             if is_updated_fees:
-                for fees_line in  line.loan_id.loan_type.loan_component_ids:
+                for fees_line in line.loan_id.loan_type.loan_component_ids:
                     if fees_line.type == 'fees' and fees_line.tenure == 'month':
-                        vals_fee.update({'installment_id':line.id,
-                                                            'product_id':fees_line.product_id.id,
-                                                            'name':fees_line.type,
-                                                            'base':(fees_line.product_amt + grc_fees),})
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         'base': (fees_line.product_amt + grc_fees), })
                         if fees_line.tax_id:
-                            vals_fee.update({'tax':fees_line.tax_amount})
+                            vals_fee.update({'tax': fees_line.tax_amount})
                         if vals_fee:
                             self.env['fees.lines'].create(vals_fee)
                     elif fees_line.type == 'fees' and fees_line.tenure == 'tenure':
-                        vals_fee.update({'installment_id':line.id,
-                                                        'product_id':fees_line.product_id.id,
-                                                        'name':fees_line.type,
-                                                        })
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         })
 
                         if 'actual_fee' in fees_vals:
-                            vals_fee.update({'base':(fees_vals['actual_fee'] + grc_fees)})
+                            vals_fee.update(
+                                {'base': (fees_vals['actual_fee'] + grc_fees)})
                         if fees_line.tax_id and 'tax_amt' in fees_vals:
-                            vals_fee.update({'tax':fees_vals['tax_amt']})
+                            vals_fee.update({'tax': fees_vals['tax_amt']})
                         if vals_fee:
                             self.env['fees.lines'].create(vals_fee)
 
                     elif fees_line.type == 'fees' and fees_line.tenure == 'per_year':
-                        vals_fee.update({'installment_id':line.id,
-                                                        'product_id':fees_line.product_id.id,
-                                                        'name':fees_line.type,
-                                                        })
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         })
 
                         if 'actual_fee' in fees_vals:
-                            vals_fee.update({'base':(fees_vals['actual_fee'] + grc_fees)})
+                            vals_fee.update(
+                                {'base': (fees_vals['actual_fee'] + grc_fees)})
                         if fees_line.tax_id and 'tax_amt' in fees_vals:
-                            vals_fee.update({'tax':fees_vals['tax_amt']})
+                            vals_fee.update({'tax': fees_vals['tax_amt']})
                         if vals_fee:
                             self.env['fees.lines'].create(vals_fee)
 
             gp_fee_cnt = gp_fee_cnt + 1
             fee_cnt_fee += 1
-        ## line installment using by Payment Frequency.........................
+        # line installment using by Payment Frequency.........................
 
         if self.payment_freq == 'quarterly':
             self._get_calculation_quarterly()
@@ -1779,11 +1920,12 @@ class AccountLoan(models.Model):
             self._get_yearly()
         if self._context.get('partner_id') and self._context.get('transfer_loan'):
             return False
-        move_id = self.create_moves(disbursed_amt, disburse_date, flag = True, currency_id= currency_id, journal_id = journal_id)
+        move_id = self.create_moves(
+            disbursed_amt, disburse_date, flag=True, currency_id=currency_id, journal_id=journal_id)
         return move_id
 
-    #@api.multi
-    def _simple_interest_get_by_disbursed_old(self, inter_rate, disbursed_amt = 0.0, disburse_date=False, currency_id = False, journal_id = False):
+    # @api.multi
+    def _simple_interest_get_by_disbursed_old(self, inter_rate, disbursed_amt=0.0, disburse_date=False, currency_id=False, journal_id=False):
         loan = self.read()
         installment_cr = self.env['account.loan.installment']
         cheque_cr = self.env['account.loan.bank.cheque']
@@ -1791,7 +1933,8 @@ class AccountLoan(models.Model):
         line_obj = self.env['account.move.line']
 
         if not self.partner_id:
-            raise exceptions.except_orm(_('Field Required'), _('Please select Customer.'))
+            raise exceptions.except_orm(
+                _('Field Required'), _('Please select Customer.'))
 
         part_id = self.partner_id.id
         int_rate = 0.0
@@ -1804,7 +1947,7 @@ class AccountLoan(models.Model):
             if inter_cal_type:
                 if inter_cal_type == 'flat':
                     if self.loan_amount > 0.0 and self.total_installment > 0:
-#                         int_rate = self.calculate_eir(inter_rate, self.loan_amount, self.total_installment / 12 , inter_rate, 0)
+                        #                         int_rate = self.calculate_eir(inter_rate, self.loan_amount, self.total_installment / 12 , inter_rate, 0)
                         pass
                 elif inter_cal_type == 'reducing':
                     int_rate = inter_rate
@@ -1819,8 +1962,7 @@ class AccountLoan(models.Model):
             pr_total = disbursed_amt
             main_tot = disbursed_amt
 
-
-        ##changes according to grace period of component lines.===========================================
+        # changes according to grace period of component lines.===========================================
         gp_int = 0
         gp_principal = 0
         gp_fee = 0
@@ -1835,32 +1977,33 @@ class AccountLoan(models.Model):
         for loan_com_line in self.loan_type.loan_component_ids:
             if loan_com_line.type == 'principal':
                 gp_principal = loan_com_line.grace_period
-                global_dict.update({'principal':gp_principal})
+                global_dict.update({'principal': gp_principal})
                 lst_gp.append(loan_com_line.grace_period)
             if loan_com_line.type == 'int_rate':
                 gp_int = loan_com_line.grace_period
-                global_dict.update({'int_rate':gp_int})
+                global_dict.update({'int_rate': gp_int})
                 lst_gp.append(loan_com_line.grace_period)
             if loan_com_line.type == 'fees':
                 gp_fee = loan_com_line.grace_period
-                global_dict.update({'fees':gp_fee})
+                global_dict.update({'fees': gp_fee})
                 lst_gp.append(loan_com_line.grace_period)
-
 
         if lst_gp and gp_fee == gp_int == gp_principal:
             total_installment = self.total_installment - (min(lst_gp))
             grc_installment = self.total_installment - total_installment
-        ##================================================================================================
+        # ================================================================================================
         total_installment = self.total_installment - (min(lst_gp))
         grc_install = self.total_installment - total_installment
         if gp_fee == gp_int == gp_principal:
             try:
-                installment = round(((total * (rate_interest / 12)) / (1 - ((1 + rate_interest / 12) ** -(total_installment)))))
+                installment = round(((total * (rate_interest / 12)) /
+                                     (1 - ((1 + rate_interest / 12) ** -(total_installment)))))
             except ZeroDivisionError:
                 installment = 0
         else:
             try:
-                installment = round(((total * (rate_interest / 12)) / (1 - ((1 + rate_interest / 12) ** -(self.total_installment)))))
+                installment = round(((total * (rate_interest / 12)) / (1 -
+                                                                       ((1 + rate_interest / 12) ** -(self.total_installment)))))
             except ZeroDivisionError:
                 installment = 0
 
@@ -1872,7 +2015,8 @@ class AccountLoan(models.Model):
         interest = 0
         sum_of_inst = 0.0
         cnt_fees_flag = False
-        date_update = datetime.datetime.strptime(disburse_date, "%Y-%m-%d").date()
+        date_update = datetime.datetime.strptime(
+            disburse_date, "%Y-%m-%d").date()
         new_day = int(date_update.day)
 
         if lst_gp:
@@ -1893,16 +2037,22 @@ class AccountLoan(models.Model):
             interest_month = 0.0
             int_for_prin = round(((total * rate_interest) / 12), 2)
             if not total_installment:
-                raise Warning('Please Check grace periods in the loan component lines total installment and grace period should not be same')
-            interest = round(((100000 / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+                raise Warning(
+                    'Please Check grace periods in the loan component lines total installment and grace period should not be same')
+            interest = round(((100000 / 100 * self.interest_rate) *
+                              (float(total_installment)/12.0))/float(total_installment), 2)
             if gp_fee == gp_int == gp_principal:
                 if self.loan_type.calculation == 'flat':
                     if self.repayment_basis == 'sanctioned_amt':
-                        capital = round(self.loan_amount / float(self.total_installment - global_dict.get('principal')),2)
-                        interest = round(((self.loan_amount / 100 * self.interest_rate)*(float(self.total_installment)/12.0))/float(self.total_installment),2)
+                        capital = round(
+                            self.loan_amount / float(self.total_installment - global_dict.get('principal')), 2)
+                        interest = round(((self.loan_amount / 100 * self.interest_rate)*(
+                            float(self.total_installment)/12.0))/float(self.total_installment), 2)
                     else:
-                        capital = round(disbursed_amt / float(self.total_installment - global_dict.get('principal')),2)
-                        interest = round(((disbursed_amt / 100 * self.interest_rate)*(float(self.total_installment)/12.0))/float(self.total_installment),2)
+                        capital = round(
+                            disbursed_amt / float(self.total_installment - global_dict.get('principal')), 2)
+                        interest = round(((disbursed_amt / 100 * self.interest_rate)*(
+                            float(self.total_installment)/12.0))/float(self.total_installment), 2)
                 else:
                     interest_month = round(((total * rate_interest) / 12), 2)
                     principle_amount = round(installment - interest_month, 2)
@@ -1921,31 +2071,37 @@ class AccountLoan(models.Model):
             else:
                 cnt_fees_flag = True
 
-                ## for interest calculations .............................
-                if key_min == 'int_rate' :
+                # for interest calculations .............................
+                if key_min == 'int_rate':
                     if self.loan_type.calculation == 'flat':
                         if self.repayment_basis == 'sanctioned_amt':
-#                             capital = round(disbursed_amt / float(total_installment),2)
-                            interest = round(((self.loan_amount / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+                            #                             capital = round(disbursed_amt / float(total_installment),2)
+                            interest = round(((self.loan_amount / 100 * self.interest_rate)*(
+                                float(total_installment)/12.0))/float(total_installment), 2)
 #                             print("\n\n\n\n INETREST 1111111111 :::: ",interest)
                         else:
-                            interest = round(((disbursed_amt / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+                            interest = round(((disbursed_amt / 100 * self.interest_rate)*(
+                                float(total_installment)/12.0))/float(total_installment), 2)
 #                             print("\n\n\n\n INETREST 2222222222 :::: ",interest)
                     else:
-                        interest_month = round(((total * rate_interest) / 12), 2)
+                        interest_month = round(
+                            ((total * rate_interest) / 12), 2)
 #                         print("\n\n\n\n INETREST 33333333333 :::: ",interest_month)
 
                 elif 'int_rate' in global_dict and cnt >= global_dict.get('int_rate'):
                     if self.loan_type.calculation == 'flat':
                         if self.repayment_basis == 'sanctioned_amt':
-#                             capital = round(disbursed_amt / float(total_installment),2)
-                            interest = round(((self.loan_amount / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+                            #                             capital = round(disbursed_amt / float(total_installment),2)
+                            interest = round(((self.loan_amount / 100 * self.interest_rate)*(
+                                float(total_installment)/12.0))/float(total_installment), 2)
 #                             print("\n\n\n\n INETREST 4444444444 :::: ",interest)
                         else:
-                            interest = round(((disbursed_amt / 100 * self.interest_rate)*(float(total_installment)/12.0))/float(total_installment),2)
+                            interest = round(((disbursed_amt / 100 * self.interest_rate)*(
+                                float(total_installment)/12.0))/float(total_installment), 2)
 #                             print("\n\n\n\n INETREST 555555555 :::: ",interest)
                     else:
-                        interest_month = round(((total * rate_interest) / 12), 2)
+                        interest_month = round(
+                            ((total * rate_interest) / 12), 2)
 #                         print("\n\n\n\n INETREST 6666666666 :::: ",interest_month)
                 else:
                     interest_month = 0.0
@@ -1965,13 +2121,15 @@ class AccountLoan(models.Model):
 #                     else:
 #                         tot_grc_int = tot_grc_int + temp_int_mnth
 
-                ## for principal calculations .............................
+                # for principal calculations .............................
                 if key_min == 'principal':
                     if self.loan_type.calculation == 'flat':
                         if self.repayment_basis == 'sanctioned_amt':
-                            capital = round(self.loan_amount / float(self.total_installment - global_dict.get('principal')),2)
+                            capital = round(
+                                self.loan_amount / float(self.total_installment - global_dict.get('principal')), 2)
                         else:
-                            capital = round(disbursed_amt / float(self.total_installment - global_dict.get('principal')),2)
+                            capital = round(
+                                disbursed_amt / float(self.total_installment - global_dict.get('principal')), 2)
                     else:
                         principle_amount = round(installment - int_for_prin, 2)
                 elif 'principal' in global_dict and cnt >= global_dict.get('principal'):
@@ -1980,14 +2138,18 @@ class AccountLoan(models.Model):
                         if flag:
                             flag = False
                             if self.repayment_basis == 'sanctioned_amt':
-                                capital = round(self.loan_amount / float(self.total_installment - global_dict.get('principal')),2)
+                                capital = round(
+                                    self.loan_amount / float(self.total_installment - global_dict.get('principal')), 2)
                             else:
-                                capital = round(disbursed_amt / float(self.total_installment - global_dict.get('principal')),2)
+                                capital = round(
+                                    disbursed_amt / float(self.total_installment - global_dict.get('principal')), 2)
                     else:
                         if flag:
                             flag = False
-                            installment = self.get_intstallments(pr_total, rate_interest, tot_inst + 1)
-                            int_month = round(((pr_total * rate_interest) / 12), 2)
+                            installment = self.get_intstallments(
+                                pr_total, rate_interest, tot_inst + 1)
+                            int_month = round(
+                                ((pr_total * rate_interest) / 12), 2)
                         principle_amount = round(installment - int_for_prin, 2)
                 else:
                     principle_amount = 0.0
@@ -2031,98 +2193,100 @@ class AccountLoan(models.Model):
 
                 inst_num = inst_num + 1
 
-
-
             present_month += 1
             if present_month > 12:
-                present_month = present_month - 12;
+                present_month = present_month - 12
                 s = date_update.year + 1
-                date_update = date_update.replace(year = s);
+                date_update = date_update.replace(year=s)
             if new_day > 28:
-                    date_update = self.check_date(date_update, new_day, present_month)
-            date_update = date_update.replace(month = present_month);
+                date_update = self.check_date(
+                    date_update, new_day, present_month)
+            date_update = date_update.replace(month=present_month)
             installment_vals = {}
-
-
 
             if self.loan_type.calculation == 'reducing':
                 remain_amount = round(total - principle_amount, 2)
                 sum_of_inst = sum_of_inst + principle_amount
                 if principle_amount <= 0:
                     count_grace_line = 0
-                    installment_vals = {'name':'installment' + str(inst_num),\
-                                    'date':date_update, 'loan_id':self.id,\
-                                    'capital':principle_amount, 'interest':grace_int,\
-                                    'total':principle_amount + interest_month, 'partner_id':part_id,\
-                                     'outstanding_prin':principle_amount,'outstanding_int':grace_int,\
-                                     }
+                    installment_vals = {'name': 'installment' + str(inst_num),
+                                        'date': date_update, 'loan_id': self.id,
+                                        'capital': principle_amount, 'interest': grace_int,
+                                        'total': principle_amount + interest_month, 'partner_id': part_id,
+                                        'outstanding_prin': principle_amount, 'outstanding_int': grace_int,
+                                        }
                 else:
                     count_grace_line += 1
                     if count_grace_line == 1:
-                        installment_vals = {'name':'installment' + str(inst_num),\
-                                    'date':date_update, 'loan_id':self.id,\
-                                    'capital':principle_amount, 'interest':grace_int,\
-                                    'total':principle_amount + interest_month, 'partner_id':part_id,\
-                                     'outstanding_prin':principle_amount,'outstanding_int':grace_int,\
-                                     }
+                        installment_vals = {'name': 'installment' + str(inst_num),
+                                            'date': date_update, 'loan_id': self.id,
+                                            'capital': principle_amount, 'interest': grace_int,
+                                            'total': principle_amount + interest_month, 'partner_id': part_id,
+                                            'outstanding_prin': principle_amount, 'outstanding_int': grace_int,
+                                            }
                     else:
-                        installment_vals = {'name':'installment' + str(inst_num),\
-                                    'date':date_update, 'loan_id':self.id,\
-                                    'capital':principle_amount, 'interest':interest_month,\
-                                    'total':principle_amount + interest_month, 'partner_id':part_id,\
-                                     'outstanding_prin':principle_amount,'outstanding_int':interest_month,\
-                                     }
+                        installment_vals = {'name': 'installment' + str(inst_num),
+                                            'date': date_update, 'loan_id': self.id,
+                                            'capital': principle_amount, 'interest': interest_month,
+                                            'total': principle_amount + interest_month, 'partner_id': part_id,
+                                            'outstanding_prin': principle_amount, 'outstanding_int': interest_month,
+                                            }
             else:
                 remain_amount = round(total - capital, 2)
                 sum_of_inst = sum_of_inst + capital
-                installment_vals = {'name':'installment'+str(inst_num), 'date':date_update,
-                        'loan_id':self.id, 'capital':capital,
-                        'interest':interest, 'total':capital+interest,
-                        'partner_id':part_id,'outstanding_prin':capital,'outstanding_int':interest,}
+                installment_vals = {'name': 'installment'+str(inst_num), 'date': date_update,
+                                    'loan_id': self.id, 'capital': capital,
+                                    'interest': interest, 'total': capital+interest,
+                                    'partner_id': part_id, 'outstanding_prin': capital, 'outstanding_int': interest, }
                 interest_month = installment_vals['interest']
             installment_cr.create(installment_vals)
             total = remain_amount
             interest += interest_month
             cnt = cnt + 1
-        self.write({'interest':interest,'old_disburse_amt':disbursed_amt,});
+        self.write({'interest': interest, 'old_disburse_amt': disbursed_amt, })
 
-        ## Fee calculation .........................
+        # Fee calculation .........................
         fees_vals = {}
         if self.repayment_basis == 'sanctioned_amt':
-            fees_amt = self._get_fees_amount(self.loan_type, self.loan_amount, interest)
+            fees_amt = self._get_fees_amount(
+                self.loan_type, self.loan_amount, interest)
             if fees_amt:
                 for fees_line in self.loan_type.loan_component_ids:
                     if fees_line.type == 'fees' and fees_line.tenure == 'tenure':
-                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt, self.total_installment - fees_line.grace_period)
+                        fees_vals = self.get_fees_as_tenure(
+                            self.loan_type, fees_amt, self.total_installment - fees_line.grace_period)
                     elif fees_line.type == 'fees' and fees_line.tenure == 'month':
-                        fees_vals.update({'fees_amt':fees_amt})
+                        fees_vals.update({'fees_amt': fees_amt})
                     elif fees_line.type == 'fees' and fees_line.tenure == 'per_year':
-                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt, self.total_installment-fees_line.grace_period)
+                        fees_vals = self.get_fees_as_tenure(
+                            self.loan_type, fees_amt, self.total_installment-fees_line.grace_period)
 
 #                     else:
 #                         fees_vals.update({'fees_amt':fees_amt})
             else:
-                fees_vals.update({'fees_amt':0.0})
+                fees_vals.update({'fees_amt': 0.0})
         else:
-            fees_amt = self._get_fees_amount(self.loan_type, disbursed_amt, interest)
+            fees_amt = self._get_fees_amount(
+                self.loan_type, disbursed_amt, interest)
             if fees_amt:
                 for fees_line in self.loan_type.loan_component_ids:
                     if fees_line.type == 'fees' and fees_line.tenure == 'tenure':
-                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt, self.total_installment - fees_line.grace_period)
+                        fees_vals = self.get_fees_as_tenure(
+                            self.loan_type, fees_amt, self.total_installment - fees_line.grace_period)
                     elif fees_line.type == 'fees' and fees_line.tenure == 'month':
-                        fees_vals.update({'fees_amt':fees_amt})
+                        fees_vals.update({'fees_amt': fees_amt})
                     elif fees_line.type == 'fees' and fees_line.tenure == 'per_year':
-                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt, self.total_installment-fees_line.grace_period)
+                        fees_vals = self.get_fees_as_tenure(
+                            self.loan_type, fees_amt, self.total_installment-fees_line.grace_period)
 #                     else:
 #                         fees_vals.update({'fees_amt':fees_amt})
             else:
-                fees_vals.update({'fees_amt':0.0})
+                fees_vals.update({'fees_amt': 0.0})
 
-        ##grace period principal and interest calculation ................
+        # grace period principal and interest calculation ................
         grc_cp = 0.0
         grc_int = 0.0
         grc_fees = 0.0
-
 
         if total and self.installment_id:
             self.get_rounding_amt(total, self.installment_id[-1])
@@ -2143,9 +2307,10 @@ class AccountLoan(models.Model):
 #                     grc_cp = self.get_grace_amount(tot_grc_capital, self.total_installment - p)
 
         if tot_grc_int and cnt_fees_flag:
-#             print (tot_grc_int,'---------------------------in1233')
-#             if min(lst_gp) == 0 and gp_int != 0:
-            grc_int = self.get_grace_amount(tot_grc_int, self.total_installment - gp_int)
+            #             print (tot_grc_int,'---------------------------in1233')
+            #             if min(lst_gp) == 0 and gp_int != 0:
+            grc_int = self.get_grace_amount(
+                tot_grc_int, self.total_installment - gp_int)
 #             else:
 #                 if gp_int != min(lst_gp):
 #                     v = abs(gp_int - min(lst_gp))
@@ -2157,13 +2322,14 @@ class AccountLoan(models.Model):
             if grc_fees:
                 grc_fees = self.get_grace_amount(grc_fees, total_installment)
             #
-        ## for random grace period to all fees, capital, interest ...................
+        # for random grace period to all fees, capital, interest ...................
         if cnt_fees_flag:
             if 'fees_amt' in fees_vals and fees_vals['fees_amt']:
                 if min(lst_gp) == 0 and gp_fee != 0:
                     grc_fees = fees_vals.get('fees_amt') * gp_fee
                     if grc_fees:
-                        grc_fees = self.get_grace_amount(grc_fees, self.total_installment - gp_fee)
+                        grc_fees = self.get_grace_amount(
+                            grc_fees, self.total_installment - gp_fee)
 #                 else:
 #                     if gp_fee != min(lst_gp):
 #                         a = abs(gp_fee - min(lst_gp))
@@ -2174,20 +2340,22 @@ class AccountLoan(models.Model):
 #                         grc_fees = self.get_grace_amount(grc_fees, self.total_installment - a)
 
 #         print (grc_fees,grc_cp,grc_int,'----------------------------11111')
-        if grc_cp  or grc_int:
+        if grc_cp or grc_int:
             for ins_line in self.installment_id:
                 if ins_line.capital:
-                    ins_line.capital = (ins_line.capital +  grc_cp)
+                    ins_line.capital = (ins_line.capital + grc_cp)
                     ins_line.total = ins_line.total + grc_cp
                 if ins_line.interest:
-                    ins_line.interest = (ins_line.interest +  grc_int)
+                    ins_line.interest = (ins_line.interest + grc_int)
                     ins_line.total = ins_line.total + grc_int
                 if ins_line.outstanding_prin:
-                    ins_line.outstanding_prin = (ins_line.outstanding_prin + grc_cp)
+                    ins_line.outstanding_prin = (
+                        ins_line.outstanding_prin + grc_cp)
                 if ins_line.outstanding_int:
-                    ins_line.outstanding_int = (ins_line.outstanding_int +  grc_int)
+                    ins_line.outstanding_int = (
+                        ins_line.outstanding_int + grc_int)
 
-        ## fee updating in installment line level ...................
+        # fee updating in installment line level ...................
         gp_fee_cnt = min(lst_gp)
         is_updated_fees = False
         for line in self.installment_id:
@@ -2198,57 +2366,64 @@ class AccountLoan(models.Model):
                 is_updated_fees = True
                 if 'fees_amt' in fees_vals:
                     total_amt = fees_vals['fees_amt'] + line.total + grc_fees
-                    line.write({'fees':fees_vals['fees_amt'] + grc_fees,'outstanding_fees':fees_vals['fees_amt'] + grc_fees, 'total':total_amt})
+                    line.write({'fees': fees_vals['fees_amt'] + grc_fees,
+                                'outstanding_fees': fees_vals['fees_amt'] + grc_fees, 'total': total_amt})
             else:
                 if key_min == 'fees':
                     is_updated_fees = True
                     if 'fees_amt' in fees_vals:
-                        total_amt = fees_vals['fees_amt'] + line.total + grc_fees
-                        line.write({'fees':fees_vals['fees_amt'] + grc_fees,'outstanding_fees':fees_vals['fees_amt'] + grc_fees,'total':total_amt})
+                        total_amt = fees_vals['fees_amt'] + \
+                            line.total + grc_fees
+                        line.write(
+                            {'fees': fees_vals['fees_amt'] + grc_fees, 'outstanding_fees': fees_vals['fees_amt'] + grc_fees, 'total': total_amt})
                 elif 'fees' in global_dict and gp_fee_cnt >= global_dict.get('fees'):
                     is_updated_fees = True
                     if 'fees_amt' in fees_vals:
-                        total_amt = fees_vals['fees_amt'] + line.total + grc_fees
-                        line.write({'fees':fees_vals['fees_amt'] + grc_fees,'outstanding_fees':fees_vals['fees_amt'] + grc_fees,'total':total_amt})
+                        total_amt = fees_vals['fees_amt'] + \
+                            line.total + grc_fees
+                        line.write(
+                            {'fees': fees_vals['fees_amt'] + grc_fees, 'outstanding_fees': fees_vals['fees_amt'] + grc_fees, 'total': total_amt})
             if is_updated_fees:
-                for fees_line in  line.loan_id.loan_type.loan_component_ids:
+                for fees_line in line.loan_id.loan_type.loan_component_ids:
                     if fees_line.type == 'fees' and fees_line.tenure == 'month':
-                        vals_fee.update({'installment_id':line.id,
-                                                            'product_id':fees_line.product_id.id,
-                                                            'name':fees_line.type,
-                                                            'base':(fees_line.product_amt + grc_fees),})
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         'base': (fees_line.product_amt + grc_fees), })
                         if fees_line.tax_id:
-                            vals_fee.update({'tax':fees_line.tax_amount})
+                            vals_fee.update({'tax': fees_line.tax_amount})
                         if vals_fee:
                             self.env['fees.lines'].create(vals_fee)
                     elif fees_line.type == 'fees' and fees_line.tenure == 'tenure':
-                        vals_fee.update({'installment_id':line.id,
-                                                        'product_id':fees_line.product_id.id,
-                                                        'name':fees_line.type,
-                                                        })
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         })
 
                         if 'actual_fee' in fees_vals:
-                            vals_fee.update({'base':(fees_vals['actual_fee'] + grc_fees)})
+                            vals_fee.update(
+                                {'base': (fees_vals['actual_fee'] + grc_fees)})
                         if fees_line.tax_id and 'tax_amt' in fees_vals:
-                            vals_fee.update({'tax':fees_vals['tax_amt']})
+                            vals_fee.update({'tax': fees_vals['tax_amt']})
                         if vals_fee:
                             self.env['fees.lines'].create(vals_fee)
 
                     elif fees_line.type == 'fees' and fees_line.tenure == 'per_year':
-                        vals_fee.update({'installment_id':line.id,
-                                                        'product_id':fees_line.product_id.id,
-                                                        'name':fees_line.type,
-                                                        })
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         })
 
                         if 'actual_fee' in fees_vals:
-                            vals_fee.update({'base':(fees_vals['actual_fee'] + grc_fees)})
+                            vals_fee.update(
+                                {'base': (fees_vals['actual_fee'] + grc_fees)})
                         if fees_line.tax_id and 'tax_amt' in fees_vals:
-                            vals_fee.update({'tax':fees_vals['tax_amt']})
+                            vals_fee.update({'tax': fees_vals['tax_amt']})
                         if vals_fee:
                             self.env['fees.lines'].create(vals_fee)
 
             gp_fee_cnt = gp_fee_cnt + 1
-        ## line installment using by Payment Frequency.........................
+        # line installment using by Payment Frequency.........................
 
         if self.payment_freq == 'quarterly':
             self._get_calculation_quarterly()
@@ -2260,10 +2435,11 @@ class AccountLoan(models.Model):
             self._get_yearly()
         if self._context.get('partner_id') and self._context.get('transfer_loan'):
             return False
-        move_id = self.create_moves(disbursed_amt, disburse_date, flag = True, currency_id= currency_id, journal_id = journal_id)
+        move_id = self.create_moves(
+            disbursed_amt, disburse_date, flag=True, currency_id=currency_id, journal_id=journal_id)
         return move_id
 
-    ## yearly calcultion ..................
+    # yearly calcultion ..................
     def _get_yearly(self):
         cnt = 0
         inst = 'installment'
@@ -2276,35 +2452,37 @@ class AccountLoan(models.Model):
         vals = {}
         inst_list = []
         if (len(self.installment_id) % 12) != 0:
-            raise UserError(_('You can not apply for yearly basis loan. Please check no. of installments.'))
+            raise UserError(
+                _('You can not apply for yearly basis loan. Please check no. of installments.'))
         if self.payment_schedule_ids:
             self.payment_schedule_ids.unlink()
 
         for line in self.installment_id:
-            principal = round(principal + line.capital,2)
-            interest = round(interest + line.interest,2)
-            fees = round(fees + line.fees,2)
+            principal = round(principal + line.capital, 2)
+            interest = round(interest + line.interest, 2)
+            fees = round(fees + line.fees, 2)
             installment_ids.append(line)
             inst_list.append(line.id)
             if cnt == 11:
                 date_update = line.date
-                total =  round(principal + interest + fees,2)
-                vals.update({'name':inst+ str(cnt1), 'capital':principal,\
-                             'interest':interest,'fees':fees,'total':total,\
-                            'date':date_update, 'installment_id':[(6,0,inst_list)],'loan_id':self.id})
+                total = round(principal + interest + fees, 2)
+                vals.update({'name': inst + str(cnt1), 'capital': principal,
+                             'interest': interest, 'fees': fees, 'total': total,
+                             'date': date_update, 'installment_id': [(6, 0, inst_list)], 'loan_id': self.id})
                 inst_list = []
                 if self.return_type == 'cheque':
-                    vals1 = {'name':'cheque' + str(cnt1),\
-                     'date':date_update, 'loan_id':self.id,\
-                     'code':'cheque' + str(cnt1),'partner_id':line.partner_id.id,\
-                     'cheque_amount':total, 'loan':principal, 'interest':interest,\
-                     'account_id':self.journal_repayment_id.default_debit_account_id.id,\
-                     'installment_id':line.id,'fees':fees}
-                    cheque_id = self.env['account.loan.bank.cheque'].create(vals1)
-                    vals.update({'cheque_id':cheque_id.id})
-                    line.write({'cheque_id':cheque_id.id})
+                    vals1 = {'name': 'cheque' + str(cnt1),
+                             'date': date_update, 'loan_id': self.id,
+                             'code': 'cheque' + str(cnt1), 'partner_id': line.partner_id.id,
+                             'cheque_amount': total, 'loan': principal, 'interest': interest,
+                             'account_id': self.journal_repayment_id.default_debit_account_id.id,
+                             'installment_id': line.id, 'fees': fees}
+                    cheque_id = self.env['account.loan.bank.cheque'].create(
+                        vals1)
+                    vals.update({'cheque_id': cheque_id.id})
+                    line.write({'cheque_id': cheque_id.id})
                     for l in installment_ids:
-                        l.write({'cheque_id':cheque_id.id})
+                        l.write({'cheque_id': cheque_id.id})
                     installment_ids = []
 #                 vals.update({'loan_id':self.id})
                 self.env['payment.schedule.line'].create(vals)
@@ -2318,7 +2496,7 @@ class AccountLoan(models.Model):
             else:
                 cnt = cnt + 1
 
-    ## half yearly calculation ...........................
+    # half yearly calculation ...........................
     def _get_half_yearly(self):
         cnt = 0
         inst = 'installment'
@@ -2333,7 +2511,8 @@ class AccountLoan(models.Model):
         if self.payment_schedule_ids:
             self.payment_schedule_ids.unlink()
         if (len(self.installment_id) % 6) != 0:
-            raise UserError(_('You can not apply for half yearly loan. Please check no. of installments.'))
+            raise UserError(
+                _('You can not apply for half yearly loan. Please check no. of installments.'))
 
         for line in self.installment_id:
             principal = principal + line.capital
@@ -2343,25 +2522,26 @@ class AccountLoan(models.Model):
             inst_list.append(line.id)
             if cnt == 5:
                 date_update = line.date
-                total =  principal + interest + fees
-                vals.update({'name':inst+ str(cnt1), 'capital':principal,\
-                             'interest':interest,'fees':fees,'total':total,\
-                            'date':date_update, 'installment_id':[(6,0,inst_list)]})
+                total = principal + interest + fees
+                vals.update({'name': inst + str(cnt1), 'capital': principal,
+                             'interest': interest, 'fees': fees, 'total': total,
+                             'date': date_update, 'installment_id': [(6, 0, inst_list)]})
                 inst_list = []
                 if self.return_type == 'cheque':
-                    vals1 = {'name':'cheque' + str(cnt1),\
-                     'date':date_update, 'loan_id':self.id,\
-                     'code':'cheque' + str(cnt1),'partner_id':line.partner_id.id,\
-                     'cheque_amount':total, 'loan':principal, 'interest':interest,\
-                     'account_id':self.journal_repayment_id.default_debit_account_id.id,\
-                     'installment_id':line.id, 'fees':fees}
-                    cheque_id = self.env['account.loan.bank.cheque'].create(vals1)
-                    vals.update({'cheque_id':cheque_id.id})
-                    line.write({'cheque_id':cheque_id.id})
+                    vals1 = {'name': 'cheque' + str(cnt1),
+                             'date': date_update, 'loan_id': self.id,
+                             'code': 'cheque' + str(cnt1), 'partner_id': line.partner_id.id,
+                             'cheque_amount': total, 'loan': principal, 'interest': interest,
+                             'account_id': self.journal_repayment_id.default_debit_account_id.id,
+                             'installment_id': line.id, 'fees': fees}
+                    cheque_id = self.env['account.loan.bank.cheque'].create(
+                        vals1)
+                    vals.update({'cheque_id': cheque_id.id})
+                    line.write({'cheque_id': cheque_id.id})
                     for l in installment_ids:
-                        l.write({'cheque_id':cheque_id.id})
+                        l.write({'cheque_id': cheque_id.id})
                     installment_ids = []
-                vals.update({'loan_id':self.id})
+                vals.update({'loan_id': self.id})
                 self.env['payment.schedule.line'].create(vals)
                 vals = {}
                 vals1 = {}
@@ -2373,8 +2553,8 @@ class AccountLoan(models.Model):
             else:
                 cnt = cnt + 1
 
+    # monthly calculation .........................
 
-    ##monthly calculation .........................
     def _get_calculation_monthly(self):
         cnt1 = 1
         vals = {}
@@ -2383,19 +2563,19 @@ class AccountLoan(models.Model):
             self.payment_schedule_ids.unlink()
         for line in self.installment_id:
 
-            vals = {'name':line.name, 'capital':line.capital,\
-                             'interest':line.interest,'fees':line.fees,'total':line.total,\
-                            'date':line.date, 'installment_id':[(6,0,[line.id])],'loan_id':self.id}
+            vals = {'name': line.name, 'capital': line.capital,
+                    'interest': line.interest, 'fees': line.fees, 'total': line.total,
+                    'date': line.date, 'installment_id': [(6, 0, [line.id])], 'loan_id': self.id}
             if self.return_type == 'cheque':
-                cheque_id = cheque_cr.create({'name':'cheque' + str(cnt1), 'date':line.date,\
-                                        'loan_id':line.loan_id.id, 'code':'cheque' + str(cnt1),\
-                                        'partner_id':line.partner_id.id,\
-                                        'cheque_amount':line.total, 'loan':line.capital, 'interest':line.interest,\
-                                        'account_id':self.journal_repayment_id.default_debit_account_id.id,\
-                                        'installment_id':line.id,'fees':line.fees})
+                cheque_id = cheque_cr.create({'name': 'cheque' + str(cnt1), 'date': line.date,
+                                              'loan_id': line.loan_id.id, 'code': 'cheque' + str(cnt1),
+                                              'partner_id': line.partner_id.id,
+                                              'cheque_amount': line.total, 'loan': line.capital, 'interest': line.interest,
+                                              'account_id': self.journal_repayment_id.default_debit_account_id.id,
+                                              'installment_id': line.id, 'fees': line.fees})
                 if cheque_id:
-                    vals.update({'cheque_id':cheque_id.id})
-                    line.write({'cheque_id':cheque_id.id})
+                    vals.update({'cheque_id': cheque_id.id})
+                    line.write({'cheque_id': cheque_id.id})
 #                     vals.update({'name':line.name, 'capital':line.capital,\
 #                                      'interest':line.interest,'fees':line.fees,'total':line.total,\
 #                                     'date':line.date, 'installment_id':line.id,'loan_id':self.id})
@@ -2403,7 +2583,7 @@ class AccountLoan(models.Model):
             pyt_id = self.env['payment.schedule.line'].create(vals)
             cnt1 = cnt1 + 1
 
-    ##Quarterly calculation .................
+    # Quarterly calculation .................
     def _get_calculation_quarterly(self):
         cnt = 0
         inst = 'installment'
@@ -2416,7 +2596,8 @@ class AccountLoan(models.Model):
         installment_ids = []
         inst_list = []
         if (len(self.installment_id) % 3) != 0:
-            raise UserError(_('You can not apply for quarterly basis loan. Please check no. of installments.'))
+            raise UserError(
+                _('You can not apply for quarterly basis loan. Please check no. of installments.'))
         if self.payment_schedule_ids:
             self.payment_schedule_ids.unlink()
         for line in self.installment_id:
@@ -2427,26 +2608,27 @@ class AccountLoan(models.Model):
             inst_list.append(line.id)
             if cnt == 2:
                 date_update = line.date
-                total =  principal + interest + fees
-                vals.update({'name':inst+ str(cnt1), 'capital':principal,\
-                             'interest':interest,'fees':fees,'total':total,\
-                            'date':date_update, 'installment_id':[(6,0,inst_list)]})
+                total = principal + interest + fees
+                vals.update({'name': inst + str(cnt1), 'capital': principal,
+                             'interest': interest, 'fees': fees, 'total': total,
+                             'date': date_update, 'installment_id': [(6, 0, inst_list)]})
                 inst_list = []
                 if self.return_type == 'cheque':
-                    vals1 = {'name':'cheque' + str(cnt1),\
-                     'date':date_update, 'loan_id':self.id,\
-                     'code':'cheque' + str(cnt1),'partner_id':line.partner_id.id,\
-                     'cheque_amount':total, 'loan':principal, 'interest':interest,\
-                     'account_id':self.journal_repayment_id.default_debit_account_id.id,\
-                     'installment_id':line.id,'fees':fees}
-                    cheque_id = self.env['account.loan.bank.cheque'].create(vals1)
-                    vals.update({'cheque_id':cheque_id.id})
-                    line.write({'cheque_id':cheque_id.id})
+                    vals1 = {'name': 'cheque' + str(cnt1),
+                             'date': date_update, 'loan_id': self.id,
+                             'code': 'cheque' + str(cnt1), 'partner_id': line.partner_id.id,
+                             'cheque_amount': total, 'loan': principal, 'interest': interest,
+                             'account_id': self.journal_repayment_id.default_debit_account_id.id,
+                             'installment_id': line.id, 'fees': fees}
+                    cheque_id = self.env['account.loan.bank.cheque'].create(
+                        vals1)
+                    vals.update({'cheque_id': cheque_id.id})
+                    line.write({'cheque_id': cheque_id.id})
                     for l in installment_ids:
-                        l.write({'cheque_id':cheque_id.id})
+                        l.write({'cheque_id': cheque_id.id})
                     installment_ids = []
 
-                vals.update({'loan_id':self.id})
+                vals.update({'loan_id': self.id})
                 self.env['payment.schedule.line'].create(vals)
                 vals = {}
                 vals1 = {}
@@ -2458,8 +2640,8 @@ class AccountLoan(models.Model):
             else:
                 cnt = cnt + 1
 
-    def create_moves(self, disburse_amt, disburse_date, flag, currency_id, journal_id = False):
-        ## accounting journal entries ..........................
+    def create_moves(self, disburse_amt, disburse_date, flag, currency_id, journal_id=False):
+        # accounting journal entries ..........................
         move_vals = {}
         name_des = "Loan Disbursement For: "
         name_processing_fees = "Processing Fee Collected For: "
@@ -2475,7 +2657,6 @@ class AccountLoan(models.Model):
         fee_cnt = 0.0
         partner_id = False
 
-
         if not currency_id:
             raise UserError(_('Please Configure Currency'))
 
@@ -2484,14 +2665,15 @@ class AccountLoan(models.Model):
         company_curren = self.company_id.currency_id
 
         if not self.journal_disburse_id:
-                raise UserError(_('Please Configure Loan Disbursement Journal'))
+            raise UserError(_('Please Configure Loan Disbursement Journal'))
         if self.loan_type:
             for type_line in self.loan_type.loan_component_ids:
                 if type_line.type == 'principal':
                     if not type_line.gl_code:
-                        raise UserError(_('Please Configure GLCode For Principal Amount'))
+                        raise UserError(
+                            _('Please Configure GLCode For Principal Amount'))
                     gl_code = type_line.gl_code.id
-        print (self._context,'context of account loan')
+        print(self._context, 'context of account loan')
 #         if self._context.get('partner_id') and self._context.get('transfer_loan'):
 #             return True
 #             if not self._context.get('partner_id').property_account_receivable_id:
@@ -2501,129 +2683,132 @@ class AccountLoan(models.Model):
 #         else:
         partner_id = self.partner_id
         if not journal_id.default_credit_account_id:
-            raise UserError(_('Please Configure Default Credit Account Of Selected Journal'))
+            raise UserError(
+                _('Please Configure Default Credit Account Of Selected Journal'))
         acc_id = journal_id.default_credit_account_id.id
-        print (partner_id, acc_id,'account_id and partner_id')
+        print(partner_id, acc_id, 'account_id and partner_id')
         if self.loan_id:
-            move_vals.update({'name':'/','ref':name_des + self.loan_id,\
-                              'date':date_new,'journal_id':journal_id.id,\
+            move_vals.update({'name': '/', 'ref': name_des + self.loan_id,
+                              'date': date_new, 'journal_id': journal_id.id,
                               })
 
-
-
-            ##calculation for processing fee .............................
+            # calculation for processing fee .............................
             if self.process_fee and flag:
                 if not self.proc_fee:
-                    raise UserError(_('Please Configure Processing Fee Journal'))
+                    raise UserError(
+                        _('Please Configure Processing Fee Journal'))
 
                 if company_curren:
                     if currency_id.id != company_curren.id:
                         amount_currency = self.process_fee
-                        amount = currency_id.with_context(date=date_new).compute(self.process_fee, company_curren)
+                        amount = currency_id.with_context(date=date_new).compute(
+                            self.process_fee, company_curren)
                         fee_cnt = amount
                     else:
                         amount_currency = False
                 if not amount_currency:
                     processing_fee.update({
-                                            'account_id':self.proc_fee.id,
-                                            'name':name_processing_fees+self.loan_id,
-                                            'debit':0.0,
-                                            'credit':self.process_fee,
-                                            'partner_id':self.partner_id.id,
-                        })
+                        'account_id': self.proc_fee.id,
+                        'name': name_processing_fees+self.loan_id,
+                        'debit': 0.0,
+                        'credit': self.process_fee,
+                        'partner_id': self.partner_id.id,
+                    })
                 else:
                     processing_fee.update({
-                                            'account_id':self.proc_fee.id,
-                                            'name':name_processing_fees+self.loan_id,
-                                            'debit':0.0,
-                                            'credit':amount,
-                                            'partner_id':partner_id.id,
-                                            'amount_currency':-amount_currency,
-                                            'currency_id':currency_id.id
-                        })
+                        'account_id': self.proc_fee.id,
+                        'name': name_processing_fees+self.loan_id,
+                        'debit': 0.0,
+                        'credit': amount,
+                        'partner_id': partner_id.id,
+                        'amount_currency': -amount_currency,
+                        'currency_id': currency_id.id
+                    })
 
                 list_mv_line.append((0, 0, processing_fee))
 
-            ## calculations for disburse debit amount ............................
+            # calculations for disburse debit amount ............................
             if company_curren:
                 if currency_id.id != company_curren.id:
                     amount_currency = disburse_amt
-                    amount = currency_id.with_context(date=date_new).compute(disburse_amt, company_curren)
+                    amount = currency_id.with_context(
+                        date=date_new).compute(disburse_amt, company_curren)
                 else:
                     amount_currency = False
             if not amount_currency:
                 move_lines_dr.update({
-                                'account_id':gl_code,
-                                'name':name_des+ self.loan_id,
-                                'debit':disburse_amt,
-                                'credit':0.0,
-                                'partner_id':self.partner_id.id,
+                    'account_id': gl_code,
+                    'name': name_des + self.loan_id,
+                    'debit': disburse_amt,
+                    'credit': 0.0,
+                    'partner_id': self.partner_id.id,
 
-                    })
+                })
             else:
                 move_lines_dr.update({
-                                'account_id':gl_code,
-                                'name':name_des+ self.loan_id,
-                                'debit':amount,
-                                'credit':0.0,
-                                'partner_id':self.partner_id.id,
-                                'amount_currency':amount_currency,
-                                'currency_id':currency_id.id
+                    'account_id': gl_code,
+                    'name': name_des + self.loan_id,
+                    'debit': amount,
+                    'credit': 0.0,
+                    'partner_id': self.partner_id.id,
+                    'amount_currency': amount_currency,
+                    'currency_id': currency_id.id
 
-                    })
-
+                })
 
             list_mv_line.append((0, 0, move_lines_dr))
 
-
-            ## calculations for disburse credit amount ............................
+            # calculations for disburse credit amount ............................
             if company_curren:
                 if currency_id.id != company_curren.id:
                     amount_currency = disburse_amt
-                    amount = currency_id.with_context(date=date_new).compute(disburse_amt, company_curren)
+                    amount = currency_id.with_context(
+                        date=date_new).compute(disburse_amt, company_curren)
                 else:
                     amount_currency = False
 
             if not amount_currency:
                 move_lines_cr.update({
-                                'account_id':acc_id,
-                                'name':name_bank_deposite+ self.loan_id,
-                                'credit':disburse_amt,
-                                'debit':0.0,
-                                'partner_id':partner_id.id,
-                    })
+                    'account_id': acc_id,
+                    'name': name_bank_deposite + self.loan_id,
+                    'credit': disburse_amt,
+                    'debit': 0.0,
+                    'partner_id': partner_id.id,
+                })
                 if flag:
                     move_lines_cr['credit'] = disburse_amt - self.process_fee
             else:
                 move_lines_cr.update({
-                                'account_id':acc_id,
-                                'name':name_bank_deposite+ self.loan_id,
-                                'credit':amount,
-                                'debit':0.0,
-                                'partner_id':partner_id.id,
-                                'amount_currency':-amount_currency,
-                                'currency_id':currency_id.id
-                    })
+                    'account_id': acc_id,
+                    'name': name_bank_deposite + self.loan_id,
+                    'credit': amount,
+                    'debit': 0.0,
+                    'partner_id': partner_id.id,
+                    'amount_currency': -amount_currency,
+                    'currency_id': currency_id.id
+                })
 
                 if flag:
                     move_lines_cr['credit'] = amount - fee_cnt
-                    move_lines_cr['amount_currency'] = -amount_currency - (-self.process_fee)
+                    move_lines_cr['amount_currency'] = - \
+                        amount_currency - (-self.process_fee)
 
             list_mv_line.append((0, 0, move_lines_cr))
-            move_vals.update({'line_ids':list_mv_line})
+            move_vals.update({'line_ids': list_mv_line})
             move_id = self.env['account.move'].create(move_vals)
             if move_id:
                 move_id.post()
                 return move_id
 
+    # @api.multi
 
-    #@api.multi
     def _simple_interest_get(self, inter_rate):
         loan = self.read()
         installment_cr = self.env['account.loan.installment']
         cheque_cr = self.env['account.loan.bank.cheque']
         if not self.partner_id:
-            raise exceptions.except_orm(_('Field Required'), _('Please select Customer.'))
+            raise exceptions.except_orm(
+                _('Field Required'), _('Please select Customer.'))
 
         part_id = self.partner_id.id
         int_rate = 0.0
@@ -2636,7 +2821,8 @@ class AccountLoan(models.Model):
             if inter_cal_type:
                 if inter_cal_type == 'flat':
                     if self.loan_amount > 0.0 and self.total_installment > 0:
-                        int_rate = self.calculate_eir(inter_rate, self.loan_amount, self.total_installment / 12 , inter_rate, 0)
+                        int_rate = self.calculate_eir(
+                            inter_rate, self.loan_amount, self.total_installment / 12, inter_rate, 0)
                 elif inter_cal_type == 'reducing':
                     int_rate = inter_rate
 
@@ -2644,9 +2830,11 @@ class AccountLoan(models.Model):
         total = self.loan_amount
         approve_amt = self.approve_amount
         interest_amt = self.interest
-        fees_amt = self._get_fees_amount(self.loan_type, approve_amt, interest_amt)
+        fees_amt = self._get_fees_amount(
+            self.loan_type, approve_amt, interest_amt)
         try:
-            installment = round(((total * (rate_interest / 12)) / (1 - ((1 + rate_interest / 12) ** -(self.total_installment)))))
+            installment = round(((total * (rate_interest / 12)) / (1 -
+                                                                   ((1 + rate_interest / 12) ** -(self.total_installment)))))
         except ZeroDivisionError:
             installment = 0
 
@@ -2659,50 +2847,51 @@ class AccountLoan(models.Model):
         if date_update != date_new:
             new_month = date_new.month
             new_year = date_new.year
-            date_update = date_update.replace(month = new_month)
-            date_update = date_update.replace(year = new_year)
+            date_update = date_update.replace(month=new_month)
+            date_update = date_update.replace(year=new_year)
         present_month = date_update.month
         cnt = 0
 
         numbering = 1
         for num in self.installment_id:
             numbering += 1
-        for i in range(numbering,self.total_installment+1):
+        for i in range(numbering, self.total_installment+1):
             interest_month = round(((total * rate_interest) / 12))
             principle_amount = round(installment - interest_month)
             remain_amount = round(total - principle_amount)
             if self.return_type == 'cheque':
                 present_month += 1
                 if present_month > 12:
-                    present_month = 1;
+                    present_month = 1
                     s = date_update.year + 1
-                    date_update = date_update.replace(year = s);
+                    date_update = date_update.replace(year=s)
 
-                date_update = date_update.replace(month = present_month);
-                j += 1;
-                vals = {'name':'cheque' + str(i),\
-                 'date':date_update, 'loan_id':self.id,\
-                 'code':'cheque' + str(i),'partner_id':part_id,\
-                 'cheque_amount':installment, 'loan':principle_amount, 'interest':interest_month}
+                date_update = date_update.replace(month=present_month)
+                j += 1
+                vals = {'name': 'cheque' + str(i),
+                        'date': date_update, 'loan_id': self.id,
+                        'code': 'cheque' + str(i), 'partner_id': part_id,
+                        'cheque_amount': installment, 'loan': principle_amount, 'interest': interest_month}
                 if bank_ids:
-                    vals.update({'loan_bank_id':bank_ids.id})
-                ##remove customer bank account _id which is taken from res_partner_bank object  ....
+                    vals.update({'loan_bank_id': bank_ids.id})
+                # remove customer bank account _id which is taken from res_partner_bank object  ....
                 if self.bank_acc:
-                    vals.update({'account_id':self.bank_acc.id})
+                    vals.update({'account_id': self.bank_acc.id})
 #                 if acc_ids:
 #                     vals.update({'account_id':acc_ids[0]})
-                ##create loan lines ....................
+                # create loan lines ....................
                 acc_loan_bank_cheque_obj = cheque_cr.create(vals)
             for item in acc_loan_bank_cheque_obj:
-                installment_cr.create({'name':'installment' + str(i), 'loan_id':self.id, 'capital':principle_amount, 'fees':fees_amt,'interest':interest_month, 'total':installment, 'cheque_id':item.id, 'partner_id':part_id})
+                installment_cr.create({'name': 'installment' + str(i), 'loan_id': self.id, 'capital': principle_amount,
+                                       'fees': fees_amt, 'interest': interest_month, 'total': installment, 'cheque_id': item.id, 'partner_id': part_id})
                 total = remain_amount
                 interest += interest_month
 #                 i += 1
-        self.write({'interest':interest});
+        self.write({'interest': interest})
         for line in self.installment_id:
             total_amt = 0.0
             total_amt = line.fees + line.total
-            line.write({'total':total_amt})
+            line.write({'total': total_amt})
 #         d_l = self.read(['apply_date'])[0]
         curr_date = self.apply_date
         sal_obj = self
@@ -2710,49 +2899,52 @@ class AccountLoan(models.Model):
         pr_fee = self.process_fee
         amt = self.approve_amount
         emp_name = self.partner_id.name
-        journal_id = self.env['account.journal'].search([('name', '=', 'Bank')])[0]
+        journal_id = self.env['account.journal'].search(
+            [('name', '=', 'Bank')])[0]
 
         acc_move_line_name = emp_name
         try:
             move_vals = {
-                       'acc_loan_id': self.id,
-                       'name': acc_move_line_name,
-                       'date': curr_date,
-                       'account_id':sal_obj.proc_fee.id,
-                       'credit': pr_fee ,
-                       'debit':0.0,
-                       'journal_id' : 5
-                       }
+                'acc_loan_id': self.id,
+                'name': acc_move_line_name,
+                'date': curr_date,
+                'account_id': sal_obj.proc_fee.id,
+                'credit': pr_fee,
+                'debit': 0.0,
+                'journal_id': 5
+            }
 
             move_vals1 = {
-                        'acc_loan_id': self.id,
-                        'name': acc_move_line_name,
-                        'date': curr_date,
-                        'account_id':sal_obj.partner_id.property_account_payable_id.id,
-                        'credit': amt ,
-                        'debit':0.0,
-                        'journal_id' : 5
-                        }
+                'acc_loan_id': self.id,
+                'name': acc_move_line_name,
+                'date': curr_date,
+                'account_id': sal_obj.partner_id.property_account_payable_id.id,
+                'credit': amt,
+                'debit': 0.0,
+                'journal_id': 5
+            }
 
             move_vals2 = {
-                         'acc_loan_id': self.id,
-                         'name': acc_move_line_name,
-                         'date': curr_date,
-                         'account_id': sal_obj.cus_pay_acc.id,
-                         'debit': gross ,
-                         'credit' : 0.0,
-                         'journal_id' : 5
-                         }
-            self.env['account.move'].create({'name': '/', 'partner_id': self.partner_id.id, 'journal_id': journal_id.id, 'date': curr_date, 'line_ids':[(0, 0, move_vals), (0, 0, move_vals1), (0, 0, move_vals2)]})
+                'acc_loan_id': self.id,
+                'name': acc_move_line_name,
+                'date': curr_date,
+                'account_id': sal_obj.cus_pay_acc.id,
+                'debit': gross,
+                'credit': 0.0,
+                'journal_id': 5
+            }
+            self.env['account.move'].create({'name': '/', 'partner_id': self.partner_id.id, 'journal_id': journal_id.id,
+                                             'date': curr_date, 'line_ids': [(0, 0, move_vals), (0, 0, move_vals1), (0, 0, move_vals2)]})
         except:
             raise UserError(_('Could not create account move lines.'))
 
+    # @api.multi
 
-    #@api.multi
     def reject_loan(self):
         for loan in self:
             if loan.voucher_id and loan.voucher_id.state not in ('draft', 'cancel'):
-                raise exceptions.except_orm(_('Could not Reject Loan !'), _('You must first cancel invoice attaced to this loan.'))
+                raise exceptions.except_orm(_('Could not Reject Loan !'), _(
+                    'You must first cancel invoice attaced to this loan.'))
 #                 raise osv.except_osv(
 #                    'Could not Reject Loan !',
 #                    'You must first cancel invoice attaced to this loan.')
@@ -2773,24 +2965,27 @@ class AccountLoan(models.Model):
 
         return True
 
-    #@api.multi
+    # @api.multi
     def proof_approval(self):
         for loan in self:
             print("")
             if loan.loan_type:
                 prooftype_req = loan.loan_type.prooftypes
                 for pt in prooftype_req:
-                    avail_proof_docs = self.env['account.loan.proof'].search([('loan_id', '=', loan.id), ('type', '=', pt.name), ('state', '=', 'done')])
+                    avail_proof_docs = self.env['account.loan.proof'].search(
+                        [('loan_id', '=', loan.id), ('type', '=', pt.name), ('state', '=', 'done')])
                     if not avail_proof_docs:
-                        raise exceptions.except_orm(_('Field Required'), _('This loan object has not valid ' + pt.name + ' proofs so please submit proof again and valid it.'))
+                        raise exceptions.except_orm(_('Field Required'), _(
+                            'This loan object has not valid ' + pt.name + ' proofs so please submit proof again and valid it.'))
 #                         raise osv.except_osv('Field Required','This loan object has not valid ' + pt.name + ' proofs so please submit proof again and valid it')
-                self.write({'state':'apply'})
+                self.write({'state': 'apply'})
             else:
-                raise exceptions.except_orm(_('Information Required'), _('Loan Type is Not Defined.'))
+                raise exceptions.except_orm(
+                    _('Information Required'), _('Loan Type is Not Defined.'))
 #                 raise osv.except_osv('Information Required','Loan Type is Not Defined')
 
+    # @api.multi
 
-    #@api.multi
     def apply_loan(self):
         for loan in self:
             if loan.loan_type.calculation == 'flat':
@@ -2798,7 +2993,7 @@ class AccountLoan(models.Model):
             else:
                 interest_rate1 = self._simple_interest_get(loan.interest_rate)
 
-    #@api.multi
+    # @api.multi
     def button_cancel_loan(self):
         is_disburse = False
         is_payment = False
@@ -2806,7 +3001,7 @@ class AccountLoan(models.Model):
             raise UserError(_("You are not allowed to void application"))
         for disburse_line in self.disbursement_details:
             if disburse_line.release_number and disburse_line.release_number.state != 'post':
-                print ('for Disbursement entry cancel')
+                print('for Disbursement entry cancel')
             if disburse_line.release_number:
                 cancel_entry = disburse_line.release_number.button_cancel()
                 if cancel_entry:
@@ -2816,7 +3011,7 @@ class AccountLoan(models.Model):
 
         for repayment_line in self.repayment_details:
             if repayment_line.release_number and repayment_line.release_number != 'post':
-                print ('For Payment Cancel')
+                print('For Payment Cancel')
             if repayment_line.release_number:
                 py_cancel_entry = repayment_line.release_number.button_cancel()
                 if py_cancel_entry:
@@ -2826,9 +3021,9 @@ class AccountLoan(models.Model):
         self.state = 'cancel'
         return True
 
-    ##manually added fees
+    # manually added fees
     def button_fees_calculation(self):
-        ## Fee calculation .........................
+        # Fee calculation .........................
         fees_vals = {}
         product_id = False
         late_fee_prodcut = False
@@ -2849,76 +3044,85 @@ class AccountLoan(models.Model):
         for line in self.installment_id:
             fees_vals = {}
             late_fees_vals = {}
-            if line.state not in  ['open','paid'] and line.outstanding_fees:
-                fees_line_id = self.env['fees.lines'].search([('product_id','=',product_id),('installment_id','=',line.id)], limit=1)
-                print (fees_line_id)
+            if line.state not in ['open', 'paid'] and line.outstanding_fees:
+                fees_line_id = self.env['fees.lines'].search(
+                    [('product_id', '=', product_id), ('installment_id', '=', line.id)], limit=1)
+                print(fees_line_id)
                 fees_amt = line.outstanding_fees
                 if tax_id:
-                    tx_tot = self.get_tax_total_incl_exl(tax_id, line.outstanding_fees)
+                    tx_tot = self.get_tax_total_incl_exl(
+                        tax_id, line.outstanding_fees)
                     fees_amt = fees_amt - tx_tot
-                    fees_vals.update({'tax':tx_tot})
-                fees_vals.update({'name':'fees','product_id':product_id, 'base':fees_amt,'installment_id':line.id})
+                    fees_vals.update({'tax': tx_tot})
+                fees_vals.update({'name': 'fees', 'product_id': product_id,
+                                  'base': fees_amt, 'installment_id': line.id})
 
                 if not fees_line_id:
                     self.env['fees.lines'].create(fees_vals)
 
-            if line.state not in  ['open','paid'] and line.late_fee:
+            if line.state not in ['open', 'paid'] and line.late_fee:
                 late_fees_amt = line.late_fee
-                late_fees_line_id = self.env['fees.lines'].search([('product_id','=',late_fee_prodcut),('installment_id','=',line.id)], limit=1)
+                late_fees_line_id = self.env['fees.lines'].search(
+                    [('product_id', '=', late_fee_prodcut), ('installment_id', '=', line.id)], limit=1)
                 if late_tax_id:
-                    tx_tot = self.get_tax_total_incl_exl(late_tax_id, line.late_fee)
+                    tx_tot = self.get_tax_total_incl_exl(
+                        late_tax_id, line.late_fee)
                     late_fees_amt = late_fees_amt - tx_tot
-                    late_fees_vals.update({'tax':tx_tot})
-                late_fees_vals.update({'name':'late_fee', 'product_id':late_fee_prodcut, 'base':late_fees_amt,'installment_id':line.id})
+                    late_fees_vals.update({'tax': tx_tot})
+                late_fees_vals.update({'name': 'late_fee', 'product_id': late_fee_prodcut,
+                                       'base': late_fees_amt, 'installment_id': line.id})
                 if not late_fees_line_id:
                     self.env['fees.lines'].create(late_fees_vals)
         return True
 
+    # @api.multi
 
-
-    #@api.multi
     def approve_loan(self):
         context = dict(self.env.context or {})
         context['active_id'] = self.id
-        is_approve = self.env['ir.config_parameter'].sudo().get_param('pragtech_loan.loan_approval')
-        approval_amount = self.env['ir.config_parameter'].sudo().get_param('pragtech_loan.validation_amount')
+        is_approve = self.env['ir.config_parameter'].sudo(
+        ).get_param('pragtech_loan.loan_approval')
+        approval_amount = self.env['ir.config_parameter'].sudo(
+        ).get_param('pragtech_loan.validation_amount')
         if is_approve:
             if self.loan_amount >= float(approval_amount) and not self.user_has_groups('pragtech_loan.group_loan_manager'):
                 users = self.env.ref('pragtech_loan.group_loan_manager').users
-                template = self.env.ref('pragtech_loan.email_template_loan_approve')
+                template = self.env.ref(
+                    'pragtech_loan.email_template_loan_approve')
                 mail_obj = self.env['mail.template'].browse(template.id)
                 user_str = ''
                 for user in users:
                     if user.company_id.id == self.company_id.id:
-                        user_str += str(user.partner_id.id)+ ','
+                        user_str += str(user.partner_id.id) + ','
 #                         user_list.append(user.id)
 
                 if user_str:
-                    mail_obj.body_html = "<b>Hello Loan Manager,</b>\n<p>There is a new Loan Application {0} is waiting for your approval to get disbursed.</p> <p>Please login to the system and disburse it.</p> <p>Thank you,</p>".format(self.loan_id)
+                    mail_obj.body_html = "<b>Hello Loan Manager,</b>\n<p>There is a new Loan Application {0} is waiting for your approval to get disbursed.</p> <p>Please login to the system and disburse it.</p> <p>Thank you,</p>".format(
+                        self.loan_id)
                     mail_obj.partner_to = user_str
                     mail_obj.send_mail(self.id, force_send=True)
 
-                return self.write({'state':'to_approve'})
+                return self.write({'state': 'to_approve'})
         return {
             'name': _('Disbursement Wizard'),
-            'view_type': 'form',
+            # 'view_type': 'form',
             'view_mode': 'form',
             'res_model': 'loan.disbursement.wizard',
             'view_id': self.env.ref('pragtech_loan.loan_disbursement_wizard_form_view').id,
             'type': 'ir.actions.act_window',
             'res_id': self.env.context.get('id'),
-            'context': {'default_name':'Repayment Schedule Shall be Generated On "%s". Do you want to continue ?'%(dict(self._fields['repayment_basis'].selection).get(self.repayment_basis))},
+            'context': {'default_name': 'Repayment Schedule Shall be Generated On "%s". Do you want to continue ?' % (dict(self._fields['repayment_basis'].selection).get(self.repayment_basis))},
             'target': 'new'
         }
 
+    # @api.multi
 
-
-    #@api.multi
     def approve_proofs(self):
         if self.is_collateral and (not self.collateral_lines):
             raise UserError("Dear applicant please provide collateral details")
         if self.partner_id.is_group and (not self.group_members):
-                raise UserError("Please provide name of group members before you proceed further.")
+            raise UserError(
+                "Please provide name of group members before you proceed further.")
 #         if not self.proof_id:
 #             raise UserError("Dear applicant please provide proofs")
 #         else:
@@ -2947,9 +3151,9 @@ class AccountLoan(models.Model):
 #             if not self.cus_pay_acc or not self.bank_acc or not self.int_acc or not self.proc_fee:
 #                 raise UserError("Please provide value for : \n\n- Customer Loan Account,\n- Interest Account,\n- Processing Fee Account, \n- Bank Account")
 
-        self.write({'state':'apply'})
+        self.write({'state': 'apply'})
 
-    #@api.multi
+    # @api.multi
     def approve_finance(self):
 
         if not self.proof_id:
@@ -2967,16 +3171,18 @@ class AccountLoan(models.Model):
                         if x.is_mandatory:
                             proof_names.append(x.name.name)
                     for p in proof_names:
-                        st = st +'\n'+str(p)
-                    raise UserError("Following proofs are mandatory: %s"%st)
+                        st = st + '\n'+str(p)
+                    raise UserError("Following proofs are mandatory: %s" % st)
                 proof_type = []
                 for proof in self.proof_id:
                     if proof.type:
                         proof_type.append(proof.type.name.id)
                 for proof in required_proof_ids:
                     if not proof in proof_type:
-                        proof_name = self.env['account.loan.proof.type'].search([('id','=',proof)])
-                        raise UserError("Following mandatory proof(s) is/are still missing:\n %s"%proof_name.name)
+                        proof_name = self.env['account.loan.proof.type'].search(
+                            [('id', '=', proof)])
+                        raise UserError(
+                            "Following mandatory proof(s) is/are still missing:\n %s" % proof_name.name)
 
         if self.loan_amount <= 0:
             raise UserError("Sanctioned amount cannot be \"0.00\"")
@@ -2991,45 +3197,46 @@ class AccountLoan(models.Model):
                     mail_obj.partner_to = user.id
                     mail_obj.sudo().send_mail(self.id)
 #         self.apply_loan()
-        self.write({'state':'apply'})
+        self.write({'state': 'apply'})
 
+    # @api.multi
 
-    #@api.multi
     def loan_cancel(self):
         if not self.user_has_groups('pragtech_loan.group_allow_loan_rejection'):
             raise UserError(_("You are not allowed to reject/cancel loan"))
-        if self.voucher_id and self.voucher_id.state not in ('draft','cancel'):
+        if self.voucher_id and self.voucher_id.state not in ('draft', 'cancel'):
             raise osv.except_osv(
-                    'Could not Reject Loan !',
-                    'You must first cancel Voucher attached to this loan.')
+                'Could not Reject Loan !',
+                'You must first cancel Voucher attached to this loan.')
 
         self.installment_id.unlink()
         self.cheque_ids.unlink()
         acc_move_line = self.env['account.move.line']
-        ac_ids =  acc_move_line.search([('acc_loan_id','=', self.id)]);
-        ac_ids.unlink();
-        self.write({'state':'cancel'})
+        ac_ids = acc_move_line.search([('acc_loan_id', '=', self.id)])
+        ac_ids.unlink()
+        self.write({'state': 'cancel'})
 
         return True
 
-    #@api.multi
+    # @api.multi
     def loan_cancel1(self):
-        self.write({'state':'cancel'})
+        self.write({'state': 'cancel'})
 
-    #@api.multi
+    # @api.multi
     def loan_write_off(self):
         """This method is used to set loan to write off state"""
-        self.write({'state':'writeoff'})
+        self.write({'state': 'writeoff'})
 
-    #@api.multi
+    # @api.multi
     def loan_paid(self):
         for line in self.installment_id:
-            if line.state not in ['paid','skip']:
-                raise UserError("Warning : This loan application can not be marked as Done as there is some installment amount still pending.")
+            if line.state not in ['paid', 'skip']:
+                raise UserError(
+                    "Warning : This loan application can not be marked as Done as there is some installment amount still pending.")
         voucher_dict = {
-#             'draft':['open_voucher','proforma_voucher'],
-            'draft':['proforma_voucher'],
-            'proforma':['proforma_voucher']
+            #             'draft':['open_voucher','proforma_voucher'],
+            'draft': ['proforma_voucher'],
+            'proforma': ['proforma_voucher']
         }
         voucher_pool = self.env['sale.coupon']
         for this_obj in self:
@@ -3037,22 +3244,22 @@ class AccountLoan(models.Model):
             voucher_state = voucher_obj and voucher_obj.state or False
             if voucher_state and voucher_state in voucher_dict:
                 for voucher_method in voucher_dict[voucher_state]:
-#                     values = this_obj.voucher_id.id
+                    #                     values = this_obj.voucher_id.id
                     getattr(voucher_pool, voucher_method)
 
             move_id = voucher_obj and [x.id for x in voucher_obj.move_id] or []
             if move_id:
-                self.env['account.move.line'].write({'acc_loan_id':this_obj.id})
+                self.env['account.move.line'].write(
+                    {'acc_loan_id': this_obj.id})
 #                  self.pool.get('freight.vehicle').write(cr, uid, [self_brw.name.id], {'state': 'available'})
         self.date_done = date.today()
 
-        self.write({'state':'done'})
+        self.write({'state': 'done'})
         return True
 
-    #@api.multi
+    # @api.multi
     def loan_draft(self):
-        self.write({'state':'draft'})
-
+        self.write({'state': 'draft'})
 
     def loan_classification_status(self):
         records = self.search([])
@@ -3062,22 +3269,25 @@ class AccountLoan(models.Model):
             arrear_day = 0
             for inst in loan.installment_id:
                 if inst.date:
-                    if datetime.datetime.strptime(inst.date, "%Y-%m-%d") < date and inst.state not in ['skip', 'paid']: #== 'draft'
-                            if not arrear_day:
-                                arrear_day = inst.date
+                    # == 'draft'
+                    if datetime.datetime.strptime(inst.date, "%Y-%m-%d") < date and inst.state not in ['skip', 'paid']:
+                        if not arrear_day:
+                            arrear_day = inst.date
             if arrear_day:
-                    arrear_day = datetime.datetime.strptime(arrear_day, "%Y-%m-%d")
-                    arrear_day =  date - arrear_day
-                    arrear_day = arrear_day.days
+                arrear_day = datetime.datetime.strptime(arrear_day, "%Y-%m-%d")
+                arrear_day = date - arrear_day
+                arrear_day = arrear_day.days
 
             classification = None
             if arrear_day > 360:
-                classification = self.env['loan.classifications'].search([('min','<=',arrear_day)])
+                classification = self.env['loan.classifications'].search(
+                    [('min', '<=', arrear_day)])
             else:
-                classification = self.env['loan.classifications'].search([('min','<=',arrear_day),('max','>=',arrear_day)])
+                classification = self.env['loan.classifications'].search(
+                    [('min', '<=', arrear_day), ('max', '>=', arrear_day)])
 
             if classification:
-                loan.write({'classification':classification[0].name})
+                loan.write({'classification': classification[0].name})
 
     def loan_due_cron(self):
         records = self.search([])
@@ -3085,16 +3295,16 @@ class AccountLoan(models.Model):
             for line in record.installment_id:
                 if line.date:
                     if(datetime.datetime.strptime(line.date, "%Y-%m-%d").date() <= date.today()) and line.state != 'paid':
-#                         print(datetime.datetime.strptime(line.date, "%Y-%m-%d").date())
+                        #                         print(datetime.datetime.strptime(line.date, "%Y-%m-%d").date())
                         line.due_principal = line.outstanding_prin
                         line.due_interest = line.outstanding_int
                         line.due_fees = line.outstanding_fees
 #                         total = line.outstanding_prin + line.outstanding_int + line.outstanding_fees
 #                         line.installment_due = total
 
-    ##thisn for late fee calculation .................
+    # thisn for late fee calculation .................
     def loan_late_fees(self):
-        records = self.search([('state', 'in', ['approved','partial'])])
+        records = self.search([('state', 'in', ['approved', 'partial'])])
 
         current_date = datetime.date.today()
 #         current_date = datetime.date(2018,11,13)
@@ -3109,25 +3319,26 @@ class AccountLoan(models.Model):
                     for line in py_line.installment_id:
                         waiv_amt = 0
                         if line.state in ['draft', 'open']:
-                            waived_entries = self.env['waived.entries'].search(['|',('loan_line_id', '=', line.id),('from_line_id', '=', line.id),\
-                                                                                ('waived_off', '=', 'Late Fee'),('loan_id','=',line.loan_id.id),\
-                                                                            ])
+                            waived_entries = self.env['waived.entries'].search(['|', ('loan_line_id', '=', line.id), ('from_line_id', '=', line.id),
+                                                                                ('waived_off', '=', 'Late Fee'), (
+                                                                                    'loan_id', '=', line.loan_id.id),
+                                                                                ])
                             if waived_entries:
-#                                 for l in waived_entries:
-#                                     date_obj = (datetime.datetime.strptime(l.date, '%Y-%m-%d').date())
-#                                     delta = current_date - date_obj
-#                                     diff = int(delta.days / record.grace_period)
-#                                     if diff > 0:
-#                                         is_grace_period = True
-#                                         last_record = line
-#                                         if l.is_carry_forward and l.loan_line_id.id == line.id:
-#                                             if line.late_fee > l.amount:
-#                                                 waiv_amt = l.amount
-#                                             else:
-#                                                 waiv_amt = line.late_fee
-#                                     else:
-                                    is_grace_period = False
-                                    last_record = False
+                                #                                 for l in waived_entries:
+                                #                                     date_obj = (datetime.datetime.strptime(l.date, '%Y-%m-%d').date())
+                                #                                     delta = current_date - date_obj
+                                #                                     diff = int(delta.days / record.grace_period)
+                                #                                     if diff > 0:
+                                #                                         is_grace_period = True
+                                #                                         last_record = line
+                                #                                         if l.is_carry_forward and l.loan_line_id.id == line.id:
+                                #                                             if line.late_fee > l.amount:
+                                #                                                 waiv_amt = l.amount
+                                #                                             else:
+                                #                                                 waiv_amt = line.late_fee
+                                #                                     else:
+                                is_grace_period = False
+                                last_record = False
                             else:
                                 is_grace_period = True
                                 last_record = line
@@ -3137,43 +3348,50 @@ class AccountLoan(models.Model):
                             last_record = False
                             break
                     if is_grace_period and last_record:
-    #                     date_object = (datetime.datetime.strptime(last_record.date, '%Y-%m-%d').date()+relativedelta(days = record.grace_period))
-
+                        #                     date_object = (datetime.datetime.strptime(last_record.date, '%Y-%m-%d').date()+relativedelta(days = record.grace_period))
 
                         total = 0.0
-                        date_object = (datetime.datetime.strptime(last_record.date, '%Y-%m-%d').date())
+                        date_object = (datetime.datetime.strptime(
+                            last_record.date, '%Y-%m-%d').date())
                         delta = current_date - date_object
                         diff = int(delta.days / record.grace_period)
                         if diff > 0:
                             if record.repayment_basis == 'sanctioned_amt':
-                                total = self._get_late_fees_amount(record.loan_type, record.loan_amount, record.interest)
+                                total = self._get_late_fees_amount(
+                                    record.loan_type, record.loan_amount, record.interest)
                             else:
                                 dis_amt = 0.0
                                 for line in record.disbursement_details:
                                     dis_amt = dis_amt + line.disbursement_amt
 
                                 if dis_amt > 0.0:
-                                    total = self._get_late_fees_amount(record.loan_type, dis_amt, record.interest)
+                                    total = self._get_late_fees_amount(
+                                        record.loan_type, dis_amt, record.interest)
 
                         if total:
                             for cmp_line in record.loan_type.loan_component_ids:
 
                                 if cmp_line.type == 'late_fee':
-                                    search_id = self.env['fees.lines'].search([('product_id','=', cmp_line.product_id.id),('installment_id','=', last_record.id)])
+                                    search_id = self.env['fees.lines'].search(
+                                        [('product_id', '=', cmp_line.product_id.id), ('installment_id', '=', last_record.id)])
                                     if search_id:
                                         if cmp_line.product_amt:
-                                            search_id.write({'base':cmp_line.product_amt * diff})
+                                            search_id.write(
+                                                {'base': cmp_line.product_amt * diff})
                                         if cmp_line.tax_amount > 0.0 and cmp_line.tax_id:
-                                            search_id.write({'tax':cmp_line.tax_amount * diff})
+                                            search_id.write(
+                                                {'tax': cmp_line.tax_amount * diff})
                                     else:
-                                        vals_fee.update({'installment_id':last_record.id,
-                                                                'product_id':cmp_line.product_id.id,
-                                                                'name':cmp_line.type,
-                                                                'base':cmp_line.product_amt*diff})
+                                        vals_fee.update({'installment_id': last_record.id,
+                                                         'product_id': cmp_line.product_id.id,
+                                                         'name': cmp_line.type,
+                                                         'base': cmp_line.product_amt*diff})
                                         if cmp_line.tax_amount > 0.0 and cmp_line.tax_id:
-                                            vals_fee.update({'tax':cmp_line.tax_amount*diff})
+                                            vals_fee.update(
+                                                {'tax': cmp_line.tax_amount*diff})
                                         if vals_fee:
-                                            self.env['fees.lines'].create(vals_fee)
+                                            self.env['fees.lines'].create(
+                                                vals_fee)
 
                             total = total + waiv_amt
                             last_record.late_fee = total*diff
@@ -3191,7 +3409,8 @@ class AccountLoan(models.Model):
 #                                         self.env['fees.lines'].create(vals_fee)
 #                                     last_record.late_fee = lfee_total
 #
-    #@api.multi
+    # @api.multi
+
     def unlink(self):
 
         if not self.user_has_groups('pragtech_loan.group_loan_del_user'):
@@ -3202,7 +3421,8 @@ class AccountLoan(models.Model):
             if t['state'] in ('draft', 'cancel'):
                 unlink_ids.append(t['id'])
             else:
-                raise exceptions.except_orm(_('Invalid action !'), _('Cannot delete vouchers(s) which are already opened or paid !'))
+                raise exceptions.except_orm(_('Invalid action !'), _(
+                    'Cannot delete vouchers(s) which are already opened or paid !'))
 
 #         for loan in self:
 #             if loan.state != 'draft':
@@ -3210,8 +3430,8 @@ class AccountLoan(models.Model):
         res = super(AccountLoan, self).unlink()
         return res
 
+    # getting fees values basis of principle, interest and fees products ................
 
-    ##getting fees values basis of principle, interest and fees products ................
     def _get_late_fees_amount(self, loan_type, approve_amt, interest_amt):
         amt = 0.0
         if not loan_type.loan_component_ids:
@@ -3246,13 +3466,12 @@ class AccountLoan(models.Model):
                 if line.product_id.id not in fees_list:
                     global_list.append(line.product_id.id)
                     fees_list.append(line.product_id.id)
-                    global_dict.update({line.product_id.id:line})
+                    global_dict.update({line.product_id.id: line})
 
             if line.type == 'late_fee':
                 if line.product_id.id not in lfees_list:
                     lfees_list.append(line.product_id.id)
-                    global_dict1.update({line.product_id.id:line})
-
+                    global_dict1.update({line.product_id.id: line})
 
         for line in loan_type.loan_component_ids:
             if line.type == 'late_fee':
@@ -3267,54 +3486,75 @@ class AccountLoan(models.Model):
                                 sum_amt = sum_amt + amt
 #                                 for tx_line in line.tax_id:
                                 if line.tax_id:
-                                    tx_tot = self.get_late_fee_tax_total(line.tax_id, sum_amt)
+                                    tx_tot = self.get_late_fee_tax_total(
+                                        line.tax_id, sum_amt)
                                 if tx_tot:
                                     if type(tx_tot) == dict:
                                         bse_tx = 0.0
-                                        bse_tx = sum_amt - tx_tot.get('include')
-                                        line.with_context({'inclsive':bse_tx}).write({'product_amt':bse_tx,'tax_amount':tx_tot.get('include')})
+                                        bse_tx = sum_amt - \
+                                            tx_tot.get('include')
+                                        line.with_context({'inclsive': bse_tx}).write(
+                                            {'product_amt': bse_tx, 'tax_amount': tx_tot.get('include')})
                                     else:
-                                        line.write({'product_amt':sum_amt, 'tax_amount':tx_tot})
+                                        line.write(
+                                            {'product_amt': sum_amt, 'tax_amount': tx_tot})
                                         sum_amt = sum_amt + tx_tot
-                                    line.write({'outstanding_product_amt':sum_amt})
+                                    line.write(
+                                        {'outstanding_product_amt': sum_amt})
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 else:
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    line.write({'product_amt':sum_amt, 'outstanding_product_amt':sum_amt})
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    line.write(
+                                        {'product_amt': sum_amt, 'outstanding_product_amt': sum_amt})
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 global_add1 = global_add1 + sum_amt
                                 sum_amt = 0
 
                         elif product.id in interest_list:
                             if line.amount_percentage and flag1:
                                 percent = line.amount_percentage * line.quantity
-                                amt1 = (interest_amt * line.amount_percentage) / 100
+                                amt1 = (interest_amt *
+                                        line.amount_percentage) / 100
                                 sum_amt = sum_amt + amt1
 #                                 for tx_line in line.tax_id:
 #                                     if tx_line.amount:
 #                                         tx_tot = self.get_tax_total(tx_line, sum_amt)
                                 if line.tax_id:
-                                    tx_tot = self.get_late_fee_tax_total(line.tax_id, sum_amt)
+                                    tx_tot = self.get_late_fee_tax_total(
+                                        line.tax_id, sum_amt)
                                 if tx_tot:
                                     if type(tx_tot) == dict:
                                         bse_tx = 0.0
-                                        bse_tx = sum_amt - tx_tot.get('include')
-                                        line.with_context({'inclsive':bse_tx}).write({'product_amt':bse_tx,'tax_amount':tx_tot.get('include')})
+                                        bse_tx = sum_amt - \
+                                            tx_tot.get('include')
+                                        line.with_context({'inclsive': bse_tx}).write(
+                                            {'product_amt': bse_tx, 'tax_amount': tx_tot.get('include')})
                                     else:
-                                        line.write({'product_amt':sum_amt, 'tax_amount':tx_tot})
+                                        line.write(
+                                            {'product_amt': sum_amt, 'tax_amount': tx_tot})
                                         sum_amt = sum_amt + tx_tot
-                                    line.write({'outstanding_product_amt':sum_amt})
+                                    line.write(
+                                        {'outstanding_product_amt': sum_amt})
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 else:
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    line.write({'product_amt':sum_amt, 'outstanding_product_amt':sum_amt})
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    line.write(
+                                        {'product_amt': sum_amt, 'outstanding_product_amt': sum_amt})
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 global_add2 = global_add2 + sum_amt
                                 sum_amt = 0
 
@@ -3322,7 +3562,7 @@ class AccountLoan(models.Model):
                             amt_tot = 0.0
                             for o in global_dict[product.id]:
                                 if o.amount_select == 'percentage':
-#                                     for f in o.amount_percentage_base:
+                                    #                                     for f in o.amount_percentage_base:
                                     if o.product_id.id in internal_dict:
                                         amt_tot = internal_dict[o.product_id.id]
 #                                     internal_dict.update({line.product_id.id : sum_amt})
@@ -3337,34 +3577,43 @@ class AccountLoan(models.Model):
 #                                     if tx_line.amount:
 #                                         tx_tot = self.get_tax_total(tx_line, sum_amt)
                                 if line.tax_id:
-                                    tx_tot = self.get_late_fee_tax_total(line.tax_id, sum_amt)
+                                    tx_tot = self.get_late_fee_tax_total(
+                                        line.tax_id, sum_amt)
                                 if tx_tot:
                                     if type(tx_tot) == dict:
                                         bse_tx = 0.0
-                                        bse_tx = sum_amt - tx_tot.get('include')
-                                        line.with_context({'inclsive':bse_tx}).write({'product_amt':bse_tx,'tax_amount':tx_tot.get('include')})
+                                        bse_tx = sum_amt - \
+                                            tx_tot.get('include')
+                                        line.with_context({'inclsive': bse_tx}).write(
+                                            {'product_amt': bse_tx, 'tax_amount': tx_tot.get('include')})
                                     else:
-                                        line.write({'product_amt':sum_amt, 'tax_amount':tx_tot})
+                                        line.write(
+                                            {'product_amt': sum_amt, 'tax_amount': tx_tot})
                                         sum_amt = sum_amt + tx_tot
 
-                                    line.write({'outstanding_product_amt':sum_amt})
+                                    line.write(
+                                        {'outstanding_product_amt': sum_amt})
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 else:
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    line.write({'product_amt':sum_amt, 'outstanding_product_amt':sum_amt})
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    line.write(
+                                        {'product_amt': sum_amt, 'outstanding_product_amt': sum_amt})
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 global_add3 = global_add3 + sum_amt
                                 sum_amt = 0
-
 
                         elif product.id in global_dict1:
                             amt_tot = 0.0
                             for o in global_dict1[product.id]:
                                 if o.amount_select == 'percentage':
-#                                     for f in o.amount_percentage_base:
+                                    #                                     for f in o.amount_percentage_base:
                                     if o.product_id.id in internal_dict:
                                         amt_tot = internal_dict[o.product_id.id]
                                 elif o.amount_select == 'fix':
@@ -3378,24 +3627,34 @@ class AccountLoan(models.Model):
 #                                     if tx_line.amount:
 #                                         tx_tot = self.get_tax_total(tx_line, sum_amt)
                                 if line.tax_id:
-                                    tx_tot = self.get_late_fee_tax_total(line.tax_id, sum_amt)
+                                    tx_tot = self.get_late_fee_tax_total(
+                                        line.tax_id, sum_amt)
                                 if tx_tot:
                                     if type(tx_tot) == dict:
                                         bse_tx = 0.0
-                                        bse_tx = sum_amt - tx_tot.get('include')
-                                        line.with_context({'inclsive':bse_tx}).write({'product_amt':bse_tx,'tax_amount':tx_tot.get('include')})
+                                        bse_tx = sum_amt - \
+                                            tx_tot.get('include')
+                                        line.with_context({'inclsive': bse_tx}).write(
+                                            {'product_amt': bse_tx, 'tax_amount': tx_tot.get('include')})
                                     else:
-                                        line.write({'product_amt':sum_amt, 'tax_amount':tx_tot})
+                                        line.write(
+                                            {'product_amt': sum_amt, 'tax_amount': tx_tot})
                                         sum_amt = sum_amt + tx_tot
-                                    line.write({'outstanding_product_amt':sum_amt})
+                                    line.write(
+                                        {'outstanding_product_amt': sum_amt})
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 else:
                                     if line.product_id.id in internal_dict:
-                                        sum_amt = sum_amt + internal_dict[line.product_id.id]
-                                    line.write({'product_amt':sum_amt, 'outstanding_product_amt':sum_amt})
-                                    internal_dict.update({line.product_id.id : sum_amt})
+                                        sum_amt = sum_amt + \
+                                            internal_dict[line.product_id.id]
+                                    line.write(
+                                        {'product_amt': sum_amt, 'outstanding_product_amt': sum_amt})
+                                    internal_dict.update(
+                                        {line.product_id.id: sum_amt})
                                 sum_amt = 0
 
                 elif line.amount_select == 'fix':
@@ -3405,64 +3664,78 @@ class AccountLoan(models.Model):
 #                         if tx_line.amount:
 #                             tx_tot = self.get_tax_total(tx_line, sum_amt)
                     if line.tax_id:
-                        tx_tot = self.get_late_fee_tax_total(line.tax_id, sum_amt)
+                        tx_tot = self.get_late_fee_tax_total(
+                            line.tax_id, sum_amt)
                     if tx_tot:
                         if type(tx_tot) == dict:
                             bse_tx = 0.0
                             bse_tx = sum_amt - tx_tot.get('include')
-                            line.with_context({'inclsive':bse_tx}).write({'product_amt':bse_tx,'tax_amount':tx_tot.get('include')})
+                            line.with_context({'inclsive': bse_tx}).write(
+                                {'product_amt': bse_tx, 'tax_amount': tx_tot.get('include')})
                         else:
-                            line.write({'product_amt':sum_amt, 'tax_amount':tx_tot})
+                            line.write(
+                                {'product_amt': sum_amt, 'tax_amount': tx_tot})
                             sum_amt = sum_amt + tx_tot
 #                         line.write({'product_amt':sum_amt,'outstanding_product_amt':sum_amt, 'tax_amount':tx_tot})
 #                         sum_amt = sum_amt + tx_tot
 #                         line.write({'outstanding_product_amt':sum_amt})
                         if line.product_id.id in internal_dict:
-                            sum_amt = sum_amt + internal_dict[line.product_id.id]
-                        internal_dict.update({line.product_id.id : sum_amt})
+                            sum_amt = sum_amt + \
+                                internal_dict[line.product_id.id]
+                        internal_dict.update({line.product_id.id: sum_amt})
                     else:
                         if line.product_id.id in internal_dict:
-                            sum_amt = sum_amt + internal_dict[line.product_id.id]
-                        line.write({'product_amt':sum_amt, 'outstanding_product_amt':sum_amt})
-                        internal_dict.update({line.product_id.id : sum_amt})
+                            sum_amt = sum_amt + \
+                                internal_dict[line.product_id.id]
+                        line.write({'product_amt': sum_amt,
+                                    'outstanding_product_amt': sum_amt})
+                        internal_dict.update({line.product_id.id: sum_amt})
 
                     global_add4 = global_add4 + sum_amt
                     sum_amt = 0
 
                 elif line.amount_select == 'code':
-                    sum_amt = self.evaluate_python_code(line.amount_python_compute, approve_amt, interest_amt)
+                    sum_amt = self.evaluate_python_code(
+                        line.amount_python_compute, approve_amt, interest_amt)
 #                     for tx_line in line.tax_id:
 #                         if tx_line.amount:
 #                             tx_tot = self.get_tax_total(tx_line, sum_amt)
                     if line.tax_id:
-                        tx_tot = self.get_late_fee_tax_total(line.tax_id, sum_amt)
+                        tx_tot = self.get_late_fee_tax_total(
+                            line.tax_id, sum_amt)
                     if tx_tot:
 
                         if type(tx_tot) == dict:
                             bse_tx = 0.0
                             bse_tx = sum_amt - tx_tot.get('include')
-                            line.with_context({'inclsive':bse_tx}).write({'product_amt':bse_tx,'tax_amount':tx_tot.get('include')})
+                            line.with_context({'inclsive': bse_tx}).write(
+                                {'product_amt': bse_tx, 'tax_amount': tx_tot.get('include')})
                         else:
-                            line.write({'product_amt':sum_amt, 'tax_amount':tx_tot})
+                            line.write(
+                                {'product_amt': sum_amt, 'tax_amount': tx_tot})
                             sum_amt = sum_amt + tx_tot
 #                         line.write({'product_amt':sum_amt,'outstanding_product_amt':sum_amt, 'tax_amount':tx_tot})
 #                         sum_amt = sum_amt + tx_tot
-                        line.write({'outstanding_product_amt':sum_amt})
+                        line.write({'outstanding_product_amt': sum_amt})
                         if line.product_id.id in internal_dict:
-                            sum_amt = sum_amt + internal_dict[line.product_id.id]
-                        internal_dict.update({line.product_id.id : sum_amt})
+                            sum_amt = sum_amt + \
+                                internal_dict[line.product_id.id]
+                        internal_dict.update({line.product_id.id: sum_amt})
                     else:
                         if line.product_id.id in internal_dict:
-                            sum_amt = sum_amt + internal_dict[line.product_id.id]
-                        line.write({'product_amt':sum_amt,'outstanding_product_amt':sum_amt})
-                        internal_dict.update({line.product_id.id : sum_amt})
+                            sum_amt = sum_amt + \
+                                internal_dict[line.product_id.id]
+                        line.write({'product_amt': sum_amt,
+                                    'outstanding_product_amt': sum_amt})
+                        internal_dict.update({line.product_id.id: sum_amt})
                     sum_amt = 0
 
 #         print (internal_dict,'late Feesss total')
 
         total_all = sum(internal_dict.values())
         return total_all
-    #@api.multi
+    # @api.multi
+
     def generate_payment_schedule(self):
         if self.payment_freq == 'monthly':
             self._get_calculation_monthly()
@@ -3474,14 +3747,14 @@ class AccountLoan(models.Model):
             self._get_yearly()
         return True
 
-
     def cancel_disbursement(self):
         if not self.user_has_groups('pragtech_loan.group_allow_loan_cancel_disbursement'):
             raise UserError(_("You are not allowed to cancel disbursement"))
         dis_flag = 1
         for repay in self.repayment_details:
             if repay.is_button_visible:
-                raise UserError("Warning : To Cancel Disbursement, All Payments must be Cancelled first.")
+                raise UserError(
+                    "Warning : To Cancel Disbursement, All Payments must be Cancelled first.")
         for dis in self.disbursement_details:
             if dis.release_number:
                 if dis.release_number and dis.release_number.state != 'posted':
@@ -3500,28 +3773,31 @@ class AccountLoan(models.Model):
             for line in self.installment_id:
                 line.unlink()
             for dis in self.disbursement_details:
-#                 for o in self:
-                    if dis.release_number:
-                        payment_details_ids = self.env['payment.details'].search([('move_id','=', dis.release_number.id)])
-                        for pyline in payment_details_ids:
-                            pyline.unlink()
-                    if dis.release_number:
-                        dis.release_number.unlink()
-                    dis.unlink()
+                #                 for o in self:
+                if dis.release_number:
+                    payment_details_ids = self.env['payment.details'].search(
+                        [('move_id', '=', dis.release_number.id)])
+                    for pyline in payment_details_ids:
+                        pyline.unlink()
+                if dis.release_number:
+                    dis.release_number.unlink()
+                dis.unlink()
 #                 dis.unlink()
 
             self.state = 'apply'
         return True
 
+
 class account_loan_disbursement(models.Model):
     _name = "account.loan.disbursement"
 
-    release_number = fields.Many2one('account.move','Release Number')
-    name = fields.Many2one('res.partner','Partner Name',required=True)
-    bill_date = fields.Date("Bill Date",required=True)
-    disbursement_amt = fields.Float("Amount",required=True)
+    release_number = fields.Many2one('account.move', 'Release Number')
+    name = fields.Many2one('res.partner', 'Partner Name', required=True)
+    bill_date = fields.Date("Bill Date", required=True)
+    disbursement_amt = fields.Float("Amount", required=True)
     loan_id = fields.Many2one('account.loan')
 #     is_cancelled = fields.Boolean('Is Cancelled',default=False)
+
 
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
@@ -3534,17 +3810,18 @@ class AccountLoanRepayment(models.Model):
     _name = "account.loan.repayment"
 
     loan_id = fields.Many2one('account.loan')
-    release_number = fields.Many2one('account.move','Release Number')
-    name = fields.Many2one('res.partner','Partner Name',required=True)
-    pay_date = fields.Date("Re-payment Date",required=True)
-    amt = fields.Float("Amount",required=True)
+    release_number = fields.Many2one('account.move', 'Release Number')
+    name = fields.Many2one('res.partner', 'Partner Name', required=True)
+    pay_date = fields.Date("Re-payment Date", required=True)
+    amt = fields.Float("Amount", required=True)
     is_button_visible = fields.Boolean("Is Button Visible")
 
+    # @api.multi
 
-    #@api.multi
     def loan_payment_cancel(self):
         if not self.user_has_groups('pragtech_loan.group_allow_del_entries'):
-            raise UserError(_("You are not allowed to cancel payment, please contact to Administrator"))
+            raise UserError(
+                _("You are not allowed to cancel payment, please contact to Administrator"))
         today = datetime.datetime.today().date()
         if self.release_number:
             if self.release_number and self.release_number.state != 'posted':
@@ -3552,7 +3829,8 @@ class AccountLoanRepayment(models.Model):
 
             reverse_changeslist = []
 
-            payment_details_ids = self.env['payment.details'].search([('move_id','=', self.release_number.id)])
+            payment_details_ids = self.env['payment.details'].search(
+                [('move_id', '=', self.release_number.id)])
             for pd_line in payment_details_ids:
                 is_prin = False
                 is_int = False
@@ -3566,8 +3844,8 @@ class AccountLoanRepayment(models.Model):
                         pd_line.line_id.due_principal += pd_line.prin_amt
                     else:
                         pd_line.line_id.due_principal = 0.00
-                    if round(pd_line.line_id.outstanding_prin,2) == pd_line.line_id.capital:
-#                         pd_line.line_id.due_principal = 0.0
+                    if round(pd_line.line_id.outstanding_prin, 2) == pd_line.line_id.capital:
+                        #                         pd_line.line_id.due_principal = 0.0
                         is_prin = True
                 if pd_line.line_id:
                     pd_line.line_id.outstanding_int += pd_line.int_amt
@@ -3575,8 +3853,8 @@ class AccountLoanRepayment(models.Model):
                         pd_line.line_id.due_interest += pd_line.int_amt
                     else:
                         pd_line.line_id.due_interest = 0.00
-                    if round(pd_line.line_id.outstanding_int,2) == pd_line.line_id.interest:
-#                         pd_line.line_id.due_interest = 0.0
+                    if round(pd_line.line_id.outstanding_int, 2) == pd_line.line_id.interest:
+                        #                         pd_line.line_id.due_interest = 0.0
                         is_int = True
                 if pd_line.line_id:
                     pd_line.line_id.outstanding_fees += pd_line.fees_amt
@@ -3584,8 +3862,8 @@ class AccountLoanRepayment(models.Model):
                         pd_line.line_id.due_fees += pd_line.fees_amt
                     else:
                         pd_line.line_id.due_fees = 0.00
-                    if round(pd_line.line_id.outstanding_fees,2) == pd_line.line_id.fees:
-#                         pd_line.line_id.due_fees = 0.0
+                    if round(pd_line.line_id.outstanding_fees, 2) == pd_line.line_id.fees:
+                        #                         pd_line.line_id.due_fees = 0.0
                         is_fee = True
                     for fee_line in pd_line.line_id.fee_lines:
                         if fee_line.name == 'fees':
@@ -3617,18 +3895,20 @@ class AccountLoanRepayment(models.Model):
             cancel_entry = self.release_number.button_cancel()
             if cancel_entry:
                 self.is_button_visible = False
-                payment_details_ids = self.env['payment.details'].search([('move_id','=', self.release_number.id)])
+                payment_details_ids = self.env['payment.details'].search(
+                    [('move_id', '=', self.release_number.id)])
                 for pyline in payment_details_ids:
                     pyline.state = 'cancel'
                 if self.loan_id.state == 'done':
                     self.loan_id.state = 'approved'
         return True
 
-    #@api.multi
+    # @api.multi
     def delete_payment_line(self):
         for o in self:
             if o.release_number:
-                payment_details_ids = self.env['payment.details'].search([('move_id','=', self.release_number.id)])
+                payment_details_ids = self.env['payment.details'].search(
+                    [('move_id', '=', self.release_number.id)])
                 for pyline in payment_details_ids:
                     pyline.unlink()
             if o.release_number:
@@ -3636,21 +3916,23 @@ class AccountLoanRepayment(models.Model):
             o.unlink()
         return True
 
-    #@api.multi
+    # @api.multi
     def re_payment_line(self):
         for o in self:
             if o.release_number:
-                context = {'partner_id':o.loan_id.partner_id,\
-                       "active_model": 'account.loan', "active_ids": [o.loan_id.id],'new_loan':o.loan_id,\
-                        "journal_id":o.release_number.journal_id,"active_id": o.loan_id.id,'from_payment_confirm_button':True, 'move_id':o.release_number.id}
+                context = {'partner_id': o.loan_id.partner_id,
+                           "active_model": 'account.loan', "active_ids": [o.loan_id.id], 'new_loan': o.loan_id,
+                           "journal_id": o.release_number.journal_id, "active_id": o.loan_id.id, 'from_payment_confirm_button': True, 'move_id': o.release_number.id}
 
                 repayment_wiz_obj = self.env['loan.payment']
                 py_line = {}
-                py_line.update({'payment_date':o.pay_date, 'amount':o.amt,\
-                                'journal_id':o.release_number.journal_id.id,'loan_id':o.loan_id.id,'late_fee':0.0})
-                payment_record = repayment_wiz_obj.with_context(context).create(py_line)
+                py_line.update({'payment_date': o.pay_date, 'amount': o.amt,
+                                'journal_id': o.release_number.journal_id.id, 'loan_id': o.loan_id.id, 'late_fee': 0.0})
+                payment_record = repayment_wiz_obj.with_context(
+                    context).create(py_line)
                 payment_record.action_validate_loan_payment()
-                payment_details_ids = self.env['payment.details'].search([('move_id','=', o.release_number.id)])
+                payment_details_ids = self.env['payment.details'].search(
+                    [('move_id', '=', o.release_number.id)])
                 for pyline in payment_details_ids:
                     pyline.state = 'draft'
                 o.release_number.post()

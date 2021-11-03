@@ -33,7 +33,7 @@
         "wizard/payment_receipt_wizard.xml",
         "views/res_users_view.xml",
         "views/loan_view.xml",
-        # "views/loan_dashboard.xml",
+        "views/loan_dashboard.xml",
         "views/loantype_view.xml",
         "views/loan_sequence.xml",
         "views/loan_report.xml",

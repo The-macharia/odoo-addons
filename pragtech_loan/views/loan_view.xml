@@ -458,7 +458,7 @@
 								<field name="apply_date" />
 								<field name="department" />
 								<field name="approve_date" string="Sanctioned Date" />
-								<field name="is_refugee" widget="radio" options="{'horizontal': true}"  attrs="{'invisible':[('department', '!=', 'mbs')]}"/>
+<!-- 								<field name="is_refugee" widget="radio" options="{'horizontal': true}"  attrs="{'invisible':[('department', '!=', 'mbs')]}"/> -->
 								<field name="kiva_id" />
 								<field name="return_type" />
 								<field name="kiva_loan_id" />
