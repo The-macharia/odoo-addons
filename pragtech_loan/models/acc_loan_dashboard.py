@@ -676,9 +676,6 @@ class account_loan_dashboard(models.Model):
                     tot_bal_int += inst.interest
                     tot_bal_fees += inst.fees
                     tot_bal_late_fees += inst.late_fee
-
-
-today
 #                     date_inst = datetime.strptime(inst.date, "%Y-%m-%d")
                     self._cr.execute("select prin_amt, int_amt, fees_amt, late_fee_amt from payment_details where pay_date <= '{}' and line_id = {} and state != '{}'".format(
                         current_date, inst.id, 'cancel'))
