@@ -29,7 +29,7 @@
         "wizard/loan_extended_view.xml",
         "views/loan_asset.xml",
         "views/loan_payment_view.xml",
-        # "wizard/load_exemption.xml",
+        "wizard/payment_schedule_view.xml",
         "wizard/payment_receipt_wizard.xml",
         "views/res_users_view.xml",
         "views/loan_view.xml",

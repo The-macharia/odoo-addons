@@ -1,11 +1,13 @@
 from odoo import models, api, fields, _, SUPERUSER_ID
 import json
+import logging
 from datetime import datetime, date, timedelta
-# import datetime as dt
-# import operator
 from odoo.tools.misc import formatLang
 from dateutil.relativedelta import *
 
+logging.basicConfig(level=logging.DEBUG)
+# Get the logger
+_logger = logging.getLogger(__name__)
 
 out_graph_flag = False
 out_graph_data = []
@@ -230,6 +232,8 @@ class account_loan_dashboard(models.Model):
 
     # @api.one
     def _delinquency_graph(self):
+        _logger.error(self.get_delinquency_datas())
+        _logger.error("WHATS THE ERROR MESSAGEW")
         self.delinquency_graph = json.dumps(self.get_delinquency_datas())
 
     # @api.one
@@ -614,7 +618,7 @@ class account_loan_dashboard(models.Model):
             bal_pri = 0.0
             bal_int = 0.0
             bal_fees = 0.0
-            current_date = datetime.strptime(today, "%Y-%m-%d")
+            current_date = date.today()
             previous_date = current_date + timedelta(-30)
             if not (self._uid == SUPERUSER_ID or self.env.user.has_group('base.group_system')):
                 loan_obj = self.env['account.loan'].sudo().search([('state', 'in', ['partial', 'approved', 'done']), (
@@ -658,12 +662,12 @@ class account_loan_dashboard(models.Model):
                     final_date = pay.date
                     pay_flag = 0
                     for pay_ins in pay.installment_id:
-                        if datetime.strptime(pay.date, "%Y-%m-%d") <= current_date and pay_ins.state != 'paid':
+                        if pay.date.date() <= current_date and pay_ins.state != 'paid':
                             if not arrear_day:
                                 arrear_day = pay.date
                                 break
                 if arrear_day:
-                    arrear_day = datetime.strptime(arrear_day, "%Y-%m-%d")
+                    # arrear_day = datetime.strptime(str(arrear_day), "%Y-%m-%d")
                     arrear_day = date_new - arrear_day
                     arrear_day = arrear_day.days
 
@@ -673,6 +677,8 @@ class account_loan_dashboard(models.Model):
                     tot_bal_fees += inst.fees
                     tot_bal_late_fees += inst.late_fee
 
+
+today
 #                     date_inst = datetime.strptime(inst.date, "%Y-%m-%d")
                     self._cr.execute("select prin_amt, int_amt, fees_amt, late_fee_amt from payment_details where pay_date <= '{}' and line_id = {} and state != '{}'".format(
                         current_date, inst.id, 'cancel'))
@@ -717,7 +723,7 @@ class account_loan_dashboard(models.Model):
                             [('line_id', '=', inst.id), ('state', '!=', 'cancel')])
                         if pay_line:
                             l2 = [pline.prin_amt for pline in pay_line if pline.pay_date if datetime.strptime(
-                                pline.pay_date, "%Y-%m-%d").date() <= datetime.strptime(today, "%Y-%m-%d").date()]
+                                str(pline.pay_date), "%Y-%m-%d").date() <= datetime.strptime(today, "%Y-%m-%d").date()]
                             bal_pri1 += sum(l2)
                             if arrear_day > 30:
                                 bal_pri30day += sum(l2)

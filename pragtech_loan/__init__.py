@@ -24,6 +24,7 @@ from . import models
 # import loan_proof
 # import cheque
 # import installment
+from . import controllers
 # import loantype
 from . import wizard
 from . import report

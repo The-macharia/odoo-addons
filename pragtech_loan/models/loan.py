@@ -3,11 +3,28 @@ import datetime
 from odoo.osv import osv
 from odoo import fields, models, api, _
 from datetime import date
+import http.client
 import math
+import logging
+import json
+import base64
+import urllib.request
+import requests
+import urllib
 from odoo import exceptions, _
 from odoo.exceptions import UserError, ValidationError, Warning
+from psycopg2.extensions import JSON
+from requests.exceptions import RequestException, HTTPError, URLRequired
 from odoo.tools.safe_eval import safe_eval
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta\
+
+
+logging.basicConfig(level=logging.DEBUG)
+# Get the logger
+_logger = logging.getLogger(__name__)
+
+base_url = "https://partner-api.k1.kiva.org/v3/partner/319/loan_draft"
+base2_url = "https://partner-api.k1.kiva.org/v3/partner/319/repayments"
 
 
 class LoanCustomer(models.Model):
@@ -276,64 +293,6 @@ class AccountLoan(models.Model):
             ele.total_late_fee_paid = paid_late_fee
             self.total_excess_paid = excess_paid
 
-#     def _compute_total_payment(self):
-#         for ele in self:
-#             for payment in ele.repayment_details:
-#                 if payment.release_number.state == 'posted':
-#                     ele.total_payment += payment.amt
-#
-#     def _compute_total_principle_paid(self):
-#         for ele in self:
-#             prin_paid = 0
-#             prin_total = 0
-#             for line in ele.installment_id:
-#                 prin_paid += line.outstanding_prin
-#                 prin_total += line.capital
-#
-#             ele.total_principle_paid = prin_total - prin_paid
-#
-#     def _compute_total_interest_paid(self):
-#         for ele in self:
-#             int_paid = 0
-#             int_total = 0
-#             for line in ele.installment_id:
-#                 int_paid += line.outstanding_int
-#                 int_total += line.interest
-#
-#             ele.total_interest_paid = int_total - int_paid
-#
-#     def _compute_total_fees_paid(self):
-#         for ele in self:
-#             fees_paid = 0
-#             fees_total = 0
-#             for line in ele.installment_id:
-#                 fees_paid += line.outstanding_fees
-#                 fees_total += line.fees
-#             ele.total_fees_paid = fees_total - fees_paid
-
-#     def _compute_total_late_fees_paid(self):
-#         for ele in self:
-#             total = prin = inte = fees = 0.0
-#             int_paid = int_total = 0
-#             prin_paid = prin_total = 0
-#             fees_paid = fees_total = 0
-#             for payment in ele.repayment_details:
-#                 if payment.release_number.state == 'posted':
-#                     total += payment.amt
-#             for line in ele.installment_id:
-#                 prin_paid += line.outstanding_prin
-#                 prin_total += line.capital
-#             prin = prin_total - prin_paid
-#             for line in ele.installment_id:
-#                 int_paid += line.outstanding_int
-#                 int_total += line.interest
-#             inte = int_total - int_paid
-#             for line in ele.installment_id:
-#                 fees_paid += line.outstanding_fees
-#                 fees_total += line.fees
-#             fees = fees_total - fees_paid
-#             ele.total_late_fees_paid = round(total,2) - (round(prin,2) + round(inte,2) + round(fees,2))
-
     _name = 'account.loan'
 
     _inherit = ['mail.thread']
@@ -344,7 +303,6 @@ class AccountLoan(models.Model):
     loan_id = fields.Char('Loan Id', size=32, readonly=True,
                           track_visibility='onchange')
     proof_id = fields.One2many('account.loan.proof', 'loan_id', 'Proof Detail')
-#     auto_id = fields.Integer('Auto Id', size=32, default=lambda self: self.env['ir.sequence'].next_by_code('loan.id'), track_visibility='onchange')
     name = fields.Char('Purpose', size=128, required=True,
                        track_visibility='onchange')
     partner_id = fields.Many2one(
@@ -353,37 +311,42 @@ class AccountLoan(models.Model):
         'res.partner', 'Guarantor/Co-Signer 1', track_visibility='onchange')
     proof_2 = fields.Many2one(
         'res.partner', 'Guarantor/Co-Signer 2', track_visibility='onchange')
-    loan_type = fields.Many2one('account.loan.loantype', 'Loan Type',
-                                required=True, track_visibility='onchange', ondelete='restrict')
-#         'loan_type':fields.selection(_loan_type_get,'Loan Type', size=32 ,select=True, required=True),
-#         'loan_period':fields.selection(_loan_period_get,'Loan Period',select=True, required=True),
+    loan_type = fields.Many2one('account.loan.loantype', 'Loan Type', required=True, track_visibility='onchange',
+                                ondelete='restrict')
+    loan_component_id = fields.Many2one('loan.component.line', 'Loan gp', required=True, track_visibility='onchange',
+                                        ondelete='restrict')
+    #         'loan_type':fields.selection(_loan_type_get,'Loan Type', size=32 ,select=True, required=True),
+    #         'loan_period':fields.selection(_loan_period_get,'Loan Period',select=True, required=True),
     loan_period = fields.Many2one(
         'loan.installment.period', 'Loan Period', required=True, track_visibility='onchange')
-    loan_amount = fields.Float('Loan Amount', digits=(12, 2), required=True, states={
-                               'draft': [('readonly', False)]}, track_visibility='onchange')
+    loan_amount = fields.Float('Loan Amount', digits=(12, 2), required=True, states={'draft': [('readonly', False)]},
+                               track_visibility='onchange')
     approve_amount = fields.Float('Disbursement Amount', digits=(
         12, 2), readonly=True, track_visibility='onchange')
     process_fee = fields.Float('Processing Fee', digits=(
         12, 2), track_visibility='onchange')
-    total_installment = fields.Integer(
-        'Total Installment', readonly=False, required=True, default=0.0, track_visibility='onchange')
-#         'interest_rate': fields.float('Interest Rate',digits=(10,2),readonly=True,required=True,),
-    interest_rate = fields.Float(compute='compute_loan_interest',
-                                 string='Interest Rate (%)', store=True, track_visibility='onchange')
+    total_installment = fields.Integer('Total Installment', readonly=False, required=True, default=0.0,
+                                       track_visibility='onchange')
+    topping_amount = fields.Float(
+        'Toopping Amount', digits=(12, 2), track_visibility='onchange')
+    topping_date = fields.Date('Topping Date')
 
-#   'interest_rate': fields.function(compute_loan_interest,string='Interest Rate', track_visibility='always',multi='all',store=True),
+    #         'interest_rate': fields.float('Interest Rate',digits=(10,2),readonly=True,required=True,),
+    # interest_rate = fields.Float(compute='compute_loan_interest', string='Interest Rate (%)', store=True,
+    #                              track_visibility='onchange')
+    # interest_rate = fields.Float(string='Interest Rate (%)', store=True,
+    #                              track_visibility='onchange',default=10)
+#   #         'interest_rate': fields.float('Interest Rate',digits=(10,2),readonly=True,required=True,),
+#     interest_rate = fields.Float(compute='compute_loan_interest',
+#                                  string='Interest Rate (%)', store=True, track_visibility='onchange')
+    interest_rate = fields.Float(string='Interest Rate (%)')
+    inta= fields.Float(string='The Rate')
 
-    department = fields.Selection([
-        ('263', 'COVID-19 Recovery'),
-        ('228', 'Micro-enterprise'),
-        ('98', 'SME'),
-        ('29', 'Vulnerable Populations'),
-        ('246', 'Vulnerable Populations (Refugees Kenya)')])
-#     is_refugee = fields.Selection([('ref','Refugee'),('non_ref','Non Refugee')])
+    #   'interest_rate': fields.function(compute_loan_interest,string='Interest Rate', track_visibility='always',multi='all',store=True),
     kiva_id = fields.Char('KIVA Client ID')
     kiva_loan_id = fields.Char('KIVA Loan ID', copy=False)
-    apply_date = fields.Date('Apply Date', states={'draft': [(
-        'readonly', False)]}, default=time.strftime('%Y-%m-%d'), track_visibility='onchange')
+    apply_date = fields.Date('Apply Date', states={'draft': [('readonly', False)]}, default=time.strftime('%Y-%m-%d'),
+                             track_visibility='onchange')
     approve_date = fields.Date(
         'Approve Date', readonly=False, track_visibility='onchange')
     cheque_ids = fields.One2many(
@@ -396,6 +359,8 @@ class AccountLoan(models.Model):
         ('approved', 'Disbursed'),
         ('done', 'Closed'),
         ('cancel', 'Declined'),
+        ('p_scheduled', 'Payment Schedule Generated'),
+        ('kiva_loan', 'Loan Has Successfully Been Sent To Kiva'),
         ('writeoff', 'Write Off'),
     ], 'State', readonly=True, index=True, default='draft', track_visibility='onchange')
     return_type = fields.Selection([
@@ -403,30 +368,32 @@ class AccountLoan(models.Model):
         ('cheque', 'By Cheque'),
         ('automatic', 'Electronic Clearing'),
     ], 'Payment Type', index=True, default='automatic', track_visibility='onchange')
-    pricelist_id = fields.Many2one('product.pricelist', 'Pricelist', required=False, readonly=True, states={
-                                   'draft': [('readonly', False)]}, track_visibility='onchange')
-#     running_loan = fields.Many2many('account.loan', 'account_loan_running', 'loan_id', 'auto_id', 'Current Loans',track_visibility='onchange')
+    pricelist_id = fields.Many2one('product.pricelist', 'Pricelist', required=False, readonly=True,
+                                   states={'draft': [('readonly', False)]}, track_visibility='onchange')
+    #     running_loan = fields.Many2many('account.loan', 'account_loan_running', 'loan_id', 'auto_id', 'Current Loans',track_visibility='onchange')
+
     installment_id = fields.One2many(
         'account.loan.installment', 'loan_id', 'Installments', track_visibility='onchange')
     interest = fields.Float('Interest', digits=(
         12, 2), track_visibility='onchange', copy=False)
     voucher_id = fields.Many2one(
-        'sale.coupon', 'Voucher', readonly=True, track_visibility='onchange')
+        'account.voucher', 'Voucher', readonly=True, track_visibility='onchange')
     notes = fields.Text('Description', track_visibility='onchange')
 
     cus_pay_acc = fields.Many2one('account.account', method=True, string="Customer Loan Account",
-                                  company_dependent=True,  track_visibility='onchange')
-    int_acc = fields.Many2one('account.account', method=True, string="Interest Account",
-                              company_dependent=True,  track_visibility='onchange')
-    bank_acc = fields.Many2one('account.account', method=True, string="Bank Account",
-                               company_dependent=True,  track_visibility='onchange')
-    proc_fee = fields.Many2one('account.account', method=True, string="Processing Fee Account",
-                               company_dependent=True,  track_visibility='onchange')
+                                  company_dependent=True, track_visibility='onchange')
+    int_acc = fields.Many2one('account.account', method=True, string="Interest Account", company_dependent=True,
+                              track_visibility='onchange')
+    bank_acc = fields.Many2one('account.account', method=True, string="Bank Account", company_dependent=True,
+                               track_visibility='onchange')
+    proc_fee = fields.Many2one('account.account', method=True, string="Processing Fee Account", company_dependent=True,
+                               track_visibility='onchange')
     anal_acc = fields.Many2one('account.analytic.account', method=True, string="Analytic Account",
-                               company_dependent=True, help="This analytic account will be used", track_visibility='onchange')
+                               company_dependent=True, help="This analytic account will be used",
+                               track_visibility='onchange')
 
-    move_id = fields.One2many('account.move.line', 'acc_loan_id',
-                              'Move Line', readonly=True, track_visibility='onchange')
+    move_id = fields.One2many('account.move.line', 'acc_loan_id', 'Move Line', readonly=True,
+                              track_visibility='onchange')
 
     loan_amt = fields.Float('Loan Amount', digits=(
         12, 2), required=True, track_visibility='onchange')
@@ -449,7 +416,8 @@ class AccountLoan(models.Model):
     flat_tot_int_amt = fields.Float('Total Interest Amount', readonly=True)
     flat_yr_int_amt = fields.Float('Yearly Interest Amount', readonly=True)
     bank_id = fields.Many2one("res.partner.bank", string="Customer Bank")
-
+    disbursement_id = fields.Many2many(
+        "loan.disbursement.wizard", readonly=True)
     disbursement_details = fields.One2many(
         "account.loan.disbursement", 'loan_id', readonly=True)
     old_disburse_amt = fields.Float("Remain amt")
@@ -457,40 +425,43 @@ class AccountLoan(models.Model):
         'account.journal', "Disbursement Journal")
     journal_repayment_id = fields.Many2one(
         'account.journal', "Repayment Journal")
-    payment_freq = fields.Selection([('monthly', 'Monthly'), ('quarterly', 'Quarterly'), (
-        'half_yearly', 'Half-Yearly'), ('yearly', 'Yearly')], "Payment Frequency", default="monthly")
-    payment_schedule_ids = fields.One2many(
-        'payment.schedule.line', 'loan_id', 'Payment Schedule', track_visibility='onchange')
+    payment_freq = fields.Selection(
+        [('monthly', 'Monthly'), ('quarterly', 'Quarterly'),
+         ('half_yearly', 'Half-Yearly'), ('yearly', 'Yearly')],
+        "Payment Frequency", default="monthly")
+    payment_schedule_ids = fields.One2many('payment.schedule.line', 'loan_id', 'Payment Schedule',
+                                           track_visibility='onchange')
 
-    company_id = fields.Many2one(
-        'res.company', 'Company', default=lambda self: self.env['res.company']._company_default_get('account.loan'))
+    company_id = fields.Many2one('res.company', 'Company',
+                                 default=lambda self: self.env['res.company']._company_default_get('account.loan'))
     group_members = fields.One2many(
         'res.partner.loan.line', 'loan_id', 'Group Members')
     is_group = fields.Boolean(related="partner_id.is_group", store=True)
     is_collateral = fields.Boolean(default=False)
-    user_id = fields.Many2one('res.users', string='Salesperson', index=True,
-                              track_visibility='onchange', default=lambda self: self.env.user)
+    user_id = fields.Many2one('res.users', string='Salesperson', index=True, track_visibility='onchange',
+                              default=lambda self: self.env.user)
     date_done = fields.Date('Date Done', readonly=True)
     collateral_lines = fields.One2many(
         'collateral.line', 'loan_id', 'Collateral Lines')
 
     repayment_details = fields.One2many(
         "account.loan.repayment", 'loan_id', readonly=True)
-    repayment_basis = fields.Selection([('disbursed_amt', 'Disbursed Amount'), (
-        'sanctioned_amt', 'Sanctioned Amount')], "Repayment Basis", default="sanctioned_amt")
+    repayment_basis = fields.Selection([('disbursed_amt', 'Disbursed Amount'), ('sanctioned_amt', 'Sanctioned Amount')],
+                                       "Repayment Basis", default="sanctioned_amt")
     grace_period = fields.Integer("Grace Period (Days)")
     classification = fields.Char(string="Classification")
-    interest_type = fields.Selection(related="loan_type.calculation", string='Interest Type',
-                                     readonly=True, store=True, track_visibility='onchange')
+    interest_type = fields.Selection(related="loan_type.calculation", string='Interest Type', readonly=True, store=True,
+                                     track_visibility='onchange')
     city = fields.Char(related='partner_id.city', string='City', store=True)
-
+    installment_data = fields.Many2many(
+        'account.loan.installment', string="Installment Data")
     total_payment = fields.Float(compute='_compute_payment')
     total_principal_paid = fields.Float(compute='_compute_payment')
     total_interest_paid = fields.Float(compute='_compute_payment')
     total_fees_paid = fields.Float(compute='_compute_payment')
     total_late_fee_paid = fields.Float(compute='_compute_payment')
     total_excess_paid = fields.Float(compute='_compute_payment')
-
+    button_clicked = fields.Boolean(string='Button clicked', default=False,)
     restrict_compute = fields.Boolean()
     total_principal_paid1 = fields.Float(string="Total Payment")
     total_interest_paid1 = fields.Float(string="Total Interest Paid")
@@ -498,17 +469,408 @@ class AccountLoan(models.Model):
     total_late_fee_paid1 = fields.Float(string="Total Late Fees Paid")
     total_excess_paid1 = fields.Float(string="Excess Amount Paid")
     total_payment1 = fields.Float(compute='_compute_payment_total')
+    test_gp = fields.Selection([
+        ('1', 'GP-1'),
+        ('2', 'GP-2'),
+        ('3', 'GP-3'),
+        ('4', 'GP-4'),
+        ('5', 'GP-5'),
+        ('6', 'GP-6'),
+        ('7', 'GP-7'),
+        ('8', 'GP-8')], string="Grace Installments")
+#     auto_id = fields.Integer('Auto Id', size=32, default=lambda self: self.env['ir.sequence'].next_by_code('loan.id'), track_visibility='onchange')
+    loan_dataz = fields.Text('Loan Discription', size=128)
+    department = fields.Selection([
+        ('263', 'COVID-19 Recovery'),
+        ('228', 'Micro-enterprise'),
+        ('98', 'SME'),
+        ('29', 'Vulnerable Populations'),
+        ('246', 'Vulnerable Populations (Refugees Kenya)')])
+    activity_id = fields.Selection([
+        ('120', 'Agriculture:Agriculture'),
+        ('110', 'Agriculture, Animal Sales'),
+        ('218', 'Agriculture, Aquaculture'),
+        ('217', 'Agriculture, Beekeeping'),
+        ('56', 'Agriculture, Cattle'),
+        ('61', 'Agriculture, Dairy'),
+        ('68', 'Agriculture, Farm Supplies'),
+        ('31', 'Agriculture, Farming'),
+        ('177', 'Agriculture, Flowers'),
+        ('13', ' Agriculture, Veterinary Sales'),
+        ('102', 'Agriculture, Poultry'),
+        ('99', 'Agriculture, Pigs'),
+        ('11', 'Agriculture, Land Rental'),
+        ('73', 'Agriculture, Livestock'),
 
+        ('129', 'Services, Child Care'),
+        ('157', 'Services, Call Center'),
+        ('159', 'Services, Bookbinding'),
+        ('21', 'Services, Bicycle Repair'),
+        ('49', 'Services, Beauty Salon'),
+        ('28', 'Services, Barber Shop'),
+        ('92', ' Services, Auto Repair'),
+        ('105', 'Services, Air Conditioning'),
+        ('207', 'Services, Adult Care'),
+        ('204', ' Services, Cleaning Services'),
+        ('101', ' Services, Cobbler'),
+        ('206', 'Services, Communications'),
+        ('111', 'Services, Computers'),
+        ('116', 'Services, Electrician'),
+        ('104', 'Services, Electronics Repair'),
+        ('208', 'Services, Energy'),
+        ('226', 'Services, Event Planning'),
+        ('146', ' Services, Hotel'),
+        ('172', 'Services, Internet Cafe'),
+        ('210', 'Services, Landscaping / Gardening'),
+        ('85', 'Services, Laundry'),
+        ('184', 'Services, Machinery Rental'),
+        ('225', 'Services, Mobile Transactions'),
+        ('135', 'Services, Motorcycle Repair'),
+        ('100', 'Services, Phone Repair'),
+        ('62', 'Services, Photography'),
+        ('66', 'Services, Printing'),
+        ('138', 'Services, Recycling'),
+        ('114', 'Services, Secretarial Services'),
+        ('121', 'Services, Services'),
+        ('47', 'Services, Sewing'),
+        ('32', 'Services, Tailoring'),
+        ('216', 'Services, Technology'),
+        ('133', ' Services, Tourism'),
+        ('167', 'Services, Upholstery'),
+        ('18', 'Services, Water Distribution'),
+        ('163', 'Services, Waste Management'),
+        ('54', ' Services, Vehicle Repairs'),
+        ('137', 'Services, Utilities'),
+        ('107', 'Transportation, Transportation'),
+        ('59', ' Transportation, Taxi'),
+        ('156', 'Transportation, Rickshaw'),
+        ('37', 'Transportation, Motorcycle Transport'),
+
+        ('130', 'Retail, Fuel/Firewood'),
+        ('209', 'Retail, Florist'),
+        ('51', ' Retail, Electronics Sales'),
+        ('131', 'Retail, Electrical Goods'),
+        ('98', 'Retail, Decorations Sales'),
+        ('57', 'Retail, General Store'),
+        ('141', 'Retail, Spare Parts'),
+        ('140', 'Retail, Souvenir Sales'),
+        ('23', 'Retail, Shoe Sales'),
+        ('88', 'Retail, Retail'),
+        ('201', 'Retail, Renewable Energy Products'),
+        ('132', 'Retail, Religious Articles'),
+        ('202', 'Retail, Recycled Materials'),
+        ('26', 'Retail, Plastics Sales'),
+        ('40', ' Retail, Phone Use Sales'),
+        ('96', ' Retail, Phone Accessories'),
+        ('142', 'Retail, Personal Products Sales'),
+        ('109', 'Retail, Perfumes'),
+        ('127', 'Retail, Party Supplies'),
+        ('103', 'Retail, Paper Sales'),
+        ('80', 'Retail, Office Supplies'),
+        ('151', 'Retail, Music Discs & Tapes'),
+        ('161', 'Retail, Movie Tapes & DVDs'),
+        ('117', 'Retail, Mobile Phones'),
+        ('170', 'Retail, Jewelry'),
+        ('29', 'Retail, Home Products Sales'),
+        ('81', 'Retail, Hardware'),
+        ('41', ' Retail, Sporting Good Sales'),
+        ('12', ' Retail, Traveling Sales'),
+        ('19', 'Retail, Cosmetics Sales'),
+        ('171', 'Retail, Cloth & Dressmaking Supplies'),
+        ('60', 'Retail, Charcoal Sales'),
+        ('14', 'Retail, Bookstore'),
+        ('76', ' Retail, Bicycle Sales'),
+
+
+        ('65', 'Health, Pharmacy'),
+        ('192', ' Health, Personal Medical Expenses'),
+        ('143', 'Health, Natural Medicines'),
+        ('70', 'Health, Medical Clinic'),
+        ('123', 'Health, Health'),
+        ('115', 'Health, Dental'),
+
+
+        ('199', 'Clothing, Used Shoes'),
+        ('84', ' Clothing, Used Clothing'),
+        ('9', 'Clothing, Clothing Sales'),
+        ('183', 'Clothing, Clothing'),
+
+        ('185', ' Food, Food Stall'),
+        ('67', 'Food, Food Production/Sales'),
+        ('87', 'Food, Food Market'),
+        ('181', 'Food, Food'),
+        ('89', 'Food, Fishing'),
+        ('63', 'Food, Fish Selling'),
+        ('35', 'Food, Cheese Making'),
+        ('112', 'Food, Cereals'),
+        ('45', ' Food, Catering'),
+        ('25', 'Food, Cafe'),
+        ('34', 'Food, Butcher Shop'),
+        ('220', 'Food, Beverages'),
+        ('186', ' Food, Balut-Making'),
+        ('27', 'Food, Bakery'),
+        ('46', 'Food, Restaurant'),
+        ('94', 'Food, Pub'),
+        ('91', 'Food, Milk Sales'),
+        ('162', 'Food, Liquor Store / Off-License'),
+        ('15', 'Food, Grocery Store'),
+        ('169', 'Food, Fruits & Vegetables'),
+
+
+        ('193', 'Housing, Property'),
+        ('134', 'Housing, Personal Housing Expenses'),
+
+        ('145', ' Arts, Weaving'),
+        ('86', 'Arts, Textiles'),
+        ('75', 'Arts, Patchwork'),
+        ('78', 'Arts, Musical Instruments'),
+        ('165', 'Arts, Knitting'),
+        ('164', 'Arts, Film'),
+        ('149', 'Arts, Embroidery'),
+        ('72', 'Arts, Crafts'),
+        ('125', ' Arts, Arts'),
+
+
+        ('221', 'Manufacturing, Personal Care Products'),
+        ('52', ' Manufacturing, Metal Shop'),
+        ('108', ' Manufacturing, Blacksmith'),
+        ('33', ' Manufacturing, Furniture Making'),
+        ('95', 'Manufacturing, Machine Shop'),
+        ('124', 'Manufacturing, Manufacturing'),
+        ('43', 'Construction, Carpentry'),
+        ('79', 'Construction, Bricks'),
+        ('180', 'Wholesale, Wholesale'),
+        ('144', 'Wholesale, Goods Distribution'),
+
+
+
+        ('158', 'Education, Primary/secondary school costs'),
+        ('200', ' Education, Higher education costs'),
+        ('176', 'Education, Education provider'),
+        ('219', ' Education, Computer'),
+
+
+        ('147', 'Construction, Well digging'),
+        ('128', ' Construction, Timber Sales'),
+        ('119', 'Construction, Quarrying'),
+        ('24', 'Construction, Construction Supplies'),
+        ('39', 'Construction, Construction'),
+        ('97', 'Construction, Cement'),
+
+        ('195', 'Personal Use, Home Appliances'),
+        ('203', 'Personal Use, Home Energy'),
+        ('222', 'Personal Use, Funerals'),
+        ('224', 'Personal Use, Personal Expenses'),
+        ('196', 'Personal Use, Vehicle'),
+        ('197', 'Personal Use, Wedding Expenses'),
+
+        ('174', 'Entertainment,Entertainment'),
+        ('175', 'Entertainment, Games'),
+        ('17', 'Entertainment :Musical Performance'),
+    ])
+    loan_grace_period = fields.Boolean(default=True)
+ 
+    @api.onchange('intant')
+    def onchange_intant(self):
+        res = {}
+        if self.intant:
+            res = {'interest_rate': self.intant}
+        return {'value': res}
 #     total_late_fees_paid = fields.Float(compute='_compute_total_late_fees_paid')
+    def send2kivaloan(self):
+        active_id = self._context.get('active_id')
+        acc_loan = self.env['account.loan'].browse(active_id)
+        client_data = []
+        for clie_data in self.group_members:
+            client_data.append({
+                'first_name': clie_data.name.f_name,
+                'amount': clie_data.principal,
+                'last_name': clie_data.name.l_name,
+                'gender': clie_data.name.gender,
+                'client_id': clie_data.name.id_no,
+                'loan_id': self.loan_id,
+                # 'image_url': im_b64,
+            })
+        grp_data = json.dumps(client_data, indent=2)
+        # datau = json.loads(grp_data.decode())
+        # print(grp_d,type(grp_data),'GROUP LOAN')
+        print(grp_data, type(grp_data))
+        # name = datau.first_name
+        # print(name,'First Name')
+        installment_data = []
+        for insta in self.installment_id:
+            date = insta.date
+            dat_str = str(date)
+            installment_data.append({
+                'date': dat_str,
+                'principal': insta.capital,
+                'interest': insta.interest
+            })
+        installm = json.dumps(installment_data, indent=2)
+        print(type(installm))
+
+        # HAVING CLIENTS CREDENTIALS THEN WE INPUT THE CREDS SO ASS TO GET ACCESS TOKEN
+        conn = http.client.HTTPSConnection("auth.k1.kiva.org")
+        payloads = 'grant_type=client_credentials&client_id=ovMOzQdBV3j94wEZuVo152leYJqgp6kyr&client_secret=pP%2B99cnRe1e4lbHPD5tn7zp6%2FJ5zt2W57DOyk0vj3CH10Dw9TGzZl1xMSr0AVMphuo&audience=https%3A%2F%2Fpartner-api.k1.kiva.org&scope=create%3Aloan_draft%20create%3Arepayment%20read%3Aloans'
+        headers = {
+            'Accept': 'application/json',
+            'content-type': 'application/x-www-form-urlencoded'
+        }
+        # image= self.partner_id.p_photo
+        # # data = urllib.request.urlopen(image)
+        #
+        # # json.dumps({'picture' : data})
+        #         print(s,"ImaGE testing")
+        # this is the function to print the access token
+        conn.request("POST", "/oauth/token", payloads, headers)
+        res = conn.getresponse()
+        # this is the data being printed when this request is sent
+        data1 = res.read()
+        # CONVERT THE DATA WE GET FROM THE POST REQUEST TO JSON FORMAT
+        # print(paymentdates,"DATES FOR THE PAYMENT FOR THE LAON!!")
+        datas = json.loads(data1.decode())
+        # A VARIABLE TO SELECT A SINGLE VALUE(access_token)FROM THE RESPONSE WE GET TO AUTHORIZE THE REQUEST
+        country_name = self.partner_id.nationality_id.name
+        city_name = self.partner_id.street2
+        # print(img_file,type(img_file),"Image from inkomoko")
+        accessToken = datas['access_token']
+        date11 = str(self.approve_date)
+        # for infor in acc_loan:
+        #         if infor.activity_id == 'null':
+        #         UserError('Activity Cannot Be Empty!')
+
+        print(self.partner_id.nationality_id.currency_id["name"],
+              'HUSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS!!!')
+        if self.partner_id.is_group == False:
+            payload = {
+                "activity_id": self['activity_id'],
+                "client_waiver_signed": True,
+                "currency": self.partner_id["currency_name"],
+                "description": self["loan_dataz"],
+                "description_language_id": 1,
+                "disburse_time": date11,
+                "entreps": [{
+                    "amount": self['loan_amount'],
+                    "client_id": self["kiva_id"],
+                    "first_name": self.partner_id["f_name"],
+                    "gender": self.partner_id["gender"],
+                    "last_name": self.partner_id["l_name"],
+                    "loan_id": self["kiva_loan_id"],
+                }],
+                # "group_name": self.partner_id["company_type"],
+                # "image_url": self.partner_id['p_photo'],
+                "loanuse": self["name"],
+                "location": self.partner_id["cust_residence"],
+                # "not_pictured": True,
+                "rep_person_id": self.partner_id["id"],
+                "schedule": installment_data,
+                "theme_type_id": self['department'], }
+        # CONVERT DICT TO JSON SO AS TO BE SENT TO KIVA
+            # print('fUCK THE HELL OUT OF YOU')
+        else:
+            payload = {
+                "activity_id": self['activity_id'],
+                "client_waiver_signed": True,
+                "currency": self.partner_id["currency_name"],
+                "description": self["loan_dataz"],
+                "description_language_id": 1,
+                "disburse_time": date11,
+                # "amount": self['loan_amount'],
+                "entreps": client_data,
+                "group_name": self.partner_id["name"],
+                # # "image_url": self.partner_id["image"],
+                "internal_client_id": self["kiva_id"],
+                "internal_loan_id": self["kiva_loan_id"],
+                "loanuse": self["name"],
+                "location": self.partner_id["cust_residence"],
+                # "not_pictured": True,
+                "rep_person_id": self.partner_id["id"],
+                "schedule": installment_data,
+                "theme_type_id": self['department']}
+        # CONVERT DICT TO JSON SO AS TO BE SENT TO KIVA
+        data = json.dumps(payload, indent=2)
+        # HEADERS FOR AUTHORIZATION OF THE API ENDPOINTS
+        headers = {
+            "Authorization": "Bearer " + accessToken,
+            "Content-Type": "application/json",
+        }
+        response = requests.request(
+            "POST", base_url, headers=headers, data=data)
+        print(data, response.text)
+        _logger.debug(data)
+        _logger.debug(response.text)
+        _logger.debug("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK")
+
+        if self.activity_id == False:
+            raise ValidationError(_('Can you Define Activity Id Please!!'))
+
+        elif self.partner_id["currency_name"] == False:
+            raise ValidationError(
+                _('Can you Define Currency Name Please!!'))
+
+        # elif self.group_members.name.currency_name == False:
+        #     raise ValidationError(_('Currency Name For Each Memeber is needed !!'))
+
+        elif self["loan_dataz"] == "":
+            raise ValidationError(
+                _('Can You Add  loan Description Please!'))
+
+        elif self["approve_date"] == False:
+            raise ValidationError(
+                _('Please the Sanctioning Date is Empty'))
+
+        elif self["kiva_id"] == False:
+            raise ValidationError(_('Kiva Client Id Is Needed'))
+
+        elif self.partner_id["name"] == False:
+            raise ValidationError(_('Please First name is Missing'))
+
+        # elif self.group_members.name.name == False:
+        #     raise ValidationError(_('Please First name is Missing'))
+
+        elif self.partner_id['l_name'] == False:
+            raise ValidationError(_('Please Last name is Missing'))
+
+        elif self.partner_id['f_name'] == False:
+            raise ValidationError(_('Please First name is Missing'))
+        # elif self.group_members.name.last_name == False:
+        #     raise ValidationError(_('Please Last name is Missing'))
+
+        elif self["kiva_loan_id"] == False:
+            raise ValidationError(_('Kiva Loan Id Is Needed'))
+
+        elif self.partner_id["currency_name"] == False:
+            raise ValidationError(_('Currency Name is Needed'))
+
+        elif self["name"] == False:
+            raise ValidationError(_('Loan Purpose is Empty'))
+
+        elif self.partner_id["cust_residence"] == False:
+            raise ValidationError(_('Customer Residence is Needed!!'))
+
+        # if self.group_members.name.cust_residence == False:
+        #     raise ValidationError(_('Customer Residence is Needed!!'))
+
+        elif self['department'] == False:
+            raise ValidationError(_('Loan Department Cannot Be Empty'))
+
+        elif self.partner_id["name"] == False:
+            raise ValidationError(_('Group Name Cannot be Empty!!'))
+        else:
+            print('EVERYTHING IS FINE')
+        # if response.status_code !=200:
+        #         raise ValidationError(_('Pleasure make sure the values entered are correct'))
+        return self.write({'state': 'kiva_loan'})
 
     @api.model
     def create(self, vals):
         vals['loan_id'] = self.env['ir.sequence'].next_by_code('loan.number')
-        if 'kiva_loan_id' in vals and vals.get('kiva_loan_id'):
-            is_kiva_exist = self.search(
-                [('kiva_loan_id', '=', vals.get('kiva_loan_id'))])
-            if is_kiva_exist:
-                raise Warning("Kiva loan id can not be duplicated")
+        # if 'kiva_loan_id' in vals and vals.get('kiva_loan_id'):
+        #     is_kiva_exist = self.search(
+        #         [('kiva_loan_id', '=', vals.get('kiva_loan_id'))])
+        #     if is_kiva_exist:
+        #         raise Warning("Kiva loan id can not be duplicated")
+
         res = super(AccountLoan, self).create(vals)
         template = self.env.ref('pragtech_loan.email_template_loan_creation')
         mail_obj = self.env['mail.template'].browse(template.id)
@@ -521,13 +883,38 @@ class AccountLoan(models.Model):
         return res
 
     # @api.multi
-    def write(self, vals):
-        if 'kiva_loan_id' in vals and vals.get('kiva_loan_id'):
-            is_kiva_exist = self.search(
-                [('kiva_loan_id', '=', vals.get('kiva_loan_id'))])
-            if is_kiva_exist:
-                raise Warning("Kiva loan id can not be duplicated")
-        return super(AccountLoan, self).write(vals)
+    # def write(self, vals):
+    #     if 'kiva_loan_id' in vals and vals.get('kiva_loan_id'):
+    #         is_kiva_exist = self.search(
+    #             [('kiva_loan_id', '=', vals.get('kiva_loan_id'))])
+    #         if is_kiva_exist:
+    #             raise Warning("Kiva loan id can not be duplicated")
+    #     return super(AccountLoan, self).write(vals)
+
+    def payment_schedule(self):
+        context = dict(self.env.context or {})
+        context['active_id'] = self.id
+        is_approve = self.env['ir.config_parameter'].sudo(
+        ).get_param('pragtech_loan.loan_approval')
+        approval_amount = self.env['ir.config_parameter'].sudo(
+        ).get_param('pragtech_loan.validation_amount')
+        if is_approve:
+            if self.loan_amount >= float(approval_amount) and not self.user_has_groups(
+                    'pragtech_loan.group_loan_manager'):
+                users = self.env.ref('pragtech_loan.group_loan_manager').users
+                return self.write({'state': 'kiva_loan'})
+        return {
+            'name': _('Payment Schedule Wizard'),
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'loan.payment.scheduled',
+            'view_id': self.env.ref('pragtech_loan.loan_payment_scheduled_form_view').id,
+            'type': 'ir.actions.act_window',
+            'res_id': self.env.context.get('id'),
+            'context': {'default_name': 'Repayment Schedule Shall be Generated On "%s". Do you want to continue ?' % (
+                dict(self._fields['repayment_basis'].selection).get(self.repayment_basis))},
+            'target': 'new'
+        }
 
     @api.onchange('restrict_compute')
     def onchange_restrict_compute(self):
@@ -668,7 +1055,7 @@ class AccountLoan(models.Model):
     def loan_interest_get(self):
         for loan in self:
             self.write({'approve_amount': loan.loan_amount -
-                        loan.process_fee, 'approve_date': time.strftime('%Y/%m/%d')})
+                        loan.process_fee, 'approve_date': time.strftime('%Y-%m-%d')})
         return True
 
     def calculate_eir(self, e, t, n, i, o):
@@ -996,10 +1383,10 @@ class AccountLoan(models.Model):
             return 0.0
 
     # @api.multi
-    def _get_simple_int_by_existed_disbursed(self, inter_rate, disbursed_amt=0.0, disburse_date=False, currency_id=False, journal_id=False):
+    def _get_simple_int_by_disbursed(self, inter_rate, disbursed_amt=0.0, disburse_date=False, currency_id=False, journal_id=False):
         #         today_date = date.today()
         disburse_date = (datetime.datetime.strptime(
-            disburse_date, '%Y-%m-%d').date())
+            str(disburse_date), '%Y-%m-%d').date())
         today_date = disburse_date
         count = 0
         installment_day = False
@@ -1023,6 +1410,50 @@ class AccountLoan(models.Model):
                     l.write({'is_paid_installment': True})
                     date_of_lines = (datetime.datetime.strptime(
                         l.date, '%Y-%m-%d').date())
+                    installment_day = date_of_lines.day
+
+        differ = self.old_disburse_amt - sum_of_paid
+        new_disburse = differ + disbursed_amt
+        if self._context.get('is_extended'):
+            new_disburse = differ
+            disbursed_amt = 0
+        total_installment = self.total_installment - count
+        self.write({'old_disburse_amt': new_disburse})
+        if installment_day:
+            disburse_date = disburse_date.replace(day=installment_day)
+
+        #         print (differ, new_disburse,'Differ and disburse amount')
+        move_id = self._partial_by_disbursed(inter_rate, new_disburse, total_installment, disbursed_amt, disburse_date,
+                                             currency_id, journal_id)
+
+    def _get_simple_int_by_existed_disbursed(self, inter_rate, disbursed_amt=0.0, disburse_date=False, currency_id=False, journal_id=False):
+        #         today_date = date.today()
+        disburse_date = (datetime.datetime.strptime(
+            str(disburse_date), '%Y-%m-%d').date())
+        today_date = disburse_date
+        count = 0
+        installment_day = False
+        sum_of_paid = 0.0
+        counter_list = []
+        if not self.repayment_basis == 'sanctioned_amt':
+            for line in self.installment_id:
+                d = (datetime.datetime.strptime(
+                    str(line.date), '%Y-%m-%d')).date()
+                if d <= today_date and line.state not in ['paid']:
+                    count = count + 1
+                    if line.is_paid_installment == False:
+                        counter_list.append(line)
+                else:
+                    if line.loan_id.cheque_ids:
+                        line.loan_id.cheque_ids.unlink()
+                    line.unlink()
+
+            for l in counter_list:
+                if l.is_paid_installment == False:
+                    sum_of_paid = sum_of_paid + l.outstanding_prin
+                    l.write({'is_paid_installment': True})
+                    date_of_lines = (datetime.datetime.strptime(
+                        str(l.date), '%Y-%m-%d').date())
                     installment_day = date_of_lines.day
 
         differ = self.old_disburse_amt - sum_of_paid
@@ -1284,6 +1715,586 @@ class AccountLoan(models.Model):
             installment.total = installment.total + total
 
     # for extended period ............
+    def _simple_interest_get_by_disbursed_shedule(self, inter_rate, disbursed_amt=0.0, disburse_date=False, currency_id=False,
+                                                  journal_id=False):
+        loan = self.read()
+        installment_cr = self.env['account.loan.installment']
+        cheque_cr = self.env['account.loan.bank.cheque']
+        move_obj = self.env['account.move']
+        line_obj = self.env['account.move.line']
+
+        if not self.partner_id:
+            raise exceptions.except_orm(
+                _('Field Required'), _('Please select Customer.'))
+
+        part_id = self.partner_id.id
+        int_rate = 0.0
+        if self.return_type == 'cheque':
+            bank_ids = self.bank_id
+
+        inter_sed = self.loan_type
+        if inter_sed:
+            inter_cal_type = inter_sed.calculation
+            if inter_cal_type:
+                if inter_cal_type == 'flat':
+                    if self.loan_amount > 0.0 and self.total_installment > 0:
+                        #                         int_rate = self.calculate_eir(inter_rate, self.loan_amount, self.total_installment / 12 , inter_rate, 0)
+                        pass
+                elif inter_cal_type == 'reducing':
+                    int_rate = inter_rate
+
+        rate_interest = int_rate / 100
+        updated_loan_amount = self.loan_amount
+        if self.repayment_basis == 'sanctioned_amt':
+            if self._context.get('is_extended'):
+                bal_entry = installment_cr.search(
+                    [('state', 'in', ['draft', 'open']), ('loan_id', '=', self.id)])
+                new_loan_amount = 0.0
+                for bl in bal_entry:
+                    new_loan_amount += bl.outstanding_prin
+                    if bl.state == 'open':
+                        if bl.outstanding_prin != bl.capital and bl.capital > bl.outstanding_prin:
+                            bl.capital = bl.capital - bl.outstanding_prin
+                            bl.outstanding_prin = 0.0
+                        if bl.outstanding_int != bl.interest and bl.interest > bl.outstanding_int:
+                            bl.interest = bl.interest - bl.outstanding_int
+                            bl.outstanding_int = 0.0
+                        else:
+                            if bl.outstanding_int == bl.interest:
+                                bl.interest = 0.0
+                                bl.outstanding_int = 0.0
+                        if bl.outstanding_fees != bl.interest and bl.fees > bl.outstanding_fees:
+                            bl.fees = bl.fees - bl.outstanding_fees
+                            bl.outstanding_fees = 0.0
+                        else:
+                            if bl.outstanding_fees == bl.fees:
+                                bl.outstanding_fees = 0.0
+                                bl.fees = 0.0
+                        if bl.outstanding_fees == 0.0 and bl.outstanding_int == 0.0 and bl.outstanding_prin == 0.0:
+                            bl.state = 'paid'
+                            bl.due_principal = 0.0
+                            bl.due_interest = 0.0
+                            bl.due_fees = 0.0
+                        bl.total = bl.capital + bl.interest + bl.outstanding_fees
+                to_be_deleted = installment_cr.search(
+                    [('state', '=', 'draft'), ('loan_id', '=', self.id)])
+                to_be_deleted.unlink()
+                #                 for line in self.installment_id:
+                #                     if line.state == 'paid':
+                #                         new_loan_amount -= line.capital
+                #                     elif line.state == 'open':
+                #                         if line.outstanding_prin > 0:
+                #                             new_loan_amount -= line.outstanding_prin
+
+                # if self.loan_type.calculation == 'flat':
+                updated_loan_amount = new_loan_amount
+                total = new_loan_amount
+                pr_total = new_loan_amount
+                main_tot = new_loan_amount
+            else:
+                total = self.loan_amount
+                pr_total = self.loan_amount
+                main_tot = self.loan_amount
+        else:
+            total = disbursed_amt
+            pr_total = disbursed_amt
+            main_tot = disbursed_amt
+        # changes according to grace period of component lines.===========================================
+        gp_int = 0
+        gp_principal = 0
+        gp_fee = 0
+        lst_gp = []
+        global_dict = {}
+        key_min = None
+        flag = True
+        el_flag = True
+        grc_installment = 0.0
+        ints_cnt = 1
+
+        total_installment = self.total_installment
+        for loan_com_line in self.loan_type.loan_component_ids:
+            if loan_com_line.type == 'principal':
+                gp_principal = loan_com_line.grace_period
+                global_dict.update({'principal': gp_principal})
+                lst_gp.append(loan_com_line.grace_period)
+            if loan_com_line.type == 'int_rate':
+                gp_int = loan_com_line.grace_period
+                global_dict.update({'int_rate': gp_int})
+                lst_gp.append(loan_com_line.grace_period)
+            if loan_com_line.type == 'fees':
+                gp_fee = loan_com_line.grace_period
+                global_dict.update({'fees': gp_fee})
+                lst_gp.append(loan_com_line.grace_period)
+
+        if lst_gp and gp_fee == gp_int == gp_principal:
+            total_installment = self.total_installment - (min(lst_gp))
+            grc_installment = self.total_installment - total_installment
+        # ================================================================================================
+        total_installment = self.total_installment - (min(lst_gp))
+        grc_install = self.total_installment - total_installment
+        if gp_fee == gp_int == gp_principal:
+            try:
+                installment = round(
+                    ((total * (rate_interest / 12)) / (1 - ((1 + rate_interest / 12) ** -(total_installment)))))
+            except ZeroDivisionError:
+                installment = 0
+        else:
+            try:
+                installment = round(
+                    ((total * (rate_interest / 12)) / (1 - ((1 + rate_interest / 12) ** -(self.total_installment)))))
+            except ZeroDivisionError:
+                installment = 0
+
+        i = 1
+        if self._context.get('is_extended'):
+            if self.installment_id:
+                inst_ids = max(self.installment_id.ids)
+                inst_record = installment_cr.browse(inst_ids)
+                inst_num = int(inst_record.name[-1])
+            else:
+                inst_num = 0
+
+        else:
+            inst_num = len(self.installment_id)
+        flat_int = 0
+        tot_grc_int = 0.0
+        tot_grc_capital = 0.0
+        interest = 0
+        sum_of_inst = 0.0
+        cnt_fees_flag = False
+        date_update = datetime.datetime.strptime(
+            str(disburse_date), "%Y-%m-%d").date()
+        grc_date = datetime.datetime.strptime(
+            str(disburse_date), "%Y-%m-%d").date()
+        new_day = int(date_update.day)
+
+        if lst_gp:
+            present_month = date_update.month + min(lst_gp)
+            grc_prc_month = date_update.month
+            key_min = min(global_dict, key=lambda k: global_dict[k])
+        else:
+            present_month = date_update.month
+            grc_prc_month = date_update.month
+        cnt = min(lst_gp)
+        count_grace_line = 0
+        numbering = 1
+        for num in self.installment_id:
+            numbering += 1
+        remaining_instalment = self.total_installment + 1 - numbering
+        # for loan extended changes ...........................
+        if self._context.get('is_extended'):
+            numbering = 1
+            remaining_instalment = self.total_installment
+        for i in range(numbering, self.total_installment + 1):
+            grace_int = round(((main_tot * rate_interest) / 12), 2)
+
+            principle_amount = 0.0
+            interest_month = 0.0
+            int_for_prin = round(((total * rate_interest) / 12), 2)
+            if not total_installment:
+                raise Warning(
+                    'Please Check grace periods in the loan component lines total installment and grace period should not be same')
+            interest = round(
+                ((100000 / 100 * self.interest_rate) * (float(total_installment) / 12.0)) / float(total_installment), 2)
+            if gp_fee == gp_int == gp_principal:
+                if self.loan_type.calculation == 'flat':
+                    if self.repayment_basis == 'sanctioned_amt':
+                        capital = round(
+                            updated_loan_amount / float(remaining_instalment - global_dict.get('principal')), 2)
+                        interest = round(((updated_loan_amount / 100 * self.interest_rate) * (
+                            float(self.total_installment) / 12.0)) / float(self.total_installment), 2)
+                    else:
+                        capital = round(
+                            disbursed_amt / float(self.total_installment - global_dict.get('principal')), 2)
+                        interest = round(((disbursed_amt / 100 * self.interest_rate) * (
+                            float(self.total_installment) / 12.0)) / float(self.total_installment), 2)
+                else:
+                    interest_month = round(((total * rate_interest) / 12), 2)
+                    principle_amount = round(installment - interest_month, 2)
+                if i <= grc_installment:
+                    inst_num += 1
+                    grc_prc_month += 2
+                    if grc_prc_month > 12:
+                        grc_prc_month = grc_prc_month - 12
+                        s = grc_date.year + 1
+                        grc_date = grc_date.replace(year=s)
+                    if new_day > 28:
+                        grc_date = self.check_date(
+                            grc_date, new_day, grc_prc_month)
+                    grc_date = grc_date.replace(month=grc_prc_month)
+                    principle_amount = 0.0
+                    if self.loan_type.calculation == 'flat':
+                        tot_grc_capital = tot_grc_capital + capital
+                        tot_grc_int = tot_grc_int + interest
+                    else:
+                        tot_grc_capital = tot_grc_capital + principle_amount
+                        tot_grc_int = tot_grc_int + interest_month
+                        remain_amount = round(total - principle_amount, 2)
+                        total = remain_amount
+                    installment_vals = {'name': 'installment' + str(inst_num), 'date': grc_date,
+                                        'loan_id': self.id, 'capital': 0.0,
+                                        'interest': 0.0, 'total': 0.0,
+                                        'partner_id': part_id, 'outstanding_prin': 0.0, 'outstanding_int': 0.0, }
+                    installment_cr.create(installment_vals)
+                    present_month = grc_prc_month
+                    continue
+                inst_num = inst_num + 1
+            else:
+                cnt_fees_flag = True
+                # for interest calculations .............................
+                if key_min == 'int_rate':
+                    if self.loan_type.calculation == 'flat':
+                        if self.repayment_basis == 'sanctioned_amt':
+                            #                             capital = round(disbursed_amt / float(total_installment),2)
+                            #                             print ("=============v===========",updated_loan_amount)
+                            interest = round(((updated_loan_amount / 100 * self.interest_rate) * (
+                                float(total_installment) / 12.0)) / float(total_installment), 2)
+                            # print("\n\n\n\n INETREST 1111111111 :::: ",interest)
+                        else:
+                            interest = round(((disbursed_amt / 100 * self.interest_rate) * (
+                                float(total_installment) / 12.0)) / float(total_installment), 2)
+                    #                             print("\n\n\n\n INETREST 2222222222 :::: ",interest)
+                    else:
+                        interest_month = round(
+                            ((total * rate_interest) / 12), 2)
+                #                         print("\n\n\n\n INETREST 33333333333 :::: ",interest_month)
+
+                elif 'int_rate' in global_dict and cnt >= global_dict.get('int_rate'):
+                    if self.loan_type.calculation == 'flat':
+                        if self.repayment_basis == 'sanctioned_amt':
+                            #                             capital = round(disbursed_amt / float(total_installment),2)
+                            interest = round(((updated_loan_amount / 100 * self.interest_rate) * (
+                                float(total_installment) / 12.0)) / float(total_installment), 2)
+                            # print("\n\n\n\n INETREST 4444444444 :::: ",interest)
+                        else:
+                            interest = round(((disbursed_amt / 100 * self.interest_rate) * (
+                                float(total_installment) / 12.0)) / float(total_installment), 2)
+                    #                             print("\n\n\n\n INETREST 555555555 :::: ",interest)
+                    else:
+                        interest_month = round(
+                            ((total * rate_interest) / 12), 2)
+                #                         print("\n\n\n\n INETREST 6666666666 :::: ",interest_month)
+                else:
+                    interest_month = 0.0
+                    interest = 0.0
+                    grace_int = 0.0
+
+                # for principal calculations .............................
+                if key_min == 'principal':
+                    if self.loan_type.calculation == 'flat':
+                        if self.repayment_basis == 'sanctioned_amt':
+                            capital = round(
+                                updated_loan_amount / float(self.total_installment - global_dict.get('principal')), 2)
+                        else:
+                            capital = round(
+                                disbursed_amt / float(self.total_installment - global_dict.get('principal')), 2)
+                    else:
+                        tot_inst = self.total_installment - i
+                        if flag:
+                            flag = False
+                            installment = self.get_intstallments(
+                                pr_total, rate_interest, tot_inst + 1)
+                        principle_amount = round(installment - int_for_prin, 2)
+
+                elif 'principal' in global_dict and cnt >= global_dict.get('principal'):
+                    tot_inst = self.total_installment - i
+                    if self.loan_type.calculation == 'flat':
+                        if flag:
+                            flag = False
+                            if self.repayment_basis == 'sanctioned_amt':
+                                capital = round(
+                                    updated_loan_amount /
+                                    float(self.total_installment -
+                                          global_dict.get('principal')),
+                                    2)
+                            else:
+                                capital = round(
+                                    disbursed_amt / float(self.total_installment - global_dict.get('principal')), 2)
+                    else:
+                        if flag:
+                            flag = False
+                            installment = self.get_intstallments(
+                                pr_total, rate_interest, tot_inst + 1)
+                            int_month = round(
+                                ((pr_total * rate_interest) / 12), 2)
+                        principle_amount = round(installment - int_for_prin, 2)
+                else:
+                    principle_amount = 0.0
+                    capital = 0.0
+
+                if i <= grc_install:
+                    grc_prc_month += 2
+                    inst_num += 1
+                    if grc_prc_month > 12:
+                        grc_prc_month = grc_prc_month - 12
+                        s = grc_date.year + 1
+                        grc_date = grc_date.replace(year=s)
+                    if new_day > 28:
+                        grc_date = self.check_date(
+                            grc_date, new_day, grc_prc_month)
+                    grc_date = grc_date.replace(month=grc_prc_month)
+                    if self.loan_type.calculation == 'flat':
+                        tot_grc_capital = tot_grc_capital + capital
+                        tot_grc_int = tot_grc_int + interest
+                    else:
+                        tot_grc_capital = tot_grc_capital + principle_amount
+                        tot_grc_int = tot_grc_int + interest_month
+                    #                         print(principle_amount,'dddddddddddddddddddddd')
+                    #                         remain_amount = round(total - principle_amount, 2)
+                    #                         total = remain_amount
+                    #                         print(total,'totttttttttttttttttttttttttttttttttttttttttttttt')
+                    #                         print(ddd)
+                    installment_vals = {'name': 'installment' + str(inst_num), 'date': grc_date,
+                                        'loan_id': self.id, 'capital': 0.0,
+                                        'interest': 0.0, 'total': 0.0,
+                                        'partner_id': part_id, 'outstanding_prin': 0.0, 'outstanding_int': 0.0, }
+                    installment_cr.create(installment_vals)
+                    present_month = grc_prc_month
+                    continue
+
+                inst_num = inst_num + 1
+
+            installment_vals = {}
+            if not self._context.get('is_extended'):
+                present_month += 1
+                if present_month > 12:
+                    present_month = present_month - 12
+                    s = date_update.year + 1
+                    date_update = date_update.replace(year=s)
+                if new_day > 28:
+                    date_update = self.check_date(
+                        date_update, new_day, present_month)
+                date_update = date_update.replace(month=present_month)
+
+            else:
+                #                 present_month += 1
+                if present_month > 12:
+                    present_month = present_month - 12
+                    s = date_update.year + 1
+                    date_update = date_update.replace(year=s)
+                if new_day > 28:
+                    date_update = self.check_date(
+                        date_update, new_day, present_month)
+                date_update = date_update.replace(month=present_month)
+                present_month += 1
+
+            if self.loan_type.calculation == 'reducing':
+                remain_amount = round(total - principle_amount, 2)
+                sum_of_inst = sum_of_inst + principle_amount
+                if principle_amount <= 0:
+                    count_grace_line = 0
+                    installment_vals = {'name': 'installment' + str(inst_num),
+                                        'date': date_update, 'loan_id': self.id,
+                                        'capital': principle_amount, 'interest': grace_int,
+                                        'total': principle_amount + interest_month, 'partner_id': part_id,
+                                        'outstanding_prin': principle_amount, 'outstanding_int': grace_int,
+                                        }
+                else:
+                    count_grace_line += 1
+                    if count_grace_line == 1:
+                        installment_vals = {'name': 'installment' + str(inst_num),
+                                            'date': date_update, 'loan_id': self.id,
+                                            'capital': principle_amount, 'interest': grace_int,
+                                            'total': principle_amount + interest_month, 'partner_id': part_id,
+                                            'outstanding_prin': principle_amount, 'outstanding_int': grace_int,
+                                            }
+                    else:
+                        installment_vals = {'name': 'installment' + str(inst_num),
+                                            'date': date_update, 'loan_id': self.id,
+                                            'capital': principle_amount, 'interest': interest_month,
+                                            'total': principle_amount + interest_month, 'partner_id': part_id,
+                                            'outstanding_prin': principle_amount, 'outstanding_int': interest_month,
+                                            }
+            else:
+                remain_amount = round(total - capital, 2)
+                sum_of_inst = sum_of_inst + capital
+                installment_vals = {'name': 'installment' + str(inst_num), 'date': date_update,
+                                    'loan_id': self.id, 'capital': capital,
+                                    'interest': interest, 'total': capital + interest,
+                                    'partner_id': part_id, 'outstanding_prin': capital, 'outstanding_int': interest, }
+                interest_month = installment_vals['interest']
+            installment_cr.create(installment_vals)
+            total = remain_amount
+            interest += interest_month
+            cnt = cnt + 1
+        self.write({'interest': interest, 'old_disburse_amt': disbursed_amt, })
+
+        # Fee calculation .........................
+        fees_vals = {}
+        if self.repayment_basis == 'sanctioned_amt':
+            fees_amt = self._get_fees_amount(
+                self.loan_type, updated_loan_amount, interest)
+            if fees_amt:
+                for fees_line in self.loan_type.loan_component_ids:
+                    if fees_line.type == 'fees' and fees_line.tenure == 'tenure':
+                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt,
+                                                            self.total_installment + fees_line.grace_period)
+                    elif fees_line.type == 'fees' and fees_line.tenure == 'month':
+                        fees_vals.update({'fees_amt': fees_amt})
+                    elif fees_line.type == 'fees' and fees_line.tenure == 'per_year':
+                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt,
+                                                            self.total_installment + fees_line.grace_period)
+
+            #                     else:
+            #                         fees_vals.update({'fees_amt':fees_amt})
+            else:
+                fees_vals.update({'fees_amt': 0.0})
+        else:
+            fees_amt = self._get_fees_amount(
+                self.loan_type, disbursed_amt, interest)
+            if fees_amt:
+                for fees_line in self.loan_type.loan_component_ids:
+                    if fees_line.type == 'fees' and fees_line.tenure == 'tenure':
+                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt,
+                                                            self.total_installment + fees_line.grace_period)
+                    elif fees_line.type == 'fees' and fees_line.tenure == 'month':
+                        fees_vals.update({'fees_amt': fees_amt})
+                    elif fees_line.type == 'fees' and fees_line.tenure == 'per_year':
+                        fees_vals = self.get_fees_as_tenure(self.loan_type, fees_amt,
+                                                            self.total_installment + fees_line.grace_period)
+            #                     else:
+            #                         fees_vals.update({'fees_amt':fees_amt})
+            else:
+                fees_vals.update({'fees_amt': 0.0})
+
+        # grace period principal and interest calculation ................
+        grc_cp = 0.0
+        grc_int = 0.0
+        grc_fees = 0.0
+
+        if total and self.installment_id:
+            self.get_rounding_amt(total, self.installment_id[-1])
+
+        #         if tot_grc_capital and grc_installment:
+        #             grc_cp = self.get_grace_amount(tot_grc_capital, total_installment)
+        #
+        if tot_grc_int and grc_installment:
+            grc_int = self.get_grace_amount(tot_grc_int, total_installment)
+
+        if tot_grc_int and cnt_fees_flag:
+            grc_int = self.get_grace_amount(
+                tot_grc_int, self.total_installment + gp_int)
+        # for same grace period to all fees, capital, interest ...................
+        if grc_installment:
+            if 'fees_amt' in fees_vals and fees_vals['fees_amt']:
+                grc_fees = fees_vals.get('fees_amt') * grc_installment
+            if grc_fees:
+                grc_fees = self.get_grace_amount(grc_fees, total_installment)
+            #
+        # for random grace period to all fees, capital, interest ...................
+        if cnt_fees_flag:
+            if 'fees_amt' in fees_vals and fees_vals['fees_amt']:
+                if min(lst_gp) == 0 and gp_fee != 0:
+                    grc_fees = fees_vals.get('fees_amt') * gp_fee
+                    if grc_fees:
+                        grc_fees = self.get_grace_amount(
+                            grc_fees, self.total_installment - gp_fee)
+        if grc_cp or grc_int:
+            for ins_line in self.installment_id:
+                if ins_line.capital:
+                    ins_line.capital = (ins_line.capital + grc_cp)
+                    ins_line.total = ins_line.total + grc_cp
+                if ins_line.interest:
+                    ins_line.interest = (ins_line.interest + grc_int)
+                    ins_line.total = ins_line.total + grc_int
+                if ins_line.outstanding_prin:
+                    ins_line.outstanding_prin = (
+                        ins_line.outstanding_prin + grc_cp)
+                if ins_line.outstanding_int:
+                    ins_line.outstanding_int = (
+                        ins_line.outstanding_int + grc_int)
+
+        # fee updating in installment line level ...................
+        gp_fee_cnt = 0
+        fee_cnt_fee = 0
+        is_updated_fees = False
+        for line in self.installment_id:
+            if line.state in ['open', 'paid']:
+                continue
+            total_amt = 0.0
+            vals = {}
+            vals_fee = {}
+            if gp_fee == gp_int == gp_principal:
+                if 'fees' in global_dict and fee_cnt_fee >= global_dict.get('fees'):
+                    is_updated_fees = True
+                    if 'fees_amt' in fees_vals:
+                        total_amt = fees_vals['fees_amt'] + \
+                            line.total + grc_fees
+                        line.write({'fees': fees_vals['fees_amt'] + grc_fees,
+                                    'outstanding_fees': fees_vals['fees_amt'] + grc_fees, 'total': total_amt})
+            else:
+                if key_min == 'fees':
+                    if 'fees' in global_dict and fee_cnt_fee >= global_dict.get('fees'):
+                        is_updated_fees = True
+                        if 'fees_amt' in fees_vals:
+                            total_amt = fees_vals['fees_amt'] + \
+                                line.total + grc_fees
+                            line.write({'fees': fees_vals['fees_amt'] + grc_fees,
+                                        'outstanding_fees': fees_vals['fees_amt'] + grc_fees, 'total': total_amt})
+                elif 'fees' in global_dict and gp_fee_cnt >= global_dict.get('fees'):
+                    is_updated_fees = True
+                    if 'fees_amt' in fees_vals:
+                        total_amt = fees_vals['fees_amt'] + \
+                            line.total + grc_fees
+                        line.write({'fees': fees_vals['fees_amt'] + grc_fees,
+                                    'outstanding_fees': fees_vals['fees_amt'] + grc_fees, 'total': total_amt})
+            if is_updated_fees:
+                for fees_line in line.loan_id.loan_type.loan_component_ids:
+                    if fees_line.type == 'fees' and fees_line.tenure == 'month':
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         'base': (fees_line.product_amt + grc_fees), })
+                        if fees_line.tax_id:
+                            vals_fee.update({'tax': fees_line.tax_amount})
+                        if vals_fee:
+                            self.env['fees.lines'].create(vals_fee)
+                    elif fees_line.type == 'fees' and fees_line.tenure == 'tenure':
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         })
+
+                        if 'actual_fee' in fees_vals:
+                            vals_fee.update(
+                                {'base': (fees_vals['actual_fee'] + grc_fees)})
+                        if fees_line.tax_id and 'tax_amt' in fees_vals:
+                            vals_fee.update({'tax': fees_vals['tax_amt']})
+                        if vals_fee:
+                            self.env['fees.lines'].create(vals_fee)
+
+                    elif fees_line.type == 'fees' and fees_line.tenure == 'per_year':
+                        vals_fee.update({'installment_id': line.id,
+                                         'product_id': fees_line.product_id.id,
+                                         'name': fees_line.type,
+                                         })
+
+                        if 'actual_fee' in fees_vals:
+                            vals_fee.update(
+                                {'base': (fees_vals['actual_fee'] + grc_fees)})
+                        if fees_line.tax_id and 'tax_amt' in fees_vals:
+                            vals_fee.update({'tax': fees_vals['tax_amt']})
+                        if vals_fee:
+                            self.env['fees.lines'].create(vals_fee)
+
+            gp_fee_cnt = gp_fee_cnt + 1
+            fee_cnt_fee += 1
+        # line installment using by Payment Frequency.........................
+
+        if self.payment_freq == 'quarterly':
+            self._get_calculation_quarterly()
+        elif self.payment_freq == 'monthly':
+            self._get_calculation_monthly()
+        elif self.payment_freq == 'half_yearly':
+            self._get_half_yearly()
+        else:
+            self._get_yearly()
+        if self._context.get('partner_id') and self._context.get('transfer_loan'):
+            return False
+        move_id = self.create_movers(disbursed_amt, disburse_date, flag=True, currency_id=currency_id,
+                                     journal_id=journal_id)
+        return move_id
+
     # @api.multi
     def _simple_interest_get_by_disbursed(self, inter_rate, disbursed_amt=0.0, disburse_date=False, currency_id=False, journal_id=False):
         loan = self.read()
@@ -1432,8 +2443,9 @@ class AccountLoan(models.Model):
         sum_of_inst = 0.0
         cnt_fees_flag = False
         date_update = datetime.datetime.strptime(
-            disburse_date, "%Y-%m-%d").date()
-        grc_date = datetime.datetime.strptime(disburse_date, "%Y-%m-%d").date()
+            str(disburse_date), "%Y-%m-%d").date()
+        grc_date = datetime.datetime.strptime(
+            str(disburse_date), "%Y-%m-%d").date()
         new_day = int(date_update.day)
 
         if lst_gp:
@@ -2016,7 +3028,7 @@ class AccountLoan(models.Model):
         sum_of_inst = 0.0
         cnt_fees_flag = False
         date_update = datetime.datetime.strptime(
-            disburse_date, "%Y-%m-%d").date()
+            str(disburse_date), "%Y-%m-%d").date()
         new_day = int(date_update.day)
 
         if lst_gp:
@@ -2640,6 +3652,114 @@ class AccountLoan(models.Model):
             else:
                 cnt = cnt + 1
 
+    def create_movers(self, disburse_amt, disburse_date, flag, currency_id, journal_id=False):
+        # accounting journal entries ..........................
+        moves_vals = {}
+        name_des = "Loan Disbursement For: "
+        name_processing_fees = "Processing Fee Collected For: "
+        name_bank_deposite = "Amount Deposited In Customer Account For: "
+        date_new = disburse_date
+        move_lines_cr = {}
+        move_lines_dr = {}
+        processing_fee = {}
+        list_mv_line = []
+        gl_code = False
+        move_ids = False
+        amount_currency = False
+        fee_cnt = 0.0
+        partner_id = False
+        if not amount_currency:
+            processing_fee.update({
+                'account_id': self.proc_fee.id,
+                'name': name_processing_fees + self.loan_id,
+                'debit': 0.0,
+                'credit': self.process_fee,
+                'partner_id': self.partner_id.id,
+            })
+        else:
+            processing_fee.update({
+                'account_id': self.proc_fee.id,
+                'name': name_processing_fees + self.loan_id,
+                'debit': 0.0,
+                # 'credit': amount,
+                'partner_id': partner_id.id,
+                'amount_currency': -amount_currency,
+                'currency_id': currency_id.id
+            })
+
+        list_mv_line.append((0, 0, processing_fee))
+
+        # ## calculations for disburse debit amount ............................
+        # if company_curren:
+        #     if currency_id.id != company_curren.id:
+        #         amount_currency = disburse_amt
+        #         amount = currency_id.with_context(date=date_new).compute(disburse_amt, company_curren)
+        #     else:
+        #         amount_currency = False
+        if not amount_currency:
+            move_lines_dr.update({
+                'account_id': gl_code,
+                'name': name_des + self.loan_id,
+                'debit': disburse_amt,
+                'credit': 0.0,
+                'partner_id': self.partner_id.id,
+
+            })
+        else:
+            move_lines_dr.update({
+                'account_id': gl_code,
+                'name': name_des + self.loan_id,
+                # 'debit': amount,
+                'credit': 0.0,
+                'partner_id': self.partner_id.id,
+                'amount_currency': amount_currency,
+                'currency_id': currency_id.id
+
+            })
+
+        list_mv_line.append((0, 0, move_lines_dr))
+
+        # ## calculations for disburse credit amount ............................
+        # if company_curren:
+        #     if currency_id.id != company_curren.id:
+        #         amount_currency = disburse_amt
+        #         amount = currency_id.with_context(date=date_new).compute(disburse_amt, company_curren)
+        #     else:
+        #         amount_currency = False
+
+        if not amount_currency:
+            move_lines_cr.update({
+                # 'account_id': acc_id,
+                'name': name_bank_deposite + self.loan_id,
+                'credit': disburse_amt,
+                'debit': 0.0,
+                # 'partner_id': partner_id.id,
+            })
+            if flag:
+                move_lines_cr['credit'] = disburse_amt - self.process_fee
+        else:
+            move_lines_cr.update({
+                # 'account_id': acc_id,
+                'name': name_bank_deposite + self.loan_id,
+                # 'credit': amount,
+                'debit': 0.0,
+                # 'partner_id': partner_id.id,
+                'amount_currency': -amount_currency,
+                'currency_id': currency_id.id
+            })
+
+            if flag:
+                # move_lines_cr['credit'] = amount - fee_cnt
+                move_lines_cr['amount_currency'] = - \
+                    amount_currency - (-self.process_fee)
+
+        list_mv_line.append((0, 0, move_lines_cr))
+        moves_vals.update({'line_ids': list_mv_line})
+        print(
+            moves_vals, 'yyyyyyyyyyyyyaaaaaaaaaaaaaaaaaaawwwwwwwwwwwwwwwwsssssssssssssssssss')
+        print('WE DONT GIVE A DUMB')
+        return moves_vals
+
     def create_moves(self, disburse_amt, disburse_date, flag, currency_id, journal_id=False):
         # accounting journal entries ..........................
         move_vals = {}
@@ -3123,34 +4243,6 @@ class AccountLoan(models.Model):
         if self.partner_id.is_group and (not self.group_members):
             raise UserError(
                 "Please provide name of group members before you proceed further.")
-#         if not self.proof_id:
-#             raise UserError("Dear applicant please provide proofs")
-#         else:
-#             if self.loan_type.prooftypes:
-#                 required_proof_ids = []
-#                 for type in self.loan_type.prooftypes:
-#                     if type.is_mandatory:
-#                         required_proof_ids.append(type.name.id)
-#                 if len(self.proof_id) < len(required_proof_ids):
-#                     proof_names = []
-#                     st = ''
-#                     for x in self.loan_type.prooftypes:
-#                         if x.is_mandatory:
-#                             proof_names.append(x.name.name)
-#                     for p in proof_names:
-#                         st = st +'\n'+str(p)
-#                     raise UserError("Following proofs are mandatory: %s"%st)
-#                 proof_type = []
-#                 for proof in self.proof_id:
-#                     if proof.type:
-#                         proof_type.append(proof.type.name.id)
-#                 for proof in required_proof_ids:
-#                     if not proof in proof_type:
-#                         proof_name = self.env['account.loan.proof.type'].search([('id','=',proof)])
-#                         raise UserError("Following mandatory proof is still missing:\n %s"%proof_name.name)
-#             if not self.cus_pay_acc or not self.bank_acc or not self.int_acc or not self.proc_fee:
-#                 raise UserError("Please provide value for : \n\n- Customer Loan Account,\n- Interest Account,\n- Processing Fee Account, \n- Bank Account")
-
         self.write({'state': 'apply'})
 
     # @api.multi
@@ -3270,11 +4362,12 @@ class AccountLoan(models.Model):
             for inst in loan.installment_id:
                 if inst.date:
                     # == 'draft'
-                    if datetime.datetime.strptime(inst.date, "%Y-%m-%d") < date and inst.state not in ['skip', 'paid']:
+                    if datetime.datetime.strptime(str(inst.date), "%Y-%m-%d") < date and inst.state not in ['skip', 'paid']:
                         if not arrear_day:
                             arrear_day = inst.date
             if arrear_day:
-                arrear_day = datetime.datetime.strptime(arrear_day, "%Y-%m-%d")
+                arrear_day = datetime.datetime.strptime(
+                    str(arrear_day), "%Y-%m-%d")
                 arrear_day = date - arrear_day
                 arrear_day = arrear_day.days
 
@@ -3294,7 +4387,7 @@ class AccountLoan(models.Model):
         for record in records:
             for line in record.installment_id:
                 if line.date:
-                    if(datetime.datetime.strptime(line.date, "%Y-%m-%d").date() <= date.today()) and line.state != 'paid':
+                    if(datetime.datetime.strptime(str(line.date), "%Y-%m-%d").date() <= date.today()) and line.state != 'paid':
                         #                         print(datetime.datetime.strptime(line.date, "%Y-%m-%d").date())
                         line.due_principal = line.outstanding_prin
                         line.due_interest = line.outstanding_int
@@ -3352,7 +4445,7 @@ class AccountLoan(models.Model):
 
                         total = 0.0
                         date_object = (datetime.datetime.strptime(
-                            last_record.date, '%Y-%m-%d').date())
+                            str(last_record.date), '%Y-%m-%d').date())
                         delta = current_date - date_object
                         diff = int(delta.days / record.grace_period)
                         if diff > 0:
@@ -3779,13 +4872,8 @@ class AccountLoan(models.Model):
                         [('move_id', '=', dis.release_number.id)])
                     for pyline in payment_details_ids:
                         pyline.unlink()
-                if dis.release_number:
-                    dis.release_number.unlink()
-                dis.unlink()
-#                 dis.unlink()
-
-            self.state = 'apply'
-        return True
+            self.state = 'kiva_loan'
+        return self.write({'state': 'kiva_loan'}),True
 
 
 class account_loan_disbursement(models.Model):
@@ -3815,33 +4903,94 @@ class AccountLoanRepayment(models.Model):
     pay_date = fields.Date("Re-payment Date", required=True)
     amt = fields.Float("Amount", required=True)
     is_button_visible = fields.Boolean("Is Button Visible")
+    CustomerRefNumber = fields.Char(string='Customer Reference')
+    bankreference = fields.Char(string='Bank Reference')
+    paymentMode = fields.Selection(
+        [('cash', 'Cash'), ('cheque', 'Cheque')], string='Payment Mode')
+    debitaccount = fields.Char(string='Account Number')
+    debitcustname = fields.Char(string='Deposited by')
+    kiva_state = fields.Selection([
+        ('is_not', "Not Sent"),
+        ('is_sent', 'Sent')
+    ], string="Kiva State", default="is_not")
+    bank_note = fields.Text(string='Note')
+
+    def send_repayment2_kiva(self):
+        print(self.amt, self.loan_id.kiva_id,
+              self.loan_id.kiva_loan_id, self.loan_id.partner_id.id)
+        print('REPAYMENT SENT TO KIVA')
+        active_id = self._context.get('active_id')
+        acc_loan = self.env['account.loan'].browse(active_id)
+        """ Posts a payment of loan installment.
+        """
+        # print(len(self.loan_id),"LOAN ID")
+        conn = http.client.HTTPSConnection("auth.k1.kiva.org")
+        payloads = 'grant_type=client_credentials&client_id=ovMOzQdBV3j94wEZuVo152leYJqgp6kyr&client_secret=pP%2B99cnRe1e4lbHPD5tn7zp6%2FJ5zt2W57DOyk0vj3CH10Dw9TGzZl1xMSr0AVMphuo&audience=https%3A%2F%2Fpartner-api.k1.kiva.org&scope=create%3Aloan_draft%20create%3Arepayment%20read%3Aloans'
+        headers = {
+            'Accept': 'application/json',
+            'content-type': 'application/x-www-form-urlencoded'
+        }
+        # this is the function to print the access token
+        conn.request("POST", "/oauth/token", payloads, headers)
+        res = conn.getresponse()
+        aws = res.read()
+        print(type(aws), aws)
+        dataz = json.loads(aws.decode())
+        # A VARIABLE TO SELECT A SINGLE VALUE(access_token)FROM THE RESPONSE WE GET TO AUTHORIZE THE REQUEST
+        accessToken = dataz['access_token']
+        princiii = self.amt-self.loan_id.interest
+        payload = {"repayments": [{
+            "amount": princiii,
+            "client_id": self.loan_id["kiva_id"],
+            "loan_id": self.loan_id["kiva_loan_id"], }
+        ],
+            "user_id": self.loan_id.partner_id["id"]}
+        headers = {
+            'Accept': 'application/json',
+            'content-type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + accessToken
+        }
+        repayment_data = json.dumps(payload, indent=2)
+        print(repayment_data)
+        response = requests.request(
+            "POST", base2_url, headers=headers, data=repayment_data)
+        if response.status_code == 200:
+            print('well done!!!')
+        if response.status_code == 500:
+            raise UserError("Kiva Credentials Missing!")
+        else:
+            if response.status_code == 401:
+                raise UserError("No Enough Permissions!")
+        print(payload, response.status_code, headers)
 
     # @api.multi
 
     def loan_payment_cancel(self):
+        _logger.error(self.release_number.name)
+        _logger.error("TESTING CHANGES")
         if not self.user_has_groups('pragtech_loan.group_allow_del_entries'):
-            raise UserError(
-                _("You are not allowed to cancel payment, please contact to Administrator"))
+            raise UserError(_("You are not allowed to cancel payment, please contact to Administrator"))
         today = datetime.datetime.today().date()
         if self.release_number:
-            if self.release_number and self.release_number.state != 'posted':
-                raise Warning('You can not cancel drafted Entries')
-
+            # if self.release_number and self.release_number.state != 'posted':
+            #     raise Warning('You can not cancel drafted Entries')
             reverse_changeslist = []
-
-            payment_details_ids = self.env['payment.details'].search(
-                [('move_id', '=', self.release_number.id)])
+            payment_details_ids = self.env['payment.details'].search([('move_id', '=', self.release_number.id)])
             for pd_line in payment_details_ids:
                 is_prin = False
                 is_int = False
                 is_fee = False
                 is_late_fee = False
                 flag = False
+                _logger.error(payment_details_ids)
+                _logger.error(self.is_button_visible)
+                _logger.error("111111111111111111111111111111111111111111111111111111111111111111111111111111111111")
                 reverse_changeslist.append(pd_line.line_id)
                 if pd_line.line_id:
                     pd_line.line_id.outstanding_prin += pd_line.prin_amt
-                    if datetime.datetime.strptime(pd_line.line_id.date, "%Y-%m-%d").date() <= today:
+                    if datetime.datetime.strptime(str(pd_line.line_id.date), "%Y-%m-%d").date() <= today:
                         pd_line.line_id.due_principal += pd_line.prin_amt
+                        
                     else:
                         pd_line.line_id.due_principal = 0.00
                     if round(pd_line.line_id.outstanding_prin, 2) == pd_line.line_id.capital:
@@ -3849,7 +4998,7 @@ class AccountLoanRepayment(models.Model):
                         is_prin = True
                 if pd_line.line_id:
                     pd_line.line_id.outstanding_int += pd_line.int_amt
-                    if datetime.datetime.strptime(pd_line.line_id.date, "%Y-%m-%d").date() <= today:
+                    if datetime.datetime.strptime(str(pd_line.line_id.date), "%Y-%m-%d").date() <= today:
                         pd_line.line_id.due_interest += pd_line.int_amt
                     else:
                         pd_line.line_id.due_interest = 0.00
@@ -3858,7 +5007,7 @@ class AccountLoanRepayment(models.Model):
                         is_int = True
                 if pd_line.line_id:
                     pd_line.line_id.outstanding_fees += pd_line.fees_amt
-                    if datetime.datetime.strptime(pd_line.line_id.date, "%Y-%m-%d").date() <= today:
+                    if datetime.datetime.strptime(str(pd_line.line_id.date), "%Y-%m-%d").date() <= today:
                         pd_line.line_id.due_fees += pd_line.fees_amt
                     else:
                         pd_line.line_id.due_fees = 0.00
@@ -3871,7 +5020,10 @@ class AccountLoanRepayment(models.Model):
                             fee_line.tax_paid -= pd_line.base_fee_tax_paid
                             if pd_line.base_fee_paid or pd_line.base_fee_tax_paid:
                                 fee_line.is_paid = False
-#                             fee_line.is_paid = False
+                        _logger.error(pd_line.line_id)
+                        _logger.error(self.is_button_visible)
+                        _logger.error("222222222222222222222222222222222222222222222222222222222222222")
+                #                             fee_line.is_paid = False
                 if pd_line.line_id:
                     pd_line.line_id.late_fee += pd_line.late_fee_amt
                     flag = True
@@ -3883,7 +5035,9 @@ class AccountLoanRepayment(models.Model):
                             fee_line.tax_paid -= pd_line.base_late_fee_amt_tx
                             if fee_line.base_paid == 0.0 and fee_line.tax_paid == 0.0:
                                 fee_line.is_paid = False
-
+                    _logger.error(pd_line.line_id)
+                    _logger.error(self.is_button_visible)
+                    _logger.error("3333333333333333333333333333333333333333333")
                 if is_prin and is_int and is_fee and flag:
                     if is_late_fee:
                         pd_line.line_id.state = 'draft'
@@ -3891,32 +5045,43 @@ class AccountLoanRepayment(models.Model):
                     pd_line.line_id.state = 'draft'
                 else:
                     pd_line.line_id.state = 'open'
+        try:
+            self.release_number.button_cancel()
+            self.is_button_visible = False
+            self.loan_id._compute_payment()
+            _logger.error("444444444444444444444444444444444")
+            _logger.error(self.is_button_visible)
 
-            cancel_entry = self.release_number.button_cancel()
-            if cancel_entry:
-                self.is_button_visible = False
-                payment_details_ids = self.env['payment.details'].search(
-                    [('move_id', '=', self.release_number.id)])
-                for pyline in payment_details_ids:
-                    pyline.state = 'cancel'
-                if self.loan_id.state == 'done':
-                    self.loan_id.state = 'approved'
-        return True
+            payment_details_ids = self.env['payment.details'].search([('move_id', '=', self.release_number.id)])
+            self.loan_id._compute_payment()
+            _logger.error(payment_details_ids)
+            _logger.error(self.is_button_visible)
+            _logger.error("KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKAAAAAAAAAAAADDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDWWWWWWWWWWWWWWWWWWWWWWEEEEEEEEEEEEEEEEEEEEEEEEEAHAK")
+            for pyline in payment_details_ids:
+                self.loan_id._compute_payment()
+                pyline.state = 'cancel'
+                
+            if self.loan_id.state == 'done':
+                self.loan_id.state = 'approved'
+            payment_details_ids.unlink()
+            return True
+        except Exception as k:
+            _logger.error(k)
 
-    # @api.multi
-    def delete_payment_line(self):
-        for o in self:
-            if o.release_number:
-                payment_details_ids = self.env['payment.details'].search(
-                    [('move_id', '=', self.release_number.id)])
-                for pyline in payment_details_ids:
-                    pyline.unlink()
-            if o.release_number:
-                o.release_number.unlink()
-            o.unlink()
-        return True
 
-    # @api.multi
+    # def delete_payment_line(self):
+    #     for o in self:
+    #         if o.release_number:
+    #             payment_details_ids = self.env['payment.details'].search(
+    #                 [('move_id', '=', self.release_number.id)])
+    #             for pyline in payment_details_ids:
+    #                 pyline.unlink()
+    #     return True
+    def delete_from_db(self):
+        for rec in self:
+           _logger.error(rec)
+           return rec.unlink()
+
     def re_payment_line(self):
         for o in self:
             if o.release_number:
@@ -3934,6 +5099,7 @@ class AccountLoanRepayment(models.Model):
                 payment_details_ids = self.env['payment.details'].search(
                     [('move_id', '=', o.release_number.id)])
                 for pyline in payment_details_ids:
+                    self.loan_id._compute_payment()
                     pyline.state = 'draft'
                 o.release_number.post()
                 o.is_button_visible = True

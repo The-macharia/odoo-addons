@@ -3,8 +3,13 @@ from odoo.exceptions import UserError, ValidationError, Warning
 from dateutil.relativedelta import relativedelta
 from datetime import date
 import datetime
+import logging
 from pickle import INST
 
+
+logging.basicConfig(level=logging.DEBUG)
+#Get the logger
+_logger = logging.getLogger(__name__)
 
 class LoanPaymentDetails(models.Model):
     _name = 'payment.details'
@@ -21,23 +26,19 @@ class LoanPaymentDetails(models.Model):
     late_fee_amt = fields.Float("Late Fee Amount")
     base_late_fee_amt = fields.Float("Base Paid Late Fee")
     base_late_fee_amt_tx = fields.Float("Late Fee Amount Tax")
-    state = fields.Selection(
-        [('draft', 'Draft'), ('cancel', 'Cancel')], string="State")
+    state = fields.Selection([('draft','Draft'),('cancel','Cancel')], string="State")
+
 
 
 class LoanPayment(models.Model):
 
     _name = 'loan.payment'
 
-    # The name is attributed upon post()
-    name = fields.Char(readonly=True, copy=False)
-    journal_id = fields.Many2one('account.journal', string='Payment Journal', domain=[
-                                 ('type', 'in', ('bank', 'cash'))])
+    name = fields.Char(readonly=True, copy=False) # The name is attributed upon post()
+    journal_id = fields.Many2one('account.journal', string='Payment Journal', domain=[('type', 'in', ('bank', 'cash'))])
     amount = fields.Monetary(string='Payment Amount', required=True)
-    currency_id = fields.Many2one('res.currency', string='Currency', required=True,
-                                  default=lambda self: self.env.user.company_id.currency_id)
-    payment_date = fields.Date(
-        string='Payment Date', default=datetime.datetime.today(), required=True, copy=False)
+    currency_id = fields.Many2one('res.currency', string='Currency', required=True, default=lambda self: self.env.user.company_id.currency_id)
+    payment_date = fields.Date(string='Payment Date', default=datetime.datetime.today(), required=True, copy=False)
     loan_id = fields.Many2one('account.loan', "Loan Ref.")
     late_fee = fields.Float(string='Late Fees')
     is_late_fee = fields.Boolean("Is Late Fee")
@@ -60,9 +61,8 @@ class LoanPayment(models.Model):
         current_date = datetime.date.today()
         total = 0.0
         for line in loan_id.installment_id:
-            if line.state not in ['paid'] and line.date:
-                date_object = line.date + \
-                    relativedelta(days=loan_id.grace_period)
+            if line.state not in  ['paid'] and line.date:
+                date_object = (datetime.datetime.strptime(str(line.date), '%Y-%m-%d').date()+relativedelta(days = loan_id.grace_period))
                 if current_date >= date_object:
                     rec['is_late_fee'] = True
                 total += line.late_fee
@@ -76,20 +76,24 @@ class LoanPayment(models.Model):
             acc_loan = self.env['account.loan'].browse(active_id)
             self.currency_id = self.journal_id.currency_id or acc_loan.company_id.currency_id
 
-    # @api.multi
+
 
     def action_validate_loan_payment(self):
         """ Posts a payment of loan installment.
         """
+        _logger.debug("GENERATED PAYMENT SHEDULE")
         if self.amount == 0.0:
             raise UserError(_("Please Enter Installment Amount."))
-        if any(len(record.loan_id) != 1 for record in self):
-            raise UserError(
-                _("This method should only be called to process a single loan's payment."))
+        # if any(len(record.loan_id) != 1 for record in self):
+        #     raise UserError(_("This method should only be called to process a single loan's payment."))
+
+
+
         move_id = self.post()
+        # _logger.debug(move_id,"GENERATED DATA")
         if move_id:
             for line in move_id.line_ids:
-                self.loan_id.write({'move_id': [(4, line.id)]})
+                self.loan_id.write({'move_id':[(4,line.id)]})
 
         repayment_obj = self.env['account.loan.repayment']
 #         search_id = repayment_obj.search([('is_button_visible','=',True)])
@@ -97,44 +101,43 @@ class LoanPayment(models.Model):
 
         if 'from_payment_confirm_button' not in self._context:
             payment_id = self.env['account.loan.repayment'].create({
-                'name': self.loan_id.partner_id.id,
-                'pay_date': self.payment_date,
-                'amt': self.amount,
-                'loan_id': self.loan_id.id,
+                 'name' : self.loan_id.partner_id.id,
+                 'pay_date' : self.payment_date,
+                'amt' : self.amount,
+                'loan_id' : self.loan_id.id,
                 'release_number': move_id.id,
-                'is_button_visible': True
-            })
-            self.loan_id.write({'repayment_details': [(4, payment_id.id)]})
+                'is_button_visible':True
+                })
+            self.loan_id.write({'repayment_details':[(4,payment_id.id)]})
         return move_id
 
-    # calculate taxes for non included .......................
 
+
+    ##calculate taxes for non included .......................
     def get_interest_vals(self, tx_tot, account_id):
         if tx_tot:
             taxes_lines = {}
-            taxes_lines.update({'partner_id': self.loan_id.partner_id.id,
-                                'account_id': account_id.id, 'debit': 0.0, 'credit': tx_tot})
+            taxes_lines.update({'partner_id':self.loan_id.partner_id.id,'account_id':account_id.id, 'debit':0.0, 'credit':tx_tot})
             return taxes_lines
 
     def get_fees_vals(self, type_line):
 
         fees = {}
         if type_line.product_amt:
-            fees.update({'partner_id': self.partner_id.id, 'account_id': type_line.gl_code.id,
-                         'debit': 0.0, 'credit': type_line.product_amt})
+            fees.update({'partner_id':self.partner_id.id,'account_id':type_line.gl_code.id,'debit':0.0, 'credit':type_line.product_amt})
         return fees
 
-    # total calculatin of tax for fee calculation in installment ................
+    ## total calculatin of tax for fee calculation in installment ................
     def get_tax_total(self, tx_ids, amount):
         tax_amt = 0.0
         for tx in tx_ids:
-            tax = round(amount - ((amount * 100) / (100 + tx.amount)), 2)
+            tax = round(amount - ((amount * 100) / (100 + tx.amount)),2)
             tax_amt = tax_amt + tax
         return tax_amt
 
-    # @api.multi
     def post(self):
-
+        active_id = self._context.get('active_id')
+        acc_loan = self.env['account.loan'].browse(active_id)
         date_new = self.payment_date
         list_mv_line = []
         if self.late_fee > 0.0:
@@ -156,6 +159,7 @@ class LoanPayment(models.Model):
         is_paid_fee = False
         sequence_dict = {}
         total_sequnce = []
+        # repayment_details = ({5,0,0})
         amount = 0.0
         tr_account_id = False
         tr_journal_id = False
@@ -163,34 +167,29 @@ class LoanPayment(models.Model):
         trn_new_loan_ptr = False
         today = datetime.datetime.today().date()
 
-        if not self.loan_id.company_id.currency_id:
-            raise UserError('Please Define Company Currency')
+        if not acc_loan.company_id.currency_id:
+            raise UserError('Please Define Company Currency22')
         company_curren = self.loan_id.company_id.currency_id
 
         if not self.currency_id:
-            raise UserError('Please Define Company Currency')
+                raise UserError('Please Define Company Currency11')
         currency_id = self.currency_id
 
-        name_des = "Loan Installment For: " + str(self.loan_id.loan_id)
+        name_des = "Loan Installment For: "+ str(self.loan_id.loan_id)
         move_vals = {}
-        # loan Transfer work(code) .........it will active only when transfer loan module installed
+        ##loan Transfer work(code) .........it will active only when transfer loan module installed
 #         print (self._context,'========================12323')
         if 'new_loan_partner_id' in self._context and self._context.get('new_loan_partner_id'):
             if not self._context.get('journal_id').default_debit_account_id:
                 if not self._context.get('new_loan_partner_id').property_account_receivable_id:
-                    raise UserError(
-                        _('Please Configure Partner Receivable Account Or Selected Journal Debit Account'))
-                tr_account_id = self._context.get(
-                    'new_loan_partner_id').property_account_receivable_id.id
+                    raise UserError(_('Please Configure Partner Receivable Account Or Selected Journal Debit Account'))
+                tr_account_id = self._context.get('new_loan_partner_id').property_account_receivable_id.id
             else:
-                tr_account_id = self._context.get(
-                    'journal_id').default_debit_account_id.id
+                tr_account_id = self._context.get('journal_id').default_debit_account_id.id
             tr_journal_id = self._context.get('journal_id').id
             ptr = self._context.get('new_loan_partner_id')
             trn_new_loan_ptr = ptr.id
-            name_des = "Loan Transfered From: " + \
-                str(self.loan_id.loan_id) + " " + "To" + \
-                " " + self._context.get('new_loan')
+            name_des = "Loan Transfered From: "+ str(self.loan_id.loan_id) +" "+ "To"+" " + self._context.get('new_loan')
 
         else:
             tr_account_id = self.journal_id.default_debit_account_id.id
@@ -201,70 +200,60 @@ class LoanPayment(models.Model):
             for type_line in self.loan_id.loan_type.loan_component_ids:
                 if type_line.type == 'principal':
                     if not type_line.gl_code:
-                        raise UserError(
-                            _('Please Configure GLCode For Principal Amount'))
+                        raise UserError(_('Please Configure GLCode For Principal Amount'))
                     gl_code = type_line.gl_code.id
-                    sequence_dict.update({type_line.sequence: type_line.type})
+                    sequence_dict.update({type_line.sequence:type_line.type})
                     total_sequnce.append(type_line.sequence)
 #                     gl_code.update({'gl_code':gl_code})
                 if type_line.type == 'int_rate':
                     if not type_line.gl_code:
-                        raise UserError(
-                            _('Please Configure GLCode For Interest Amount'))
+                        raise UserError(_('Please Configure GLCode For Interest Amount'))
                     gl_code_int = type_line.gl_code.id
-                    sequence_dict.update({type_line.sequence: type_line.type})
+                    sequence_dict.update({type_line.sequence:type_line.type})
                     total_sequnce.append(type_line.sequence)
 
                 if type_line.type == 'fees':
-                    sequence_dict.update({type_line.sequence: type_line.type})
+                    sequence_dict.update({type_line.sequence:type_line.type})
                     total_sequnce.append(type_line.sequence)
 
-        move_vals.update({'name': '/', 'ref': name_des,
-                          'date': date_new, 'journal_id': tr_journal_id,
-                          })
+        move_vals.update({'name':'/','ref':name_des,\
+                              'date':date_new,'journal_id':tr_journal_id,\
+                              })
         if currency_id.id != company_curren.id:
             amount_currency = self.amount
-            amount = currency_id.with_context(
-                date=date_new).compute(self.amount, company_curren)
+            amount = currency_id.with_context(date=date_new).compute(self.amount, company_curren)
         else:
             amount_currency = False
         if not amount_currency:
             move_lines_dr.update({
-                'account_id': tr_account_id,
-                'name': name_des,
-                'debit': self.amount,
-                'credit': 0.0,
-                'partner_id': trn_new_loan_ptr,
+                                'account_id':tr_account_id,
+                                'name':name_des,
+                                'debit':self.amount,
+                                'credit':0.0,
+                                'partner_id':trn_new_loan_ptr,
 
-            })
+                    })
         else:
             move_lines_dr.update({
-                'account_id': tr_account_id,
-                'name': name_des,
-                'debit': amount,
-                'credit': 0.0,
-                'partner_id': trn_new_loan_ptr,
-                'amount_currency': amount_currency,
-                'currency_id': currency_id.id
+                                'account_id':tr_account_id,
+                                'name':name_des,
+                                'debit':amount,
+                                'credit':0.0,
+                                'partner_id':trn_new_loan_ptr,
+                                'amount_currency':amount_currency,
+                                'currency_id':currency_id.id
 
-            })
+                    })
 
         list_mv_line.append((0, 0, move_lines_dr))
 
         seq_id = self.loan_id.loan_type.loan_component_ids.ids
-        search_ids = self.env['loan.component.line'].search(
-            [('id', 'in', seq_id)],  order='sequence')
-        # for type_line in search_ids:
+        search_ids = self.env['loan.component.line'].search([('id','in', seq_id)],  order='sequence')
+        #for type_line in search_ids:
 #         for type_line in self.loan_id.loan_type.loan_component_ids:
         break_loop = False
         affected_line_list = []
         for installment_line in self.loan_id.installment_id:
-            #             if self.loan_id.journal_disburse_id:
-            #                 if self.loan_id.journal_disburse_id.currency_id:
-            #                     journal_currency = self.loan_id.journal_disburse_id.currency_id
-            #                 else:
-            #                     journal_currency = self.loan_id.journal_disburse_id.company_id.currency_id
-
             if break_loop:
                 break
 
@@ -276,211 +265,187 @@ class LoanPayment(models.Model):
                 is_paid_capital = False
                 is_paid_int = False
                 is_paid_fee = False
-                # if installment_line.state == 'draft':
+                #if installment_line.state == 'draft':
                 if installment_line.outstanding_prin or installment_line.outstanding_int or installment_line.outstanding_fees:
-                    # this for principal amount ....................
+                    ## this for principal amount ....................
                     if installment_line not in affected_line_list:
                         affected_line_list.append(installment_line)
                     if type_line.type == 'principal':
-                        if installment_line.outstanding_prin > 0.0 and main_amt >= installment_line.outstanding_prin:
-                            main_amt = round(
-                                main_amt - installment_line.outstanding_prin, 2)
+                        if installment_line.outstanding_prin > 0.0 and  main_amt >= installment_line.outstanding_prin:
+                            main_amt = round(main_amt - installment_line.outstanding_prin, 2)
                             if currency_id.id != company_curren.id:
                                 amount_currency = installment_line.outstanding_prin
-                                amount = currency_id.with_context(date=date_new).compute(
-                                    installment_line.outstanding_prin, company_curren)
+                                amount = currency_id.with_context(date=date_new).compute(installment_line.outstanding_prin, company_curren)
                             else:
                                 amount_currency = False
                             if not amount_currency:
                                 move_lines_cr_capital.update({
-                                    'account_id': gl_code,
-                                    'name': name_des,
-                                    'credit': installment_line.outstanding_prin,
-                                    'debit': 0.0,
-                                    'partner_id': self.loan_id.partner_id.id,
-                                })
-                                installment_line.with_context(
-                                    {'prin': installment_line.outstanding_prin}).onchange_principle()
+                                        'account_id':gl_code,
+                                        'name':name_des,
+                                        'credit':installment_line.outstanding_prin,
+                                        'debit':0.0,
+                                        'partner_id':self.loan_id.partner_id.id,
+                                        })
+                                installment_line.with_context({'prin':installment_line.outstanding_prin}).onchange_principle()
                             else:
                                 move_lines_cr_capital.update({
-                                    'account_id': gl_code,
-                                    'name': name_des,
-                                    'credit': amount,
-                                    'debit': 0.0,
-                                    'partner_id': self.loan_id.partner_id.id,
-                                    'amount_currency': -amount_currency,
-                                    'currency_id': currency_id.id
-                                })
-                                installment_line.with_context(
-                                    {'prin': amount}).onchange_principle()
-                            list_mv_line.append((0, 0, move_lines_cr_capital))
-                            installment_line.write(
-                                {'outstanding_prin': 0.0, 'due_principal': 0.0, 'paid_prin': installment_line.outstanding_prin})
+                                        'account_id':gl_code,
+                                        'name':name_des,
+                                        'credit':amount,
+                                        'debit':0.0,
+                                        'partner_id':self.loan_id.partner_id.id,
+                                        'amount_currency':-amount_currency,
+                                        'currency_id':currency_id.id
+                                        })
+                                installment_line.with_context({'prin':amount}).onchange_principle()
+                            list_mv_line.append((0, 0,move_lines_cr_capital))
+                            installment_line.write({'outstanding_prin':0.0,'due_principal':0.0,'paid_prin':installment_line.outstanding_prin})
                             is_paid_capital = True
                             if installment_line.late_fee:
-                                installment_line.write({'state': 'open'})
+                                installment_line.write({'state':'open'})
                             if not main_amt:
                                 if not late_fee:
                                     break_loop = True
                                 break
                         else:
                             if main_amt <= installment_line.outstanding_prin:
-                                main_amt = round(main_amt, 2)
+                                main_amt = round(main_amt,2)
                                 if currency_id.id != company_curren.id:
                                     amount_currency = main_amt
-                                    amount = currency_id.with_context(
-                                        date=date_new).compute(main_amt, company_curren)
+                                    amount = currency_id.with_context(date=date_new).compute(main_amt, company_curren)
                                 else:
                                     amount_currency = False
                                 if not amount_currency:
                                     move_lines_cr_capital.update({
-                                        'account_id': gl_code,
-                                        'name': name_des,
-                                        'credit': main_amt,
-                                        'debit': 0.0,
-                                        'partner_id': self.loan_id.partner_id.id,
-                                    })
-                                    installment_line.with_context(
-                                        {'prin': main_amt}).onchange_principle()
+                                        'account_id':gl_code,
+                                        'name':name_des,
+                                        'credit':main_amt,
+                                        'debit':0.0,
+                                        'partner_id':self.loan_id.partner_id.id,
+                                        })
+                                    installment_line.with_context({'prin':main_amt}).onchange_principle()
                                 else:
                                     move_lines_cr_capital.update({
-                                        'account_id': gl_code,
-                                        'name': name_des,
-                                        'credit': amount,
-                                        'debit': 0.0,
-                                        'partner_id': self.loan_id.partner_id.id,
-                                        'amount_currency': -amount_currency,
-                                        'currency_id': currency_id.id
-                                    })
-                                    installment_line.with_context(
-                                        {'prin': amount}).onchange_principle()
+                                        'account_id':gl_code,
+                                        'name':name_des,
+                                        'credit':amount,
+                                        'debit':0.0,
+                                        'partner_id':self.loan_id.partner_id.id,
+                                        'amount_currency':-amount_currency,
+                                        'currency_id':currency_id.id
+                                        })
+                                    installment_line.with_context({'prin':amount}).onchange_principle()
                                 main_amt = installment_line.outstanding_prin - main_amt
-                                if datetime.datetime.strptime(installment_line.date, "%Y-%m-%d").date() <= today:
-                                    installment_line.write(
-                                        {'outstanding_prin': main_amt, 'due_principal': main_amt, 'paid_prin': installment_line.outstanding_prin - main_amt})
+                                if datetime.datetime.strptime(str(installment_line.date), "%Y-%m-%d").date() <= today:
+                                    installment_line.write({'outstanding_prin':main_amt,'due_principal':main_amt, 'paid_prin': installment_line.outstanding_prin -main_amt})
                                 else:
-                                    installment_line.write(
-                                        {'outstanding_prin': main_amt, 'due_principal': 0.0, 'paid_prin': installment_line.outstanding_prin - main_amt})
-                                list_mv_line.append(
-                                    (0, 0, move_lines_cr_capital))
+                                    installment_line.write({'outstanding_prin':main_amt,'due_principal':0.0, 'paid_prin':installment_line.outstanding_prin - main_amt})
+                                list_mv_line.append((0, 0, move_lines_cr_capital))
                                 main_amt = 0.0
                                 if installment_line.late_fee:
-                                    installment_line.write({'state': 'open'})
+                                    installment_line.write({'state':'open'})
                                 if not late_fee:
                                     break_loop = True
                                 break
                             if is_paid_capital and is_paid_fee and is_paid_int:
-                                installment_line.write({'state': 'paid'})
+                                installment_line.write({'state':'paid'})
 
-                    # next for interest amount ..............
+                    ## next for interest amount ..............
                     if type_line.type == 'int_rate':
                         if installment_line.outstanding_int > 0.0 and main_amt >= installment_line.outstanding_int:
                             if type_line.tax_id:
-                                tx_tot_int = self.get_tax_total(
-                                    type_line.tax_id, installment_line.outstanding_int)
-                                new_amt = round(
-                                    installment_line.outstanding_int - tx_tot_int, 2)
+                                tx_tot_int = self.get_tax_total(type_line.tax_id, installment_line.outstanding_int)
+                                new_amt = round(installment_line.outstanding_int - tx_tot_int, 2)
                                 if currency_id.id != company_curren.id:
                                     amount_currency = new_amt
-                                    amount = currency_id.with_context(
-                                        date=date_new).compute(new_amt, company_curren)
+                                    amount = currency_id.with_context(date=date_new).compute(new_amt, company_curren)
                                 else:
                                     amount_currency = False
                                 if not amount_currency:
                                     move_lines_cr_int.update({
-                                        'account_id': gl_code_int,
-                                        'name': name_des,
-                                        'credit': new_amt,
-                                        'debit': 0.0,
-                                        'partner_id': self.loan_id.partner_id.id,
-                                    })
-                                    installment_line.with_context(
-                                        {'int': new_amt}).onchange_interest()
+                                            'account_id':gl_code_int,
+                                            'name':name_des,
+                                            'credit':new_amt,
+                                            'debit':0.0,
+                                            'partner_id':self.loan_id.partner_id.id,
+                                            })
+                                    installment_line.with_context({'int':new_amt}).onchange_interest()
                                 else:
                                     move_lines_cr_int.update({
-                                        'account_id': gl_code_int,
-                                        'name': name_des,
-                                        'credit': amount,
-                                        'debit': 0.0,
-                                        'partner_id': self.loan_id.partner_id.id,
-                                        'amount_currency': -amount_currency,
-                                        'currency_id': currency_id.id
-                                    })
-                                    installment_line.with_context(
-                                        {'int': amount}).onchange_interest()
+                                            'account_id':gl_code_int,
+                                            'name':name_des,
+                                            'credit':amount,
+                                            'debit':0.0,
+                                            'partner_id':self.loan_id.partner_id.id,
+                                            'amount_currency':-amount_currency,
+                                            'currency_id':currency_id.id
+                                            })
+                                    installment_line.with_context({'int':amount}).onchange_interest()
 
                                 list_mv_line.append((0, 0, move_lines_cr_int))
                                 if tx_tot_int:
                                     if currency_id.id != company_curren.id:
                                         amount_currency = tx_tot_int
-                                        amount = currency_id.with_context(
-                                            date=date_new).compute(tx_tot_int, company_curren)
+                                        amount = currency_id.with_context(date=date_new).compute(tx_tot_int, company_curren)
                                     else:
                                         amount_currency = False
                                     if not amount_currency:
                                         move_line_cr_int_tx.update({
-                                            'account_id': type_line.tax_id.account_id.id,
-                                            'name': name_des,
-                                            'credit': tx_tot_int,
-                                            'debit': 0.0,
-                                            'partner_id': self.loan_id.partner_id.id,
-                                        })
-                                        installment_line.with_context(
-                                            {'int': tx_tot_int}).onchange_interest()
+                                                'account_id':type_line.tax_id.account_id.id,
+                                                'name':name_des,
+                                                'credit':tx_tot_int,
+                                                'debit':0.0,
+                                                'partner_id':self.loan_id.partner_id.id,
+                                            })
+                                        installment_line.with_context({'int':tx_tot_int}).onchange_interest()
                                     else:
                                         move_line_cr_int_tx.update({
-                                            'account_id': type_line.tax_id.account_id.id,
-                                            'name': name_des,
-                                            'credit': amount,
-                                            'debit': 0.0,
-                                            'partner_id': self.loan_id.partner_id.id,
-                                            'amount_currency': -amount_currency,
-                                            'currency_id': currency_id.id
-                                        })
-                                        installment_line.with_context(
-                                            {'int': amount}).onchange_interest()
+                                                'account_id':type_line.tax_id.account_id.id,
+                                                'name':name_des,
+                                                'credit':amount,
+                                                'debit':0.0,
+                                                'partner_id':self.loan_id.partner_id.id,
+                                                'amount_currency':-amount_currency,
+                                                'currency_id':currency_id.id
+                                            })
+                                        installment_line.with_context({'int':amount}).onchange_interest()
 
-                                    list_mv_line.append(
-                                        (0, 0, move_line_cr_int_tx))
+                                    list_mv_line.append((0, 0, move_line_cr_int_tx))
 
                             else:
                                 if currency_id.id != company_curren.id:
-                                    amount_currency = installment_line.outstanding_int
-                                    amount = currency_id.with_context(date=date_new).compute(
-                                        installment_line.outstanding_int, company_curren)
+                                        amount_currency = installment_line.outstanding_int
+                                        amount = currency_id.with_context(date=date_new).compute(installment_line.outstanding_int, company_curren)
                                 else:
                                     amount_currency = False
                                 if not amount_currency:
                                     move_lines_cr_int.update({
-                                        'account_id': gl_code_int,
-                                        'name': name_des,
-                                        'credit': installment_line.outstanding_int,
-                                        'debit': 0.0,
-                                        'partner_id': self.loan_id.partner_id.id,
-                                    })
-                                    installment_line.with_context(
-                                        {'int': installment_line.outstanding_int}).onchange_interest()
+                                            'account_id':gl_code_int,
+                                            'name':name_des,
+                                            'credit':installment_line.outstanding_int,
+                                            'debit':0.0,
+                                            'partner_id':self.loan_id.partner_id.id,
+                                            })
+                                    installment_line.with_context({'int':installment_line.outstanding_int}).onchange_interest()
                                 else:
                                     move_lines_cr_int.update({
-                                        'account_id': gl_code_int,
-                                        'name': name_des,
-                                        'credit': amount,
-                                        'debit': 0.0,
-                                        'partner_id': self.loan_id.partner_id.id,
-                                        'amount_currency': -amount_currency,
-                                        'currency_id': currency_id.id
-                                    })
-                                    installment_line.with_context(
-                                        {'int': amount}).onchange_interest()
+                                            'account_id':gl_code_int,
+                                            'name':name_des,
+                                            'credit':amount,
+                                            'debit':0.0,
+                                            'partner_id':self.loan_id.partner_id.id,
+                                            'amount_currency':-amount_currency,
+                                            'currency_id':currency_id.id
+                                            })
+                                    installment_line.with_context({'int':amount}).onchange_interest()
 
                                 list_mv_line.append((0, 0, move_lines_cr_int))
 
                             main_amt = main_amt - installment_line.outstanding_int
-                            installment_line.write(
-                                {'outstanding_int': 0.0, 'due_interest': 0.0, 'paid_int': installment_line.outstanding_int})
+                            installment_line.write({'outstanding_int':0.0,'due_interest':0.0,'paid_int':installment_line.outstanding_int})
                             is_paid_int = True
                             if installment_line.late_fee:
-                                installment_line.write({'state': 'open'})
+                                installment_line.write({'state':'open'})
                             if not main_amt:
                                 if not late_fee:
                                     break_loop = True
@@ -490,200 +455,171 @@ class LoanPayment(models.Model):
                             if main_amt <= installment_line.outstanding_int:
                                 main_amt = round(main_amt, 2)
                                 if type_line.tax_id:
-                                    tx_tot_int = self.get_tax_total(
-                                        type_line.tax_id, main_amt)
+                                    tx_tot_int = self.get_tax_total(type_line.tax_id, main_amt)
                                     new_amt = main_amt - tx_tot_int
 
                                     if currency_id.id != company_curren.id:
                                         amount_currency = new_amt
-                                        amount = currency_id.with_context(
-                                            date=date_new).compute(new_amt, company_curren)
+                                        amount = currency_id.with_context(date=date_new).compute(new_amt, company_curren)
                                     else:
                                         amount_currency = False
                                     if not amount_currency:
                                         move_lines_cr_int.update({
-                                            'account_id': gl_code_int,
-                                            'name': name_des,
-                                            'credit': new_amt,
-                                            'debit': 0.0,
-                                            'partner_id': self.loan_id.partner_id.id,
-                                        })
-                                        installment_line.with_context(
-                                            {'int': new_amt}).onchange_interest()
+                                                'account_id':gl_code_int,
+                                                'name':name_des,
+                                                'credit':new_amt,
+                                                'debit':0.0,
+                                                'partner_id':self.loan_id.partner_id.id,
+                                                })
+                                        installment_line.with_context({'int':new_amt}).onchange_interest()
                                     else:
                                         move_lines_cr_int.update({
-                                            'account_id': gl_code_int,
-                                            'name': name_des,
-                                            'credit': amount,
-                                            'debit': 0.0,
-                                            'partner_id': self.loan_id.partner_id.id,
-                                            'amount_currency': -amount_currency,
-                                            'currency_id': currency_id.id
-                                        })
-                                        installment_line.with_context(
-                                            {'int': amount}).onchange_interest()
+                                                'account_id':gl_code_int,
+                                                'name':name_des,
+                                                'credit':amount,
+                                                'debit':0.0,
+                                                'partner_id':self.loan_id.partner_id.id,
+                                                'amount_currency':-amount_currency,
+                                                'currency_id':currency_id.id
+                                                })
+                                        installment_line.with_context({'int':amount}).onchange_interest()
 
-                                    list_mv_line.append(
-                                        (0, 0, move_lines_cr_int))
+                                    list_mv_line.append((0, 0, move_lines_cr_int))
                                     if tx_tot_int:
                                         if currency_id.id != company_curren.id:
                                             amount_currency = tx_tot_int
-                                            amount = currency_id.with_context(
-                                                date=date_new).compute(tx_tot_int, company_curren)
+                                            amount = currency_id.with_context(date=date_new).compute(tx_tot_int, company_curren)
                                         else:
                                             amount_currency = False
                                         if not amount_currency:
                                             move_line_cr_int_tx.update({
-                                                'account_id': type_line.tax_id.account_id.id,
-                                                'name': name_des,
-                                                'credit': tx_tot_int,
-                                                'debit': 0.0,
-                                                'partner_id': self.loan_id.partner_id.id,
-                                            })
-                                            installment_line.with_context(
-                                                {'int': tx_tot_int}).onchange_interest()
+                                                    'account_id':type_line.tax_id.account_id.id,
+                                                    'name':name_des,
+                                                    'credit':tx_tot_int,
+                                                    'debit':0.0,
+                                                    'partner_id':self.loan_id.partner_id.id,
+                                                    })
+                                            installment_line.with_context({'int':tx_tot_int}).onchange_interest()
                                         else:
                                             move_line_cr_int_tx.update({
-                                                'account_id': type_line.tax_id.account_id.id,
-                                                'name': name_des,
-                                                'credit': amount,
-                                                'debit': 0.0,
-                                                'partner_id': self.loan_id.partner_id.id,
-                                                'amount_currency': -amount_currency,
-                                                'currency_id': currency_id.id
-                                            })
-                                            installment_line.with_context(
-                                                {'int': amount}).onchange_interest()
-                                        list_mv_line.append(
-                                            (0, 0, move_line_cr_int_tx))
+                                                    'account_id':type_line.tax_id.account_id.id,
+                                                    'name':name_des,
+                                                    'credit':amount,
+                                                    'debit':0.0,
+                                                    'partner_id':self.loan_id.partner_id.id,
+                                                    'amount_currency':-amount_currency,
+                                                    'currency_id':currency_id.id
+                                                    })
+                                            installment_line.with_context({'int':amount}).onchange_interest()
+                                        list_mv_line.append((0, 0, move_line_cr_int_tx))
                                 else:
                                     if currency_id.id != company_curren.id:
-                                        amount_currency = main_amt
-                                        amount = currency_id.with_context(
-                                            date=date_new).compute(main_amt, company_curren)
+                                            amount_currency = main_amt
+                                            amount = currency_id.with_context(date=date_new).compute(main_amt, company_curren)
                                     else:
                                         amount_currency = False
                                     if not amount_currency:
                                         move_lines_cr_int.update({
-                                            'account_id': gl_code_int,
-                                            'name': name_des,
-                                            'credit': main_amt,
-                                            'debit': 0.0,
-                                            'partner_id': self.loan_id.partner_id.id,
-                                        })
-                                        installment_line.with_context(
-                                            {'int': main_amt}).onchange_interest()
+                                                'account_id':gl_code_int,
+                                                'name':name_des,
+                                                'credit':main_amt,
+                                                'debit':0.0,
+                                                'partner_id':self.loan_id.partner_id.id,
+                                                })
+                                        installment_line.with_context({'int':main_amt}).onchange_interest()
                                     else:
                                         move_lines_cr_int.update({
-                                            'account_id': gl_code_int,
-                                            'name': name_des,
-                                            'credit': amount,
-                                            'debit': 0.0,
-                                            'partner_id': self.loan_id.partner_id.id,
-                                            'amount_currency': -amount_currency,
-                                            'currency_id': currency_id.id
-                                        })
-                                        installment_line.with_context(
-                                            {'int': amount}).onchange_interest()
-                                    list_mv_line.append(
-                                        (0, 0, move_lines_cr_int))
+                                                'account_id':gl_code_int,
+                                                'name':name_des,
+                                                'credit':amount,
+                                                'debit':0.0,
+                                                'partner_id':self.loan_id.partner_id.id,
+                                                'amount_currency':-amount_currency,
+                                                'currency_id':currency_id.id
+                                                })
+                                        installment_line.with_context({'int':amount}).onchange_interest()
+                                    list_mv_line.append((0, 0, move_lines_cr_int))
 
                                 main_amt = installment_line.outstanding_int - main_amt
-                                if datetime.datetime.strptime(installment_line.date, "%Y-%m-%d").date() <= today:
-                                    installment_line.write(
-                                        {'outstanding_int': main_amt, 'due_interest': main_amt, 'paid_int': installment_line.outstanding_int - main_amt})
+                                if datetime.datetime.strptime(str(installment_line.date), "%Y-%m-%d").date() <= today:
+                                    installment_line.write({'outstanding_int':main_amt,'due_interest':main_amt, 'paid_int':installment_line.outstanding_int - main_amt})
                                 else:
-                                    installment_line.write(
-                                        {'outstanding_int': main_amt, 'due_interest': 0.0, 'paid_int': installment_line.outstanding_int - main_amt})
+                                    installment_line.write({'outstanding_int':main_amt,'due_interest': 0.0, 'paid_int':installment_line.outstanding_int - main_amt})
                                 main_amt = 0.0
 #                                 list_mv_line.append((0, 0, move_lines_cr_int))
     #                                 if is_paid_int:
 #                                     installment_line.write({'state':'paid'})
                                 if installment_line.late_fee:
-                                    installment_line.write({'state': 'open'})
+                                    installment_line.write({'state':'open'})
                                 if not late_fee:
                                     break_loop = True
                                 break
                             if is_paid_capital and is_paid_fee and is_paid_int:
-                                installment_line.write({'state': 'paid'})
-                    # next for fees calculation ............
+                                installment_line.write({'state':'paid'})
+                    ##next for fees calculation ............
                     if type_line.type == 'fees':
                         if not type_line.gl_code:
-                            raise UserError(
-                                _('Please Configure GLCode For fees Amount'))
+                            raise UserError(_('Please Configure GLCode For fees Amount'))
                         for fees_line in installment_line.fee_lines:
                             fees_dict = {}
                             interest_dict = {}
                             if fees_line.product_id.id == type_line.product_id.id and fees_line.is_paid == False:
-                                fees_line_base = round(
-                                    fees_line.base - fees_line.base_paid, 2)
-                                fees_line_tax = round(
-                                    fees_line.tax - fees_line.tax_paid, 2)
-                                # tax calculation for payment wise spliting ..............
+                                fees_line_base = round(fees_line.base - fees_line.base_paid, 2)
+                                fees_line_tax = round(fees_line.tax - fees_line.tax_paid, 2)
+                                ##tax calculation for payment wise spliting ..............
 #                                 if fees_line.tax_paid:
 #                                     tx_cal_amt = self.get_tax_total(type_line.tax_id, main_amt)
-                                main_amt = round(main_amt, 2)
+                                main_amt = round(main_amt,2)
                                 if fees_line_base > 0.0 and main_amt >= round(fees_line_base + fees_line_tax, 2):
                                     total_paid_amount = 0
                                     if fees_line_base:
                                         base_amt = fees_line_base
                                         if currency_id.id != company_curren.id:
                                             amount_currency = base_amt
-                                            amount = currency_id.with_context(
-                                                date=date_new).compute(base_amt, company_curren)
+                                            amount = currency_id.with_context(date=date_new).compute(base_amt, company_curren)
                                         else:
                                             amount_currency = False
                                         if not amount_currency:
-                                            fees_dict.update({'name': name_des, 'partner_id': self.loan_id.partner_id.id,
-                                                              'account_id': type_line.gl_code.id, 'debit': 0.0, 'credit': base_amt})
+                                            fees_dict.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,'debit':0.0, 'credit':base_amt})
                                         else:
-                                            fees_dict.update({'name': name_des, 'partner_id': self.loan_id.partner_id.id, 'account_id': type_line.gl_code.id,
-                                                              'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency,
-                                                              'currency_id': currency_id.id})
-                                        installment_line.with_context(
-                                            {'fee': fees_dict.get('credit')}).onchange_fees()
+                                            fees_dict.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,\
+                                                              'debit':0.0, 'credit':amount, 'amount_currency':-amount_currency,
+                                                              'currency_id':currency_id.id })
+                                        installment_line.with_context({'fee':fees_dict.get('credit')}).onchange_fees()
 
                                         total_paid_amount = total_paid_amount + base_amt
                                     if type_line.tax_id:
                                         tx_tot = fees_line_tax
                                         if currency_id.id != company_curren.id:
                                             amount_currency = tx_tot
-                                            amount = currency_id.with_context(
-                                                date=date_new).compute(tx_tot, company_curren)
+                                            amount = currency_id.with_context(date=date_new).compute(tx_tot, company_curren)
                                         else:
                                             amount_currency = False
                                         if not amount_currency:
-                                            interest_dict = self.get_interest_vals(
-                                                tx_tot, type_line.tax_id.account_id)
+                                            interest_dict = self.get_interest_vals(tx_tot, type_line.tax_id.account_id)
                                         else:
-                                            interest_dict.update({'partner_id': self.loan_id.partner_id.id,
-                                                                  'account_id': type_line.tax_id.account_id.id,
-                                                                  'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency, 'currency_id': currency_id.id})
+                                            interest_dict.update({'partner_id':self.loan_id.partner_id.id,\
+                                                                  'account_id':type_line.tax_id.account_id.id,\
+                                                                  'debit':0.0, 'credit':amount, 'amount_currency':-amount_currency,'currency_id':currency_id.id})
                                         if interest_dict:
-                                            interest_dict.update(
-                                                {'name': name_des})
-                                            installment_line.with_context(
-                                                {'fee': interest_dict.get('credit')}).onchange_fees()
+                                            interest_dict.update({'name':name_des})
+                                            installment_line.with_context({'fee':interest_dict.get('credit')}).onchange_fees()
                                         total_paid_amount = total_paid_amount + tx_tot
                                         installment_line.paid_fees_tx = tx_tot
 
-                                    fees_line.write({'base_paid': base_amt + fees_line.base_paid,
-                                                     'tax_paid': fees_line_tax + fees_line.tax_paid, 'is_paid': True})
+                                    fees_line.write({'base_paid':base_amt + fees_line.base_paid, 'tax_paid':fees_line_tax + fees_line.tax_paid, 'is_paid':True})
                                     if fees_dict:
-                                        list_mv_line.append((0, 0, fees_dict))
+                                            list_mv_line.append((0, 0, fees_dict))
                                     if interest_dict:
-                                        list_mv_line.append(
-                                            (0, 0, interest_dict))
+                                        list_mv_line.append((0, 0, interest_dict))
                                     if fees_line_tax:
-                                        main_amt = round(
-                                            main_amt - (fees_line_base + fees_line_tax), 2)
+                                        main_amt = round(main_amt - (fees_line_base + fees_line_tax), 2)
                                     else:
-                                        main_amt = round(
-                                            main_amt - fees_line_base, 2)
+                                        main_amt = round(main_amt - fees_line_base, 2)
 
                                     installment_line.paid_fees = base_amt
                                     installment_line.outstanding_fees = installment_line.outstanding_fees - total_paid_amount
-                                    if datetime.datetime.strptime(installment_line.date, "%Y-%m-%d").date() <= today:
+                                    if datetime.datetime.strptime(str(installment_line.date), "%Y-%m-%d").date() <= today:
                                         installment_line.due_fees = installment_line.outstanding_fees
                                     if not main_amt:
                                         if not late_fee:
@@ -693,8 +629,7 @@ class LoanPayment(models.Model):
                                     if main_amt >= fees_line_base:
                                         total_paid_amount = 0
                                         if fees_line.tax:
-                                            tx_cal_amt = self.get_tax_total(
-                                                type_line.tax_id, main_amt)
+                                            tx_cal_amt = self.get_tax_total(type_line.tax_id, main_amt)
                                             fees_line_base = main_amt - tx_cal_amt
 
                                         base_amt = fees_line_base
@@ -703,41 +638,36 @@ class LoanPayment(models.Model):
                                         if fees_line_base:
                                             if currency_id.id != company_curren.id:
                                                 amount_currency = fees_line_base
-                                                amount = currency_id.with_context(date=date_new).compute(
-                                                    fees_line_base, company_curren)
+                                                amount = currency_id.with_context(date=date_new).compute(fees_line_base, company_curren)
                                             else:
                                                 amount_currency = False
                                             if not amount_currency:
-                                                fees_dict.update({'name': name_des, 'partner_id': self.loan_id.partner_id.id,
-                                                                  'account_id': type_line.gl_code.id, 'debit': 0.0, 'credit': fees_line_base})
+                                                fees_dict.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,'debit':0.0, 'credit':fees_line_base})
                                             else:
-                                                fees_dict.update({'name': name_des, 'partner_id': self.loan_id.partner_id.id, 'account_id': type_line.gl_code.id,
-                                                                  'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency,
-                                                                  'currency_id': currency_id.id})
-                                            installment_line.with_context(
-                                                {'fee': fees_dict.get('credit')}).onchange_fees()
+                                                fees_dict.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,\
+                                                                  'debit':0.0, 'credit':amount,'amount_currency':-amount_currency,\
+                                                                  'currency_id':currency_id.id})
+                                            installment_line.with_context({'fee':fees_dict.get('credit')}).onchange_fees()
 #                                             total_paid_amount = total_paid_amount + fees_line_base
-                                            list_mv_line.append(
-                                                (0, 0, fees_dict))
+                                            list_mv_line.append((0, 0, fees_dict))
                                             base_paid = True
                                             installment_line.outstanding_fees = installment_line.outstanding_fees - fees_line_base
                                             installment_line.paid_fees = fees_line_base
-                                            if datetime.datetime.strptime(installment_line.date, "%Y-%m-%d").date() <= today:
+                                            if datetime.datetime.strptime(str(installment_line.date), "%Y-%m-%d").date() <= today:
                                                 installment_line.due_fees = installment_line.outstanding_fees
                                             else:
                                                 installment_line.due_fees = 0.0
-                                            fees_line.write(
-                                                {'base_paid': fees_line_base + fees_line.base_paid})
-                                            main_amt = round(main_amt, 2)
+                                            fees_line.write({'base_paid':fees_line_base  + fees_line.base_paid})
+                                            main_amt = round(main_amt,2)
                                             rem = main_amt - fees_line_base
                                             main_amt = rem
 
-                                        if main_amt >= fees_line_tax:
-                                            # new changes done hereesssssss for payment calculation ......
+
+                                        if main_amt >=fees_line_tax:
+                                            ## new changes done hereesssssss for payment calculation ......
                                             tx_amt = 0.0
                                             if type_line.tax_id:
-                                                tx_cal_amt = self.get_tax_total(
-                                                    type_line.tax_id, fees_line_tax)
+                                                tx_cal_amt = self.get_tax_total(type_line.tax_id, fees_line_tax)
                                                 tx_amt = main_amt - tx_cal_amt
 #                                                 tx_amt = fees_line_tax
                                                 if tx_amt:
@@ -745,8 +675,7 @@ class LoanPayment(models.Model):
                                                     fees_line_tax = fees_line_tax - tx_amt
                                                     if currency_id.id != company_curren.id:
                                                         amount_currency = tx_amt
-                                                        amount = currency_id.with_context(
-                                                            date=date_new).compute(tx_amt, company_curren)
+                                                        amount = currency_id.with_context(date=date_new).compute(tx_amt, company_curren)
                                                     else:
                                                         amount_currency = False
                                                     if type_line.tax_id:
@@ -754,28 +683,23 @@ class LoanPayment(models.Model):
                                                     else:
                                                         gl_acc = type_line.gl_code.id
                                                     if not amount_currency:
-                                                        fees_dict_tx.update(
-                                                            {'name': name_des, 'partner_id': self.loan_id.partner_id.id, 'account_id': gl_acc, 'debit': 0.0, 'credit': tx_amt})
+                                                        fees_dict_tx.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':gl_acc,'debit':0.0, 'credit':tx_amt})
                                                     else:
-                                                        fees_dict_tx.update({'name': name_des, 'partner_id': self.loan_id.partner_id.id, 'account_id': gl_acc,
-                                                                             'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency,
-                                                                             'currency_id': currency_id.id})
-                                                    installment_line.with_context(
-                                                        {'fee': fees_dict_tx.get('credit')}).onchange_fees()
+                                                        fees_dict_tx.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':gl_acc,\
+                                                                          'debit':0.0, 'credit':amount,'amount_currency':-amount_currency,\
+                                                                          'currency_id':currency_id.id})
+                                                    installment_line.with_context({'fee':fees_dict_tx.get('credit')}).onchange_fees()
 #                                                     total_paid_amount = total_paid_amount + tx_amt
-                                                    list_mv_line.append(
-                                                        (0, 0, fees_dict_tx))
+                                                    list_mv_line.append((0, 0, fees_dict_tx))
                                                     installment_line.outstanding_fees = installment_line.outstanding_fees - tx_amt
-                                                    fees_line.write(
-                                                        {'tax_paid': tx_amt + fees_line.tax_paid})
+                                                    fees_line.write({'tax_paid':tx_amt  + fees_line.tax_paid})
                                                     installment_line.paid_fees_tx = tx_amt
-                                                    if datetime.datetime.strptime(installment_line.date, "%Y-%m-%d").date() <= today:
+                                                    if datetime.datetime.strptime(str(installment_line.date), "%Y-%m-%d").date() <= today:
                                                         installment_line.due_fees = installment_line.outstanding_fees
                                                     else:
                                                         installment_line.due_fees = 0.0
                                                     tax_paid = True
-                                                    main_amt = round(
-                                                        main_amt, 2)
+                                                    main_amt = round(main_amt,2)
                                                     rem = main_amt - tx_amt
                                                     main_amt = rem
                                         else:
@@ -787,8 +711,7 @@ class LoanPayment(models.Model):
                                                     fees_line_tax = fees_line_tax - tx_amt
                                                     if currency_id.id != company_curren.id:
                                                         amount_currency = tx_amt
-                                                        amount = currency_id.with_context(
-                                                            date=date_new).compute(tx_amt, company_curren)
+                                                        amount = currency_id.with_context(date=date_new).compute(tx_amt, company_curren)
                                                     else:
                                                         amount_currency = False
                                                     if type_line.tax_id:
@@ -796,22 +719,18 @@ class LoanPayment(models.Model):
                                                     else:
                                                         gl_acc = type_line.gl_code.id
                                                     if not amount_currency:
-                                                        fees_dict_tx.update(
-                                                            {'name': name_des, 'partner_id': self.loan_id.partner_id.id, 'account_id': gl_acc, 'debit': 0.0, 'credit': tx_amt})
+                                                        fees_dict_tx.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':gl_acc,'debit':0.0, 'credit':tx_amt})
                                                     else:
-                                                        fees_dict_tx.update({'name': name_des, 'partner_id': self.loan_id.partner_id.id, 'account_id': gl_acc,
-                                                                             'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency,
-                                                                             'currency_id': currency_id.id})
-                                                    installment_line.with_context(
-                                                        {'fee': fees_dict_tx.get('credit')}).onchange_fees()
+                                                        fees_dict_tx.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':gl_acc,\
+                                                                          'debit':0.0, 'credit':amount,'amount_currency':-amount_currency,\
+                                                                          'currency_id':currency_id.id})
+                                                    installment_line.with_context({'fee':fees_dict_tx.get('credit')}).onchange_fees()
 #                                                     total_paid_amount = total_paid_amount + tx_amt
-                                                    list_mv_line.append(
-                                                        (0, 0, fees_dict_tx))
-                                                    fees_line.write(
-                                                        {'tax_paid': tx_amt + fees_line.tax_paid})
+                                                    list_mv_line.append((0, 0, fees_dict_tx))
+                                                    fees_line.write({'tax_paid':tx_amt  + fees_line.tax_paid})
                                                     installment_line.outstanding_fees = installment_line.outstanding_fees - tx_amt
                                                     installment_line.paid_fees_tx = tx_amt
-                                                    if datetime.datetime.strptime(installment_line.date, "%Y-%m-%d").date() <= today:
+                                                    if datetime.datetime.strptime(str(installment_line.date), "%Y-%m-%d").date() <= today:
                                                         installment_line.due_fees = installment_line.outstanding_fees
                                                     else:
                                                         installment_line.due_fees = 0.0
@@ -822,8 +741,7 @@ class LoanPayment(models.Model):
 
                                         if not fees_line_base:
                                             base_paid = True
-                                        if base_paid and tax_paid:
-                                            fees_line.is_paid = True
+                                        if base_paid and tax_paid: fees_line.is_paid = True
                                         if not main_amt:
                                             if not late_fee:
                                                 break_loop = True
@@ -833,15 +751,13 @@ class LoanPayment(models.Model):
                                         tx_cal_amt = 0.0
                                         if main_amt > 0.0:
                                             if fees_line.tax:
-                                                tx_cal_amt = self.get_tax_total(
-                                                    type_line.tax_id, main_amt)
+                                                tx_cal_amt = self.get_tax_total(type_line.tax_id, main_amt)
                                                 main_amt = main_amt - tx_cal_amt
                                             else:
                                                 main_amt = round(main_amt, 2)
                                             if currency_id.id != company_curren.id:
                                                 amount_currency = main_amt
-                                                amount = currency_id.with_context(
-                                                    date=date_new).compute(main_amt, company_curren)
+                                                amount = currency_id.with_context(date=date_new).compute(main_amt, company_curren)
                                             else:
                                                 amount_currency = False
 #                                             if type_line.tax_id:
@@ -849,26 +765,22 @@ class LoanPayment(models.Model):
 #                                             else:
                                             gl_acc = type_line.gl_code.id
                                             if not amount_currency:
-                                                fees_dict.update(
-                                                    {'name': name_des, 'partner_id': self.loan_id.partner_id.id, 'account_id': gl_acc, 'debit': 0.0, 'credit': main_amt})
+                                                fees_dict.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':gl_acc,'debit':0.0, 'credit':main_amt})
                                             else:
-                                                fees_dict.update({'name': name_des, 'partner_id': self.loan_id.partner_id.id,
-                                                                  'account_id': gl_acc, 'debit': 0.0,
-                                                                  'credit': amount, 'amount_currency': -amount_currency,
-                                                                  'currency_id': currency_id.id})
-                                            installment_line.with_context(
-                                                {'fee': fees_dict.get('credit')}).onchange_fees()
+                                                fees_dict.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,\
+                                                                  'account_id':gl_acc,'debit':0.0,\
+                                                                   'credit':amount,'amount_currency':-amount_currency,\
+                                                                   'currency_id':currency_id.id})
+                                            installment_line.with_context({'fee':fees_dict.get('credit')}).onchange_fees()
 
                                             installment_line.outstanding_fees = installment_line.outstanding_fees - main_amt
                                             installment_line.paid_fees = main_amt
-                                            if datetime.datetime.strptime(installment_line.date, "%Y-%m-%d").date() <= today:
+                                            if datetime.datetime.strptime(str(installment_line.date), "%Y-%m-%d").date() <= today:
                                                 installment_line.due_fees = installment_line.outstanding_fees
                                             else:
                                                 installment_line.due_fees = 0.0
-                                            list_mv_line.append(
-                                                (0, 0, fees_dict))
-                                            fees_line.write(
-                                                {'base_paid': main_amt + fees_line.base_paid})
+                                            list_mv_line.append((0, 0, fees_dict))
+                                            fees_line.write({'base_paid':main_amt + fees_line.base_paid})
 
                                             if tx_cal_amt:
                                                 rem_fr_tx_amt = tx_cal_amt
@@ -876,7 +788,7 @@ class LoanPayment(models.Model):
                                                 main_amt = 0.0
                                                 break
 
-                                        # recent changes ...........................
+                                        ##recent changes ...........................
                                         if rem_fr_tx_amt:
                                             tx_amt = rem_fr_tx_amt
                                             if tx_amt:
@@ -884,8 +796,7 @@ class LoanPayment(models.Model):
 #                                                 fees_line_tax = tx_amt
                                                 if currency_id.id != company_curren.id:
                                                     amount_currency = tx_amt
-                                                    amount = currency_id.with_context(
-                                                        date=date_new).compute(tx_amt, company_curren)
+                                                    amount = currency_id.with_context(date=date_new).compute(tx_amt, company_curren)
                                                 else:
                                                     amount_currency = False
                                                 if type_line.tax_id:
@@ -893,22 +804,18 @@ class LoanPayment(models.Model):
                                                 else:
                                                     gl_acc = type_line.gl_code.id
                                                 if not amount_currency:
-                                                    fees_dict_tx.update(
-                                                        {'name': name_des, 'partner_id': self.loan_id.partner_id.id, 'account_id': gl_acc, 'debit': 0.0, 'credit': tx_amt})
+                                                    fees_dict_tx.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':gl_acc,'debit':0.0, 'credit':tx_amt})
                                                 else:
-                                                    fees_dict_tx.update({'name': name_des, 'partner_id': self.loan_id.partner_id.id, 'account_id': gl_acc,
-                                                                         'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency,
-                                                                         'currency_id': currency_id.id})
-                                                installment_line.with_context(
-                                                    {'fee': fees_dict_tx.get('credit')}).onchange_fees()
+                                                    fees_dict_tx.update({'name':name_des,'partner_id':self.loan_id.partner_id.id,'account_id':gl_acc,\
+                                                                      'debit':0.0, 'credit':amount,'amount_currency':-amount_currency,\
+                                                                      'currency_id':currency_id.id})
+                                                installment_line.with_context({'fee':fees_dict_tx.get('credit')}).onchange_fees()
 #                                                     total_paid_amount = total_paid_amount + tx_amt
-                                                list_mv_line.append(
-                                                    (0, 0, fees_dict_tx))
+                                                list_mv_line.append((0, 0, fees_dict_tx))
                                                 installment_line.outstanding_fees = installment_line.outstanding_fees - tx_amt
-                                                fees_line.write(
-                                                    {'tax_paid': tx_amt + fees_line.tax_paid})
+                                                fees_line.write({'tax_paid':tx_amt  + fees_line.tax_paid})
                                                 installment_line.paid_fees_tx = tx_amt
-                                                if datetime.datetime.strptime(installment_line.date, "%Y-%m-%d").date() <= today:
+                                                if datetime.datetime.strptime(str(installment_line.date), "%Y-%m-%d").date() <= today:
                                                     installment_line.due_fees = installment_line.outstanding_fees
                                                 else:
                                                     installment_line.due_fees = 0.0
@@ -921,73 +828,64 @@ class LoanPayment(models.Model):
                                 break_loop = True
                             break
 
+
             if installment_line.late_fee and installment_line.late_fee > 0.0:
                 if not late_fee:
                     continue
                 for type_line in search_ids:
                     if type_line.type == 'late_fee':
                         if not type_line.gl_code:
-                            raise UserError(
-                                _('Please Configure GLCode For fees Amount'))
+                            raise UserError(_('Please Configure GLCode For fees Amount'))
                         for fees_line in installment_line.fee_lines:
                             fees_dict = {}
                             interest_dict = {}
                             if fees_line.product_id.id == type_line.product_id.id and fees_line.is_paid == False:
-                                fees_line_base = round(
-                                    fees_line.base - fees_line.base_paid, 2)
-                                fees_line_tax = round(
-                                    fees_line.tax - fees_line.tax_paid, 2)
+                                fees_line_base = round(fees_line.base - fees_line.base_paid, 2)
+                                fees_line_tax = round(fees_line.tax - fees_line.tax_paid,2)
                                 if fees_line_base > 0.0 and late_fee >= fees_line_base + fees_line_tax:
                                     total_paid_amount = 0
                                     if fees_line_base:
                                         base_amt = fees_line_base
                                         if currency_id.id != company_curren.id:
                                             amount_currency = base_amt
-                                            amount = currency_id.with_context(
-                                                date=date_new).compute(base_amt, company_curren)
+                                            amount = currency_id.with_context(date=date_new).compute(base_amt, company_curren)
                                         else:
                                             amount_currency = False
                                         if not amount_currency:
-                                            fees_dict.update(
-                                                {'partner_id': self.loan_id.partner_id.id, 'account_id': type_line.gl_code.id, 'debit': 0.0, 'credit': base_amt})
+                                            fees_dict.update({'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,'debit':0.0, 'credit':base_amt})
                                         else:
-                                            fees_dict.update({'partner_id': self.loan_id.partner_id.id,
-                                                              'account_id': type_line.gl_code.id,
-                                                              'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency,
-                                                              'currency_id': currency_id.id})
+                                            fees_dict.update({'partner_id':self.loan_id.partner_id.id,\
+                                                              'account_id':type_line.gl_code.id,\
+                                                              'debit':0.0, 'credit':amount, 'amount_currency':-amount_currency,\
+                                                               'currency_id':currency_id.id})
 #                                         installment_line.with_context({'fee':fees_dict.get('credit')}).onchange_fees()
                                         total_paid_amount = total_paid_amount + base_amt
                                     if type_line.tax_id:
                                         tx_tot = fees_line_tax
                                         if currency_id.id != company_curren.id:
                                             amount_currency = tx_tot
-                                            amount = currency_id.with_context(
-                                                date=date_new).compute(tx_tot, company_curren)
+                                            amount = currency_id.with_context(date=date_new).compute(tx_tot, company_curren)
                                         else:
                                             amount_currency = False
                                         if not amount_currency:
-                                            interest_dict = self.get_interest_vals(
-                                                tx_tot, type_line.tax_id.account_id)
+                                            interest_dict = self.get_interest_vals(tx_tot, type_line.tax_id.account_id)
                                         else:
-                                            interest_dict.update({'partner_id': self.loan_id.partner_id.id,
-                                                                  'account_id': type_line.tax_id.account_id.id,
-                                                                  'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency,
-                                                                  'currency_id': currency_id.id})
+                                            interest_dict.update({'partner_id':self.loan_id.partner_id.id,\
+                                                                'account_id':type_line.tax_id.account_id.id,\
+                                                                'debit':0.0, 'credit':amount,'amount_currency':-amount_currency,\
+                                                               'currency_id':currency_id.id})
 #                                         if interest_dict :
 #                                             installment_line.with_context({'int':interest_dict.get('credit')}).onchange_interest()
                                         total_paid_amount = total_paid_amount + tx_tot
                                         installment_line.paid_late_fee_tx = tx_tot
 
-                                    fees_line.write({'base_paid': base_amt + fees_line.base_paid,
-                                                     'tax_paid': fees_line_tax + fees_line.tax_paid, 'is_paid': True})
+                                    fees_line.write({'base_paid':base_amt + fees_line.base_paid, 'tax_paid':fees_line_tax + fees_line.tax_paid, 'is_paid':True})
                                     if fees_dict:
-                                        list_mv_line.append((0, 0, fees_dict))
+                                            list_mv_line.append((0, 0, fees_dict))
                                     if interest_dict:
-                                        list_mv_line.append(
-                                            (0, 0, interest_dict))
+                                        list_mv_line.append((0, 0, interest_dict))
                                     if fees_line_tax:
-                                        late_fee = late_fee - \
-                                            (fees_line_base + fees_line_tax)
+                                        late_fee = late_fee - (fees_line_base + fees_line_tax)
                                     else:
                                         late_fee = late_fee - fees_line_base
 
@@ -1009,31 +907,27 @@ class LoanPayment(models.Model):
                                         if fees_line_base:
                                             if currency_id.id != company_curren.id:
                                                 amount_currency = fees_line_base
-                                                amount = currency_id.with_context(date=date_new).compute(
-                                                    fees_line_base, company_curren)
+                                                amount = currency_id.with_context(date=date_new).compute(fees_line_base, company_curren)
                                             else:
                                                 amount_currency = False
                                             if not amount_currency:
-                                                fees_dict.update(
-                                                    {'partner_id': self.loan_id.partner_id.id, 'account_id': type_line.gl_code.id, 'debit': 0.0, 'credit': fees_line_base})
+                                                fees_dict.update({'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,'debit':0.0, 'credit':fees_line_base})
                                             else:
-                                                fees_dict.update({'partner_id': self.loan_id.partner_id.id, 'account_id': type_line.gl_code.id,
-                                                                  'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency,
-                                                                  'currency_id': currency_id.id})
+                                                fees_dict.update({'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,\
+                                                                  'debit':0.0, 'credit':amount,'amount_currency':-amount_currency,\
+                                                                  'currency_id':currency_id.id})
 #                                             installment_line.with_context({'fee':fees_dict.get('credit')}).onchange_fees()
                                     #                                             total_paid_amount = total_paid_amount + fees_line_base
-                                            list_mv_line.append(
-                                                (0, 0, fees_dict))
+                                            list_mv_line.append((0, 0, fees_dict))
                                             base_paid = True
                                             installment_line.late_fee = installment_line.late_fee - fees_line_base
                                             installment_line.paid_late_fee = fees_line_base
-                                            fees_line.write(
-                                                {'base_paid': fees_line_base + fees_line.base_paid})
-                                            late_fee = round(late_fee, 2)
+                                            fees_line.write({'base_paid':fees_line_base  + fees_line.base_paid})
+                                            late_fee = round(late_fee,2)
                                             rem = late_fee - fees_line_base
                                             late_fee = rem
-                                        if late_fee >= fees_line_tax:
-                                            # new changes done hereesssssss for payment calculation ......
+                                        if late_fee >=fees_line_tax:
+                                            ## new changes done hereesssssss for payment calculation ......
                                             tx_amt = 0.0
                                             if type_line.tax_id:
                                                 tx_amt = fees_line_tax
@@ -1042,28 +936,23 @@ class LoanPayment(models.Model):
                                                     fees_line_tax = fees_line_tax - tx_amt
                                                     if currency_id.id != company_curren.id:
                                                         amount_currency = tx_amt
-                                                        amount = currency_id.with_context(
-                                                            date=date_new).compute(tx_amt, company_curren)
+                                                        amount = currency_id.with_context(date=date_new).compute(tx_amt, company_curren)
                                                     else:
                                                         amount_currency = False
                                                     if not amount_currency:
-                                                        fees_dict_tx.update(
-                                                            {'partner_id': self.loan_id.partner_id.id, 'account_id': type_line.gl_code.id, 'debit': 0.0, 'credit': tx_amt})
+                                                        fees_dict_tx.update({'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,'debit':0.0, 'credit':tx_amt})
                                                     else:
-                                                        fees_dict_tx.update({'partner_id': self.loan_id.partner_id.id, 'account_id': type_line.gl_code.id,
-                                                                             'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency,
-                                                                             'currency_id': currency_id.id})
+                                                        fees_dict_tx.update({'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,\
+                                                                          'debit':0.0, 'credit':amount,'amount_currency':-amount_currency,\
+                                                                          'currency_id':currency_id.id})
     #                                                 installment_line.with_context({'fee':fees_dict_tx.get('credit')}).onchange_fees()
                                     #                                                     total_paid_amount = total_paid_amount + tx_amt
-                                                    list_mv_line.append(
-                                                        (0, 0, fees_dict_tx))
+                                                    list_mv_line.append((0, 0, fees_dict_tx))
                                                     installment_line.late_fee = installment_line.late_fee - tx_amt
-                                                    fees_line.write(
-                                                        {'tax_paid': tx_amt + fees_line.tax_paid})
+                                                    fees_line.write({'tax_paid':tx_amt  + fees_line.tax_paid})
                                                     installment_line.paid_late_fee = tx_amt
                                                     tax_paid = True
-                                                    late_fee = round(
-                                                        late_fee, 2)
+                                                    late_fee = round(late_fee,2)
                                                     rem = late_fee - tx_amt
                                                     late_fee = rem
                                         else:
@@ -1075,27 +964,22 @@ class LoanPayment(models.Model):
                                                     fees_line_tax = fees_line_tax - tx_amt
                                                     if currency_id.id != company_curren.id:
                                                         amount_currency = tx_amt
-                                                        amount = currency_id.with_context(
-                                                            date=date_new).compute(tx_amt, company_curren)
+                                                        amount = currency_id.with_context(date=date_new).compute(tx_amt, company_curren)
                                                     else:
                                                         amount_currency = False
                                                     if not amount_currency:
-                                                        fees_dict_tx.update(
-                                                            {'partner_id': self.loan_id.partner_id.id, 'account_id': type_line.gl_code.id, 'debit': 0.0, 'credit': tx_amt})
+                                                        fees_dict_tx.update({'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,'debit':0.0, 'credit':tx_amt})
                                                     else:
-                                                        fees_dict_tx.update({'partner_id': self.loan_id.partner_id.id, 'account_id': type_line.gl_code.id,
-                                                                             'debit': 0.0, 'credit': amount, 'amount_currency': -amount_currency,
-                                                                             'currency_id': currency_id.id})
-                                                    installment_line.with_context(
-                                                        {'fee': fees_dict_tx.get('credit')}).onchange_fees()
+                                                        fees_dict_tx.update({'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,\
+                                                                          'debit':0.0, 'credit':amount,'amount_currency':-amount_currency,\
+                                                                          'currency_id':currency_id.id})
+                                                    installment_line.with_context({'fee':fees_dict_tx.get('credit')}).onchange_fees()
                                     #                                                     total_paid_amount = total_paid_amount + tx_amt
-                                                    list_mv_line.append(
-                                                        (0, 0, fees_dict_tx))
-                                                    fees_line.write(
-                                                        {'tax_paid': tx_amt + fees_line.tax_paid})
+                                                    list_mv_line.append((0, 0, fees_dict_tx))
+                                                    fees_line.write({'tax_paid':tx_amt  + fees_line.tax_paid})
                                                     installment_line.outstanding_fees = installment_line.outstanding_fees - tx_amt
                                                     installment_line.paid_fees_tx = tx_amt
-                                                    if datetime.datetime.strptime(installment_line.date, "%Y-%m-%d").date() <= today:
+                                                    if datetime.datetime.strptime(str(installment_line.date), "%Y-%m-%d").date() <= today:
                                                         installment_line.due_fees = installment_line.outstanding_fees
                                                     else:
                                                         installment_line.due_fees = 0.0
@@ -1106,8 +990,7 @@ class LoanPayment(models.Model):
 
                                         if not fees_line_base:
                                             base_paid = True
-                                        if base_paid and tax_paid:
-                                            fees_line.is_paid = True
+                                        if base_paid and tax_paid: fees_line.is_paid = True
                                         if not late_fee:
                                             if not main_amt:
                                                 break_loop = True
@@ -1119,26 +1002,22 @@ class LoanPayment(models.Model):
                                             late_fee = round(late_fee, 2)
                                             if currency_id.id != company_curren.id:
                                                 amount_currency = late_fee
-                                                amount = currency_id.with_context(
-                                                    date=date_new).compute(late_fee, company_curren)
+                                                amount = currency_id.with_context(date=date_new).compute(late_fee, company_curren)
                                             else:
                                                 amount_currency = False
                                             if not amount_currency:
-                                                fees_dict.update(
-                                                    {'partner_id': self.loan_id.partner_id.id, 'account_id': type_line.gl_code.id, 'debit': 0.0, 'credit': late_fee})
+                                                fees_dict.update({'partner_id':self.loan_id.partner_id.id,'account_id':type_line.gl_code.id,'debit':0.0, 'credit':late_fee})
                                             else:
-                                                fees_dict.update({'partner_id': self.loan_id.partner_id.id,
-                                                                  'account_id': type_line.gl_code.id, 'debit': 0.0,
-                                                                  'credit': amount, 'amount_currency': -amount_currency, 'currency_id': currency_id.id})
+                                                fees_dict.update({'partner_id':self.loan_id.partner_id.id,\
+                                                                  'account_id':type_line.gl_code.id,'debit':0.0,\
+                                                                'credit':amount,'amount_currency':-amount_currency,'currency_id':currency_id.id})
 
 
 #                                             total_paid_amount = total_paid_amount + late_fee
                                             installment_line.late_fee = installment_line.late_fee - late_fee
                                             installment_line.paid_late_fee = late_fee
-                                            list_mv_line.append(
-                                                (0, 0, fees_dict))
-                                            fees_line.write(
-                                                {'base_paid': late_fee + fees_line.base_paid})
+                                            list_mv_line.append((0, 0, fees_dict))
+                                            fees_line.write({'base_paid':late_fee + fees_line.base_paid})
                                             late_fee = 0.0
                                             break_loop = True
                                             if not main_amt:
@@ -1148,32 +1027,22 @@ class LoanPayment(models.Model):
                                                 if not main_amt:
                                                     break_loop = True
                                                     break
-#                                             if not main_amt:
-#                                                 break
-
-#                         if not main_amt:
-#                             break_loop = True
-#                             break
-
-                    # ==========================for late fees====================
-
             if not installment_line.outstanding_prin and not installment_line.outstanding_int and not installment_line.outstanding_fees and not installment_line.late_fee:
                 if installment_line.state not in ['skip']:
                     installment_line.state = 'paid'
             else:
                 installment_line.state = 'open'
         if main_amt:
-            if not self.loan_id.loan_type.account_id:
+            if not acc_loan.loan_type.account_id:
                 raise Warning(_("Please Define Excess Payment Account"))
-            excess_lines = self.get_extra_payment(
-                main_amt, self.loan_id, date_new, self.loan_id.loan_type.account_id, currency_id, company_curren)
+            excess_lines = self.get_extra_payment(main_amt, self.loan_id, date_new, self.loan_id.loan_type.account_id, currency_id, company_curren)
             if excess_lines:
                 list_mv_line.append((0, 0, excess_lines))
-            print(main_amt, 'Extra Amount================')
-            print("To Do For Customer pay extra Payment")
+            print (main_amt,'Extra Amount================')
+            print ("To Do For Customer pay extra Payment")
 
-        print(list_mv_line, 'list_of idct')
-        move_vals.update({'line_ids': list_mv_line})
+        print (list_mv_line,'list_of idct')
+        move_vals.update({'line_ids':list_mv_line})
         if 'from_payment_confirm_button' not in self._context:
             try:
                 move_id = self.env['account.move'].create(move_vals)
@@ -1192,13 +1061,13 @@ class LoanPayment(models.Model):
                     late_fee_amt = 0.0
                     fees_amt = l.paid_fees + l.paid_fees_tx
                     late_fee_amt = l.paid_late_fee + l.paid_late_fee_tx
-                    vals.update({'pay_date': date_new, 'prin_amt': l.paid_prin,
-                                 'int_amt': l.paid_int, 'fees_amt': fees_amt,
-                                 'late_fee_amt': late_fee_amt, 'base_late_fee_amt': l.paid_late_fee,
-                                 'base_late_fee_amt_tx': l.paid_late_fee_tx,
-                                 'move_id': move_id.id,
-                                 'base_fee_paid': l.paid_fees, 'base_fee_tax_paid': l.paid_fees_tx,
-                                 'line_id': l.id, 'state': 'draft'})
+                    vals.update({'pay_date':date_new, 'prin_amt':l.paid_prin,\
+                                 'int_amt':l.paid_int,'fees_amt':fees_amt,\
+                                 'late_fee_amt':late_fee_amt,'base_late_fee_amt':l.paid_late_fee ,\
+                                 'base_late_fee_amt_tx':l.paid_late_fee_tx,\
+                                 'move_id':move_id.id,\
+                                 'base_fee_paid':l.paid_fees,'base_fee_tax_paid':l.paid_fees_tx,\
+                                'line_id':l.id,'state':'draft'})
                     if vals:
                         self.env['payment.details'].create(vals)
                         l.paid_prin = 0.0
@@ -1210,6 +1079,8 @@ class LoanPayment(models.Model):
                     l.move_id = move_id.id
                 return move_id
 
+
+
     def get_currency_diff_vals(self, mv_vals):
 
         credit_tot = 0.0
@@ -1217,14 +1088,14 @@ class LoanPayment(models.Model):
         for line in mv_vals['line_ids']:
             debit_total += line[2]['debit']
             credit_tot += line[2]['credit']
-        print("Debit-", debit_total, "Credit", credit_tot)
+        print ("Debit-",debit_total,"Credit",credit_tot)
 
         diff = 0.0
         diff_credit = 0.0
         if credit_tot > debit_total:
             diff_credit = credit_tot - debit_total
         else:
-            diff = debit_total - credit_tot
+            diff =  debit_total - credit_tot
         for line in mv_vals['line_ids']:
             if diff_credit:
                 if line[2]['credit'] and line[2]['credit'] > 1:
@@ -1242,31 +1113,33 @@ class LoanPayment(models.Model):
 #             if diff > 0.0 and diff < 1:
 #                 debit_total += 0.01
 
+
+
+
     def get_extra_payment(self, main_amt, loan_id, date_new, account_id, currency_id, company_curren):
         move_lines_extra_payemnt = {}
 
         if currency_id.id != company_curren.id:
             amount_currency = main_amt
-            amount = currency_id.with_context(
-                date=date_new).compute(main_amt, company_curren)
+            amount = currency_id.with_context(date=date_new).compute(main_amt, company_curren)
         else:
             amount_currency = False
         if not amount_currency:
             move_lines_extra_payemnt.update({
-                'account_id': account_id.id,
-                'name': "Excess Payment",
-                'credit': main_amt,
-                'debit': 0.0,
-                'partner_id': loan_id.partner_id.id,
-            })
+                    'account_id':account_id.id,
+                    'name':"Excess Payment",
+                    'credit':main_amt,
+                    'debit':0.0,
+                    'partner_id':loan_id.partner_id.id,
+                    })
         else:
             move_lines_extra_payemnt.update({
-                'account_id': account_id.id,
-                'name': "Excess Payment",
-                'credit': amount,
-                'debit': 0.0,
-                'partner_id': loan_id.partner_id.id,
-                'amount_currency': -amount_currency,
-                'currency_id': currency_id.id
-            })
+                    'account_id':account_id.id,
+                    'name':"Excess Payment",
+                    'credit':amount,
+                    'debit':0.0,
+                    'partner_id':loan_id.partner_id.id,
+                    'amount_currency':-amount_currency,
+                    'currency_id':currency_id.id
+                    })
         return move_lines_extra_payemnt

@@ -177,13 +177,13 @@
 		</record>
 		<menuitem name="Loan Period" action="action_loan_installment_period"
 			id="menu_loan_installment_period" parent="menu_loan" sequence="2" />
-		
-		
-		<!-- Added by Arshad 
-		These are various actions of same model called because of 
+
+
+		<!-- Added by Arshad
+		These are various actions of same model called because of
 		view of dashboard and loan_details button and new loan creation via dashboard
 		original action is 'action_account_loan_tree_small' -->
-		
+
 		<record id="action_open_loan_details" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
 			<field name="res_model">account.loan</field>
@@ -192,14 +192,14 @@
 			<field name="context">{'search_default_partner_id':
 				active_id,'default_partner_id': active_id}</field>
 		</record>
-		
+
 		<record id="action_all_loans" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
 			<field name="res_model">account.loan</field>
 			<!--<field name="view_type">form</field>-->
 			<field name="view_mode">tree,form</field>
 		</record>
-		
+
 		<record id="action_draft_state_loan" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
 			<field name="res_model">account.loan</field>
@@ -207,7 +207,7 @@
 			<field name="view_mode">tree,form</field>
 			<field name="context">{'search_default_state': 'draft'}</field>
 		</record>
-		
+
 		<record id="action_apply_state_loan" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
 			<field name="res_model">account.loan</field>
@@ -215,7 +215,7 @@
 			<field name="view_mode">tree,form</field>
 			<field name="context">{'search_default_state': 'apply'}</field>
 		</record>
-		
+
 		<record id="action_partial_state_loan" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
 			<field name="res_model">account.loan</field>
@@ -223,7 +223,7 @@
 			<field name="view_mode">tree,form</field>
 			<field name="context">{'search_default_state': 'partial'}</field>
 		</record>
-		
+
 		<record id="action_approved_state_loan" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
 			<field name="res_model">account.loan</field>
@@ -231,7 +231,7 @@
 			<field name="view_mode">tree,form</field>
 			<field name="context">{'search_default_state': 'approved'}</field>
 		</record>
-		
+
 		<record id="action_done_state_loan" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
 			<field name="res_model">account.loan</field>
@@ -239,7 +239,7 @@
 			<field name="view_mode">tree,form</field>
 			<field name="context">{'search_default_state': 'done'}</field>
 		</record>
-		
+
 		<record id="action_cancel_state_loan" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
 			<field name="res_model">account.loan</field>
@@ -247,7 +247,7 @@
 			<field name="view_mode">tree,form</field>
 			<field name="context">{'search_default_state': 'cancel'}</field>
 		</record>
-		
+
 		<record id="action_new_loan_details" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
 			<field name="res_model">account.loan</field>
@@ -276,7 +276,7 @@
 				</div>
 			</field>
 		</record>
-		
+
 		<record id="account_loan_graph" model="ir.ui.view">
             <field name="name">account.loan.graph</field>
             <field name="model">account.loan</field>
@@ -287,7 +287,7 @@
                 </graph>
             </field>
         </record>
-        
+
 		<record model="ir.ui.view" id="view_partner_filter">
 			<field name="name">res.partner.filter.inherit</field>
 			<field name="model">res.partner</field>
@@ -387,24 +387,11 @@
 				</tree>
 			</field>
 		</record>
-
-		<!-- default filter named approved uncomplete customization -->
-		<!-- <record id="view_account_invoice_filter_inherit_invoices" model="ir.ui.view"> 
-			<field name="name">account.invoice.select.invoices</field> <field name="model">account.invoice</field> 
-			<field name="mode">primary</field> <field name="inherit_id" ref="account.view_account_invoice_filter"/> 
-			<field name="arch" type="xml"> <data> <filter name="refunds" position="replace"/> 
-			<filter name="Approved" string="Approved" domain="[('state', '=', 'Approved')"></filter> 
-			</data> </field> </record> <record id="partner_view_action_for_hostel" model="ir.actions.act_window"> 
-			<field name="name">Approved</field> <field name="res_model">account.loan</field> 
-			<field name="view_type">form</field> <field name="view_mode">tree,form</field> 
-			<field name="context">{"search_default_Approved":1}</field> </record> -->
-
-
-		<record model="ir.ui.view" id="account_loan_form">
+			<record model="ir.ui.view" id="account_loan_form">
 			<field name="name">account.loan.form</field>
 			<field name="model">account.loan</field>
 			<field name="arch" type="xml">
-				<form string="Loan Details">
+					<form string="Loan Details">
 					<header>
 						<button name="loan_draft" states="cancel" string="Re Apply"
 							type="object" />
@@ -412,8 +399,14 @@
 							string="Document Approval" /> -->
 						<button name="approve_finance" states="draft, apply"
 							type="object" string="Loan Sanctioned" />
-						<button name="approve_loan" states="apply,partial" type="object"
-							string="Disburse Loan" groups="pragtech_loan.group_loan_manager"/>
+						<button name="payment_schedule" states="apply" type="object"
+								string="Generate Payment Schedule" groups="pragtech_loan.group_loan_manager"/>
+
+					<!-- <button name="send2kivaloan" states="p_scheduled" type="object"
+						string="Send To Kiva" groups="pragtech_loan.group_loan_manager"/> -->
+
+					<button name="approve_loan" states="kiva_loan,p_scheduled" type="object"
+						string="Disburse Loan" groups="pragtech_loan.group_loan_manager"/>
 						<button name="approve_loan" states="to_approve" type="object"
 							string="Disburse Loan" groups="pragtech_loan.group_loan_manager"/>
 						<button name="loan_paid" states="partial,approved" type="object"
@@ -424,27 +417,26 @@
 							type="object" />
 						<button name="%(action_loan_payment)d" id="account_loan_payment_btn"
 							type="action"  string="Register Payment"
-							 class="oe_highlight" 
+							 class="oe_highlight"
 							attrs="{'invisible':['|',('return_type', '=', 'cheque'),('state','not in',['approved','partial'])]}"/>
-							
+
 						<button name="button_cancel_loan" id="account_cancel_loan_btn"
 							type="object"  string="Void Application"
-							 class="oe_highlight" 
+							 class="oe_highlight"
 							confirm="Are you sure to cancel laon ??" attrs="{'invisible':[('state','not in',['approved','partial','apply'])]}" groups="pragtech_loan.group_loan_manager"/>
-						
+
 						<button name="%(pragtech_loan.action_wizard_receipt_report)d"
 							type="action" string="Receipt Report" class="oe_highlight" groups="pragtech_loan.group_loan_manager"></button>
-						
+
 						<button name="button_fees_calculation" id="account_fees_calculation_btn"
 							type="object"  string="Set Manual Entries"
-							 class="oe_highlight" 
+							 class="oe_highlight"
 							 groups="pragtech_loan.group_loan_manager"/>
-						
+
 						<button name="%(action_loan_extended)d" type="action"  id="extended_loan_period" states="partial,approved"
-							  string="Extend Loan Period"
+							  string="Extension"
 							 class="oe_highlight"
 							 groups="pragtech_loan.group_allow_loan_extended_period"/>
-						
 						<field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done" />
 					</header>
 					<sheet>
@@ -457,8 +449,9 @@
 								<field name="name" />
 								<field name="apply_date" />
 								<field name="department" />
+                				<field name="activity_id"/>
+               					 <field name="loan_dataz" />
 								<field name="approve_date" string="Sanctioned Date" />
-<!-- 								<field name="is_refugee" widget="radio" options="{'horizontal': true}"  attrs="{'invisible':[('department', '!=', 'mbs')]}"/> -->
 								<field name="kiva_id" />
 								<field name="return_type" />
 								<field name="kiva_loan_id" />
@@ -466,30 +459,29 @@
 								<field name="user_id" />
 								<!-- class="oe_edit_only" -->
 								<field name="is_collateral" string="Is Collateral" />
-								<field name="repayment_basis"/> 
+								<field name="repayment_basis"/>
 								<field name="grace_period" string="Late Fee Grace Period (Days)"/>
 								<field name="classification" readonly="1" />
 								<field name="company_id"/>
 								<field name="interest_type"/>
 								<field name="is_group" invisible="1" />
-								
+
 							</group>
 							<notebook colspan="4">
 								<page string="Loan">
 									<group col="6" colspan="4">
-										<field name="partner_id" context="{'search_default_customer':1}" />
-										<!-- <field name="contact" domain="[('partner_id','=',partner_id)]"/> -->
+										<field name="partner_id" context="{'search_default_customer':1}"/>
 										<field name="req_amt" />
 										<field name="loan_type" domain="[('company_id','=',company_id)]"/>
 
 
 										<field name="loan_period" />
 										<field name="total_installment" readonly="0"/>
-
-
+										<field name="test_gp" />
 										<field name="approve_amount" />
 										<field name="loan_amount" string="Sanctioned Amount" />
 										<field name="process_fee" />
+									<!-- <field name="inta" /> -->
 										<field name="interest_rate" />
 
 
@@ -500,10 +492,10 @@
 										<separator string="Repayment Calculations" colspan="4" />
 										<button name="generate_payment_schedule" id="payment_generate_id"
 											type="object"  string="Generate Payment Schedule"
-												 class="oe_highlight" 
+												 class="oe_highlight"
 							 				groups="pragtech_loan.group_loan_manager"/>
 									</div>
-									
+
 									<field name="installment_id" colspan="4" nolabel="1">
 										<tree string="Installments" editable="bottom">
 											<field name="partner_id" invisible="1" />
@@ -537,7 +529,7 @@
 											<form string="Proof Document">
 												<header>
 													<button name="apply_varification" type="object"
-														states="draft" string="Apply For Verification" 
+														states="draft" string="Apply For Verification"
 														attrs="{'invisible':['|',('loan_id', '=', False)]}"/>
 													<button name="proof_varified" type="object" states="apply"
 														string="Accept" />
@@ -708,48 +700,62 @@
 									</field>
 								</page>
 								<page string="Re-Payment Details">
-									<group>
-										<field name="restrict_compute"  class="loan-custom" groups="base.group_no_one,base.group_system" string="Restrict Computation"/>
-									</group>
-									<group>
-										<field name="total_payment" string="Total Payment" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
-										<field name="total_payment1" string="Total Payment" attrs="{'invisible':[('restrict_compute', '=', False)]}"/>
-										<field name="total_principal_paid" string="Total Principal Paid" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
-										<field name="total_principal_paid1" string="Total Principal Paid" attrs="{'invisible':[('restrict_compute','!=',True)]}"/>
-										<field name="total_interest_paid" string="Total Interest Paid" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
-										<field name="total_interest_paid1" string="Total Interest Paid" attrs="{'invisible':[('restrict_compute', '=', False)]}"/>
-										<field name="total_fees_paid" string="Total Fees Paid" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
-										<field name="total_fees_paid1" string="Total Fees Paid" attrs="{'invisible':[('restrict_compute', '=', False)]}"/>
-										<field name="total_late_fee_paid" string="Total Late Fees Paid" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
-										<field name="total_late_fee_paid1" string="Total Late Fees Paid" attrs="{'invisible':[('restrict_compute', '=', False)]}"/>
-										<field name="total_excess_paid" string="Excess Amount Paid" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
-										<field name="total_excess_paid1" string="Excess Amount Paid" attrs="{'invisible':[('restrict_compute', '=', False)]}"/>
-										<!-- <field name="total_late_fees_paid"/> -->
-										
-									</group>
-	
-									<field name="repayment_details" string="Re-Payment Details">
-										<form>
-											<group>
+										<group>
+											<field name="restrict_compute"  class="loan-custom" groups="base.group_no_one,base.group_system" string="Restrict Computation"/>
+										</group>
+										<group>
+											<field name="total_payment" string="Total Payment" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
+											<field name="total_payment1" string="Total Payment" attrs="{'invisible':[('restrict_compute', '=', False)]}"/>
+											<field name="total_principal_paid" string="Total Principal Paid" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
+											<field name="total_principal_paid1" string="Total Principal Paid" attrs="{'invisible':[('restrict_compute','!=',True)]}"/>
+											<field name="total_interest_paid" string="Total Interest Paid" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
+											<field name="total_interest_paid1" string="Total Interest Paid" attrs="{'invisible':[('restrict_compute', '=', False)]}"/>
+											<field name="total_fees_paid" string="Total Fees Paid" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
+											<field name="total_fees_paid1" string="Total Fees Paid" attrs="{'invisible':[('restrict_compute', '=', False)]}"/>
+											<field name="total_late_fee_paid" string="Total Late Fees Paid" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
+											<field name="total_late_fee_paid1" string="Total Late Fees Paid" attrs="{'invisible':[('restrict_compute', '=', False)]}"/>
+											<field name="total_excess_paid" string="Excess Amount Paid" attrs="{'invisible':[('restrict_compute', '=', True)]}"/>
+											<field name="total_excess_paid1" string="Excess Amount Paid" attrs="{'invisible':[('restrict_compute', '=', False)]}"/>
+										</group>
+
+										<field name="repayment_details" string="Re-Payment Details">
+											<form>
+												<group>
+													<field name="release_number" />
+													<field name="name" />
+													<field name="pay_date" />
+													<field name="is_button_visible" invisible="0"/>
+													<field name="amt" sum="Re-Payment Total"/>
+												</group>
+												<group>
+													<group>
+														<field name="CustomerRefNumber"/>
+														<field name="bankreference"/>
+														<field name="paymentMode"/>
+													</group>
+													<group>
+														<field name="debitaccount"/>
+														<field name="debitcustname"/>
+														<field name="bank_note"/>
+													</group>
+												</group>
+											</form>
+											<tree>
 												<field name="release_number" />
 												<field name="name" />
 												<field name="pay_date" />
-												<field name="is_button_visible" invisible="0"/>
+												<field name="is_button_visible" invisible="1"/>
 												<field name="amt" sum="Re-Payment Total"/>
-											</group>
-										</form>
-										<tree>
-											<field name="release_number" />
-											<field name="name" />
-											<field name="pay_date" />
-											<field name="is_button_visible" invisible="1"/>
-											<field name="amt" sum="Re-Payment Total"/>
-											<button attrs="{'invisible':[('is_button_visible','=',False)]}" style="padding: 0px; background-color: transparent; border: 0px; font-size: 20px; color:red;" class="fa fa-remove" type="object" name="loan_payment_cancel" confirm="Are you sure. Do you want to continue ?"  title="Cancel"/>
-											<button attrs="{'invisible':[('is_button_visible','=',True)]}" style="padding: 0px; background-color: transparent; border: 0px; font-size: 20px;" class="fa fa-trash-o" type="object" name="delete_payment_line" confirm="Are you sure. Do you want to continue ?"  title="Delete"/>
-											<button attrs="{'invisible':[('is_button_visible','=',True)]}" style="padding: 0px; background-color: transparent; border: 0px; font-size: 20px;" class="fa fa-check-circle" type="object" name="re_payment_line" confirm="Are you sure. Do you want to continue ?"  title="Confirm"/>
-										</tree>
-									</field>
-								</page>
+												<field name="kiva_state"/>
+												<button attrs="{'invisible':[('is_button_visible','=',False)]}" style="padding: 0px; background-color: transparent; border: 0px; font-size: 20px; color:red;" class="fa fa-remove" type="object" name="loan_payment_cancel" confirm="Are you sure. Do you want to continue ?"  title="Cancel"/>
+												<!-- <button attrs="{'invisible':[('is_button_visible','=',True)]}" style="padding: 0px; background-color: transparent; border: 0px; font-size: 20px;" class="fa fa-trash-o" type="object" name="delete_payment_line" confirm="Are you sure. Do you want to continue ?"  title="Delete"/> -->
+												<!-- <button attrs="{'invisible':[('is_button_visible','=',True)]}" style="padding: 0px; background-color: transparent; border: 0px; font-size: 20px;" class="fa fa-trash-o" type="object" name="_delete_from_db" confirm="uko salama>>>?"  title="jarbu"/> -->
+												<button attrs="{'invisible':[('is_button_visible','=',True)]}" style="padding: 0px; background-color: transparent; border: 0px; font-size: 20px;" class="fa fa-check-circle" type="object" name="re_payment_line" confirm="Are you sure. Do you want to continue ?"  title="Confirm"/>
+												<button class="fa fa-check-circle oe_highlight" type="object" name="send_repayment2_kiva" attrs="{'invisible':[('kiva_state','=','is_sent')]}"/>
+												<button attrs="{'invisible':[('is_button_visible','=',True)]}" class='oe_highlight'  string="DELETE REPAYMENTS" type="object" name="delete_from_db" confirm="Your sure ??"  title="deleted"/>
+											</tree>
+										</field>
+									</page>
 								<page name="groups" string="Group Member"
 									attrs="{'invisible':[('is_group', '=', False)]}">
 									<field name="group_members" required="1">
@@ -784,7 +790,6 @@
 				</form>
 			</field>
 		</record>
-
 		<record model="ir.ui.view" id="view_account_loan_pivot">
 			<field name="name">account.loan.pivot</field>
 			<field name="model">account.loan</field>
@@ -836,7 +841,6 @@
 					<field name="state" />
 					<separator/>
 					<filter name="draft" string="New" domain="[('state','=','draft')]"/>
-					<!-- <filter name="proof approval" string="Proof Approved" domain="[('state','=','proof approval')]"/> -->
 					<filter name="apply" string="Loan Sanctioned" domain="[('state','=','apply')]"/>
 					<filter name="partial" string="Partially Disbursed" domain="[('state','=','partial')]"/>
 					<filter name="approved" string="Loan Disbursed" domain="[('state','=','approved')]"/>
@@ -1077,6 +1081,6 @@
 		<menuitem name="Collateral Type" id="menu_account_loan_collateral_menu"
 			action="action_account_loan_collateral_type" parent="menu_loan"
 			sequence="3" />
-		
+
 	</data>
 </odoo>
