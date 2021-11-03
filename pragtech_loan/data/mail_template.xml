@@ -3,7 +3,7 @@
 	<data noupdate="0">
 	
 		<!-- These data are for dashboard purpose -->
-		<record model="account.loan.dashboard" id="account_loan_dashboard_demo1">
+		<!-- <record model="account.loan.dashboard" id="account_loan_dashboard_demo1">
 			<field name="name">Loan Dashboard</field>
 		</record>
 		<record model="account.loan.dashboard" id="account_loan_dashboard_demo2">
@@ -27,7 +27,7 @@
 		</record>
 		<record model="account.loan.dashboard" id="account_loan_dashboard_demo8">
 			<field name="name">PAR30</field>
-		</record>
+		</record> -->
 		
 		
 		<record id="email_template_loan_creation" model="mail.template">

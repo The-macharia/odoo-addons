@@ -662,7 +662,8 @@ class account_loan_dashboard(models.Model):
 #                             if paid_line[0] is not None:
 #                                 bal_pri30day += paid_line[0]
 
-                    if inst.date and datetime.strptime(inst.date, "%Y-%m-%d").date() <= datetime.strptime(today, "%Y-%m-%d").date():
+#                     if inst.date and datetime.strptime(inst.date, "%Y-%m-%d").date() <= datetime.strptime(today, "%Y-%m-%d").date():
+                    if inst.date and inst.date.strftime('%d/%m/%Y') <= date.today().strftime('%d/%m/%Y'):
                         pay_line = self.env['payment.details'].search([('line_id','=',inst.id),('state','!=','cancel')])
                         if pay_line:
                             l2 = [pline.prin_amt for pline in pay_line if pline.pay_date if datetime.strptime(pline.pay_date, "%Y-%m-%d").date() <= datetime.strptime(today, "%Y-%m-%d").date()]
