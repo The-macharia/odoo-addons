@@ -6,15 +6,13 @@
 			<field name="model">account.loan</field>
 			<field name="inherit_id" ref="pragtech_loan.acc_loan_search_filter" />
 			<field name="arch" type="xml">
-				<xpath expr="/search/group/filter[@name='group_city']"
-					position="after">
-					<filter name="group_business_industry_id" string="Industry Sector"
-						context="{'group_by': 'business_industry_id'}" />
+				<xpath expr="/search/group/filter[@name='group_city']" position="after">
+					<filter name="group_business_industry_id" string="Industry Sector" context="{'group_by': 'business_industry_id'}" />
 					<filter name="group_gender" string="Gender" context="{'group_by': 'gender'}" />
 				</xpath>
 			</field>
 		</record>
-		
+
 		<!-- For men gender action -->
 		<record id="action_gender_male_loan" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
@@ -22,7 +20,7 @@
 			<field name="view_mode">tree,form</field>
 			<field name="domain">[('state', 'in', ['done', 'partial', 'approved']), ('gender','=','male')]</field>
 		</record>
-		
+
 		<!-- For female gender action -->
 		<record id="action_gender_female_loan" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
@@ -30,7 +28,7 @@
 			<field name="view_mode">tree,form</field>
 			<field name="domain">[('state', 'in', ['done', 'partial', 'approved']), ('gender','=','female')]</field>
 		</record>
-		
+
 		<!-- For undefined gender action -->
 		<record id="action_gender_undefined_loan" model="ir.actions.act_window">
 			<field name="name">Loan Details</field>
@@ -40,76 +38,7 @@
 		</record>
 
 
-		<record model="ir.ui.view" id="acc_loan_search_filter_inherit_id">
-			<field name="name">account.loan.dashboard.inherited</field>
-			<field name="model">account.loan.dashboard</field>
-			<field name="inherit_id" ref="pragtech_loan.account_loan_dashboard_kanban_view" />
-			<field name="arch" type="xml">
-				<xpath expr="//t[@t-name='Gender']" position="replace">
-					<t t-name="Gender">
-						<div t-attf-class="o_kanban_card_header">
-							<div class="o_kanban_card_header_title">
-								<div class="o_primary">
-									<h3>Gender of owner</h3>
-								</div>
-								<div class="o_secondary">
-								</div>
-							</div>
-						</div>
-						<div class="row" style="margin-bottom: 6%;">
-							<div class="col-xs-6 o_kanban_primary_left"></div>
-							<div class="col-xs-6 o_kanban_primary_right text-right">
-									<a name="%(aec_partner_extension.action_gender_male_loan)d" type="action">
-						                		<span class="o_value pull-left" >Male</span>
-												<span class="o_value pull-left" style="width: 65px;">
-													<field name="male_loan_count" />
-												</span>
-												<span class="o_value pull-left"  style="width: 123px;">
-													<field name="male_loan_total"/>
-												</span>
-					                </a>
-					                <br />
-					                <a name="%(aec_partner_extension.action_gender_female_loan)d" type="action">
-						                		<span class="o_value pull-left">Female</span>
-												<span class="o_value pull-left" style="width: 52px;">
-													<field name="female_loan_count" />
-												</span>
-												<span class="o_value pull-left" style="width: 123px;">
-													<field name="female_loan_total"/>
-												</span>
-												
-					                </a>
-					                <br />
-					                <a name="%(aec_partner_extension.action_gender_undefined_loan)d" type="action">
-						                		<span class="o_value pull-left">Undefined</span>
-												<span class="o_value pull-left" style="width: 38px;">
-													<field name="undefined_loan_count" />
-												</span>
-												<span class="o_value pull-left" style="width: 123px;">
-													<field name="undefined_loan_total"/>
-												</span>
-					                </a>
-							</div>
-						</div>
-						<div class="row" style="margin-bottom: 8%;">
-							<div class="col-xs-6 o_kanban_primary_left"></div>
-							<div class="col-xs-6 o_kanban_primary_right text-right">
-								<h3><strong style="font-size: 14px;">
-									<span>M</span>
-									<field name="get_male_percent" /> <span>%</span><br/>
-									<span>F</span>
-									<field name="get_female_percent" /> <span>%</span>
-								</strong></h3>
-							</div>
-						</div>
-						<div style="margin-bottom: -3%;margin-top: 9%;">
-							<field name="gender_graph_detail" t-att-graph_type="'bar'"
-								widget="dashboard_graph" />
-						</div>
-					</t>
-				</xpath>
-			</field>
-		</record>
+		<!-- <record model="ir.ui.view" id="acc_loan_search_filter_inherit_id"> <field name="name">account.loan.dashboard.inherited</field> <field name="model">account.loan.dashboard</field> <field name="inherit_id" ref="pragtech_loan.account_loan_dashboard_kanban_view" /> <field name="arch" type="xml"> <xpath expr="//t[@t-name='Gender']" position="replace"> <t t-name="Gender"> <div t-attf-class="o_kanban_card_header"> <div class="o_kanban_card_header_title"> <div class="o_primary"> <h3>Gender of owner</h3> </div> <div class="o_secondary"> </div> </div> </div> <div class="row" style="margin-bottom: 6%;"> <div class="col-xs-6 o_kanban_primary_left"></div> <div class="col-xs-6 o_kanban_primary_right text-right"> <a name="%(aec_partner_extension.action_gender_male_loan)d" type="action"> <span class="o_value pull-left" >Male</span> <span class="o_value pull-left" style="width: 65px;"> <field name="male_loan_count" /> </span> <span class="o_value pull-left" style="width: 123px;"> <field name="male_loan_total"/> </span> </a> <br /> <a name="%(aec_partner_extension.action_gender_female_loan)d" type="action"> <span class="o_value pull-left">Female</span> <span class="o_value pull-left" style="width: 52px;"> <field name="female_loan_count" /> </span> <span class="o_value pull-left" style="width: 123px;"> <field name="female_loan_total"/> </span> </a> <br /> <a name="%(aec_partner_extension.action_gender_undefined_loan)d" type="action"> <span class="o_value pull-left">Undefined</span> <span class="o_value pull-left" style="width: 38px;"> <field name="undefined_loan_count" /> </span> <span class="o_value pull-left" style="width: 123px;"> <field name="undefined_loan_total"/> </span> </a> </div> </div> <div class="row" style="margin-bottom: 8%;"> <div class="col-xs-6 o_kanban_primary_left"></div> <div class="col-xs-6 o_kanban_primary_right text-right"> <h3><strong style="font-size: 14px;"> <span>M</span> <field name="get_male_percent" /> <span>%</span><br/> <span>F</span> <field name="get_female_percent" /> <span>%</span> </strong></h3> </div> </div> <div style="margin-bottom: -3%;margin-top: 9%;"> <field name="gender_graph_detail" t-att-graph_type="'bar'" widget="dashboard_graph" /> </div> </t> </xpath> </field> </record> -->
 
 	</data>
 </odoo>

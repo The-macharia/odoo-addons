@@ -1,18 +1,16 @@
-from odoo import api, models
+from odoo import models
+
 
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
-    
-    #@api.one
+
     def _prepare_analytic_line(self):
-        if not self.name:
-            default_name = self.name or (self.ref or '/' + ' -- ' + (self.partner_id and self.partner_id.name or '/'))
-            self.name = default_name
-        res = super(AccountMoveLine, self)._prepare_analytic_line()
-        if res:
-            return res[0]
-        return super(AccountMoveLine, self)._prepare_analytic_line()
-        
-            
-    
-    
+        for rec in self:
+            if not rec.name:
+                default_name = rec.name or (
+                    rec.ref or '/' + ' -- ' + (rec.partner_id and rec.partner_id.name or '/'))
+                rec.name = default_name
+            res = super(AccountMoveLine, rec)._prepare_analytic_line()
+            if res:
+                return res[0]
+            return super(AccountMoveLine, rec)._prepare_analytic_line()
