@@ -1,5 +1,10 @@
 from odoo import models, fields
 
+class ResPartnerBank(models.Model):
+    _inherit = 'res.partner.bank'
+
+    currency_id = fields.Many2one(comodel_name='res.currency', string='Currency')
+
 
 class AccountMove(models.Model):
     _inherit = 'account.move'

@@ -15,63 +15,63 @@
           </div>
         </t>
         <div class="page">
+          <br />
           <div class="row">
 
-            <div class="col-4">
-              <div name="div_entry">
-                <strong>
-                  <b>Entry No</b>
-                </strong>
-                <p>
-                  <span t-if="o.type == 'out_invoice' and o.state == 'posted'">Invoice</span>
-                  <span t-if="o.type == 'out_invoice' and o.state == 'draft'">Draft Invoice</span>
-                  <span t-if="o.type == 'out_invoice' and o.state == 'cancel'">Cancelled Invoice</span>
-                  <span t-if="o.type == 'out_refund'">Credit Note</span>
-                  <span t-if="o.type == 'in_refund'">Vendor Credit Note</span>
-                  <span t-if="o.type == 'in_invoice'">Vendor Bill</span>
-                  <span t-if="o.name != '/'" t-field="o.name" />
-                </p>
-              </div>
+            <div class="col-3" name="div_entry">
+              <strong>
+                <b>Invoice No</b>
+              </strong>
+              <p class="border border-dark text-center border-2">
+                <span t-if="o.type == 'out_invoice' and o.state == 'posted'">Invoice</span>
+                <span t-if="o.type == 'out_invoice' and o.state == 'draft'">Draft Invoice</span>
+                <span t-if="o.type == 'out_invoice' and o.state == 'cancel'">Cancelled Invoice</span>
+                <span t-if="o.type == 'out_refund'">Credit Note</span>
+                <span t-if="o.type == 'in_refund'">Vendor Credit Note</span>
+                <span t-if="o.type == 'in_invoice'">Vendor Bill</span>
+                <span t-if="o.name != '/'" t-field="o.name" />
+              </p>
             </div>
 
-            <div class="col-4">
-              <div name="div_nature_of_goods">
-                <strong>
-                  <b>Nature Of Goods</b>
-                </strong>
-                <p t-field="o.goods_nature" />
-              </div>
+            <div class="col-3" t-if="o.ref" name="reference">
+              <strong>Reference:</strong>
+              <p class="border border-dark text-center border-2" t-field=" o.ref" />
             </div>
-            <div class="col-4">
-              <div name="entry">
-                <strong>
-                  <b>KGS</b>
-                </strong>
-                <p t-field="o.total_kgs" />
-              </div>
+
+            <div class="col-3 " t-if="o.invoice_date" name="invoice_date">
+              <strong>Invoice Date:</strong>
+              <p class="border border-dark text-center border-2" t-field=" o.invoice_date" />
+            </div>
+
+            <div class="col-3" t-if="o.invoice_date_due and o.type == 'out_invoice' and o.state == 'posted'" name="due_date">
+              <strong>Due Date:</strong>
+              <p class="border border-dark text-center border-2" t-field="o.invoice_date_due" />
             </div>
           </div>
 
-          <div id="informations" class="row mt32 mb32">
-            <div class="col-auto mw-100 mb-2" t-if="o.invoice_date" name="invoice_date">
-              <strong>Invoice Date:</strong>
-              <p class="m-0" t-field="o.invoice_date" />
+          <div id="informations" class="row mt4 mb4">
+            <div class="col-auto" name="div_nature_of_goods">
+              <strong>
+                <b>Nature Of Goods</b>
+              </strong>
+              <p class="border border-dark text-center border-2" t-field="o.goods_nature" />
             </div>
-            <div class="col-auto mw-100 mb-2" t-if="o.invoice_date_due and o.type == 'out_invoice' and o.state == 'posted'" name="due_date">
-              <strong>Due Date:</strong>
-              <p class="m-0" t-field="o.invoice_date_due" />
+
+            <div class="col-auto" name="entry">
+              <strong>
+                <b>KGS</b>
+              </strong>
+              <p class="border border-dark text-center border-2" t-field="o.total_kgs" />
             </div>
-            <div class="col-auto mw-100 mb-2" t-if="o.invoice_origin" name="origin">
+
+            <div class="col-auto" t-if="o.invoice_origin" name="origin">
               <strong>Source:</strong>
               <p class="m-0" t-field="o.invoice_origin" />
             </div>
-            <div class="col-auto mw-100 mb-2" t-if="o.partner_id.ref" name="customer_code">
+
+            <div class="col-auto" t-if="o.partner_id.ref" name="customer_code">
               <strong>Customer Code:</strong>
               <p class="m-0" t-field="o.partner_id.ref" />
-            </div>
-            <div class="col-auto mw-100 mb-2" t-if="o.ref" name="reference">
-              <strong>Reference:</strong>
-              <p class="m-0" t-field="o.ref" />
             </div>
           </div>
 
@@ -87,19 +87,19 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <td>
+                    <td class="border border-dark text-center border-2">
                       <span t-field="o.mawb" />
                     </td>
-                    <td>
+                    <td class="border border-dark text-center border-2">
                       <span t-field="o.flight" />
                     </td>
-                    <td>
+                    <td class="border border-dark text-center border-2">
                       <span t-field="o.no_of_packages" />
                     </td>
-                    <td>
+                    <td class="border border-dark text-center border-2">
                       <span t-field="o.hawb" />
                     </td>
-                    <td>
+                    <td class="border border-dark text-center border-2">
                       <span t-field="o.cbm" />
                     </td>
                   </tr>
@@ -202,7 +202,7 @@
           </table>
 
           <div class="clearfix">
-            <div id="total" class="row">
+            <div id="total" class="row mb-4">
               <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'}">
                 <br />
                 <br />
@@ -293,10 +293,14 @@
               <span t-field="o.company_id" />
             </h6>
           </div>
-          <div class="row justify-content-between d-flex" t-foreach="o.company_id.partner_id.bank_ids" t-as="bank">
-            <div class="col-auto">
+
+          <div class="row d-flex justify-content-evenly">
+            <div t-foreach="o.company_id.partner_id.bank_ids" t-as="bank" class="col-auto border border-dark mr-1 text-center border-2">
               <p class="m-0">
-                <b>BANK DETAILS</b>
+                <b>
+                  BANK DETAILS &#10;
+                  <span t-field="bank.currency_id" />
+                </b>
               </p>
               <p class="m-0">
                 BANK NAME:
@@ -318,6 +322,7 @@
               </p>
             </div>
           </div>
+
         </div>
       </t>
     </template>
