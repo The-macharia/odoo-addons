@@ -1,9 +1,11 @@
 from odoo import models, fields
 
+
 class ResPartnerBank(models.Model):
     _inherit = 'res.partner.bank'
 
-    currency_id = fields.Many2one(comodel_name='res.currency', string='Currency')
+    currency_id = fields.Many2one(
+        comodel_name='res.currency', string='Currency')
 
 
 class AccountMove(models.Model):
@@ -16,6 +18,7 @@ class AccountMove(models.Model):
     flight = fields.Char(string='Flight')
     cbm = fields.Char(string='CBM')
     total_kgs = fields.Float(string='KGS')
+    terms = fields.Char('Terms')
 
 
 class SaleOrder(models.Model):
@@ -28,6 +31,7 @@ class SaleOrder(models.Model):
     flight = fields.Char(string='Flight')
     cbm = fields.Char(string='CBM')
     total_kgs = fields.Float(string='KGS')
+    terms = fields.Char('Terms')
 
     def _prepare_invoice(self):
         self.ensure_one()
@@ -40,6 +44,7 @@ class SaleOrder(models.Model):
             'total_kgs': self.total_kgs,
             'flight': self.flight,
             'mawb': self.mawb,
+            'terms': self.terms,
         })
 
         return res

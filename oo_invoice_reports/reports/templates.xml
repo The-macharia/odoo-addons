@@ -82,6 +82,7 @@
                   <th>MAWB</th>
                   <th>FLIGHT</th>
                   <th>NO OF PACKAGES</th>
+                  <th>TERMS</th>
                   <th>HAWB</th>
                   <th>CBM</th>
                 </thead>
@@ -95,6 +96,9 @@
                     </td>
                     <td class="border border-dark text-center border-2">
                       <span t-field="o.no_of_packages" />
+                    </td>
+                    <td class="border border-dark text-center border-2">
+                      <span t-field="o.terms" />
                     </td>
                     <td class="border border-dark text-center border-2">
                       <span t-field="o.hawb" />
@@ -294,7 +298,7 @@
             </h6>
           </div>
 
-          <div class="row d-flex justify-content-evenly">
+          <div class="row" style="display: flex; display: -moz-box; display: -webkit-box; -webkit-box-pack: justify; -moz-box-pack:justify;">
             <div t-foreach="o.company_id.partner_id.bank_ids" t-as="bank" class="col-auto border border-dark mr-1 text-center border-2">
               <p class="m-0">
                 <b>

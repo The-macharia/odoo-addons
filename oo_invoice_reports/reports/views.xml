@@ -13,6 +13,7 @@
           <field name="goods_nature" />
           <field name="hawb" />
           <field name="mawb" />
+          <field name="terms" />
         </xpath>
         <xpath expr="//field[@name='currency_id']" position="after">
           <field name="cbm" />
@@ -34,6 +35,8 @@
           <field name="goods_nature" />
           <field name="hawb" />
           <field name="mawb" />
+          <field name="mawb" />
+          <field name="terms" />
         </xpath>
 
         <xpath expr="//field[@name='payment_term_id']" position="after">
