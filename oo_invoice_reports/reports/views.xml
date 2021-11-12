@@ -35,7 +35,6 @@
           <field name="goods_nature" />
           <field name="hawb" />
           <field name="mawb" />
-          <field name="mawb" />
           <field name="terms" />
         </xpath>
 
