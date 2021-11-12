@@ -5,6 +5,7 @@ import sys
 from flask import Flask, request
 import win32print
 import win32api
+from waitress import serve
 
 app = Flask(__name__)
 
@@ -33,4 +34,5 @@ def sign():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # app.run(debug=True)
+    serve(app, host='0.0.0.0', port=5000)
