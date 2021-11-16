@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="oo_menu_excel_reports" model="ir.ui.menu">
+            <field name="name">Excel Reports</field>
+            <field name="sequence" eval="11" />
+            <field name="parent_id" ref="account.menu_finance_reports" />
+        </record>
+
+        <record id="oo_menu_analytic_report" model="ir.ui.menu">
+            <field name="name">Analytic Report</field>
+            <field name="sequence" eval="1" />
+            <field name="action" ref="invoice_report.oo_action_analytic_report_wizard" />
+            <field name="parent_id" ref="invoice_report.oo_menu_excel_reports" />
+        </record>
+
+    </data>
+</odoo>
