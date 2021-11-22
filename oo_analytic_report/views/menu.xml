@@ -11,8 +11,8 @@
         <record id="oo_menu_analytic_report" model="ir.ui.menu">
             <field name="name">Analytic Report</field>
             <field name="sequence" eval="1" />
-            <field name="action" ref="invoice_report.oo_action_analytic_report_wizard" />
-            <field name="parent_id" ref="invoice_report.oo_menu_excel_reports" />
+            <field name="action" ref="oo_analytic_report.oo_action_analytic_report_wizard" />
+            <field name="parent_id" ref="oo_analytic_report.oo_menu_excel_reports" />
         </record>
 
     </data>

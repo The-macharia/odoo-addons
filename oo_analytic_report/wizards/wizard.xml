@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data noupdate="0">
+        <!-- analytic.report.wizard form view -->
+        <record id="oo_analytic_report_wizard_form" model="ir.ui.view">
+            <field name="name">analytic.report.wizard.view.form</field>
+            <field name="model">analytic.report.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="period" widget="radio" />
+                            <field name="date_start" attrs="{ 'invisible':[('period','!=','between')],'required':[('period','=','between')] }" />
+                            <field name="date_end" attrs="{ 'invisible':[('period','!=','between')],'required':[('period','=','between')] }" />
+                        </group>
+                        <footer>
+                            <button string="Cancel" special="cancel" class="oe_link" />
+                            <button name="generate_report" string="Generate Report" type="object" class="oe_highlight" default_focus="1" />
+                        </footer>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="oo_action_analytic_report_wizard" model="ir.actions.act_window">
+            <field name="name">Analytic Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">analytic.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="oo_analytic_report_wizard_form" />
+            <field name="target">new</field>
+        </record>
+
+
+        <record id="oo_wizard_excel_report_form" model="ir.ui.view">
+            <field name="name">Analytic Report Download</field>
+            <field name="model">excel.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Excel Report">
+                    <sheet>
+                        <group>
+                            <field name="name" invisible="1" />
+                            <field name="report" readonly="1" filename="name" />
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

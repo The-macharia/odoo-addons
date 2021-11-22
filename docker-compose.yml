@@ -18,7 +18,7 @@ services:
                 - db:db
         volumes:
                 - ./config:/etc/odoo
-                - /home/b14/Desktop/odoo-addons:/mnt/extra-addons
+                - /home/b14/Desktop/my_addons:/mnt/extra-addons
                 - /home/b14/odoo-dev/12addons:/mnt/third  
                 - odoo12-data:/var/lib/odoo
 volumes:
