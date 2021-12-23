@@ -24,6 +24,7 @@
               </strong>
               <p class="border border-dark text-center border-2">
                 <!-- <span t-if="o.type == 'out_invoice' and o.state == 'posted'">Invoice</span> <span t-if="o.type == 'out_invoice' and o.state == 'draft'">Draft Invoice</span> <span t-if="o.type == 'out_invoice' and o.state == 'cancel'">Cancelled Invoice</span> <span t-if="o.type == 'out_refund'">Credit Note</span> <span t-if="o.type == 'in_refund'">Vendor Credit Note</span> <span t-if="o.type == 'in_invoice'">Vendor Bill</span> -->
+                <span t-if="o.name == '/'">Draft Invoice</span>
                 <span t-if="o.name != '/'" t-field="o.name" />
               </p>
             </div>
@@ -52,11 +53,15 @@
               <p class="border border-dark text-center border-2" t-field="o.goods_nature" />
             </div>
 
-            <div class="col-auto" name="entry">
+            <div class="col-auto" name="kgs">
               <strong>
                 <b>KGS</b>
               </strong>
               <p class="border border-dark text-center border-2" t-field="o.total_kgs" />
+            </div>
+            <div class="col-auto" t-if="o.entry" name="entry">
+              <strong>Entry:</strong>
+              <p class="border border-dark text-center border-2" t-field="o.entry" />
             </div>
 
             <div class="col-auto" t-if="o.invoice_origin" name="origin">
@@ -312,12 +317,6 @@
               <p class="m-0">
                 A/C NO:
                 <span t-field="bank.acc_number" />
-              </p>
-              <p>
-                BRANCH - BRANCH CODE:
-                <span t-field="bank.bank_id.street" />
-                - &#10;
-                <span t-field="bank.bank_id.bic" />
               </p>
             </div>
           </div>

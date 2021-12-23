@@ -19,6 +19,7 @@ class AccountMove(models.Model):
     cbm = fields.Char(string='CBM')
     total_kgs = fields.Float(string='KGS')
     terms = fields.Char('Terms')
+    entry = fields.Char(string='Entry')
 
 
 class SaleOrder(models.Model):
@@ -32,6 +33,7 @@ class SaleOrder(models.Model):
     cbm = fields.Char(string='CBM')
     total_kgs = fields.Float(string='KGS')
     terms = fields.Char('Terms')
+    entry = fields.Char(string='Entry')
 
     def _prepare_invoice(self):
         self.ensure_one()
@@ -45,6 +47,7 @@ class SaleOrder(models.Model):
             'flight': self.flight,
             'mawb': self.mawb,
             'terms': self.terms,
+            'entry': self.entry,
         })
 
         return res
