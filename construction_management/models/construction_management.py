@@ -74,11 +74,49 @@ class project_task(models.Model):
     stock_move_ids = fields.One2many('stock.move', 'project_stock_move_id')
 
 
+class SaleOrderLine(models.Model):
+    _inherit = 'sale.order.line'
+
+    def _prepare_procurement_values(self, group_id=False):
+        res = super()._prepare_procurement_values(group_id)
+
+        res.update({
+            'project_id': self.order_id.project_id.id,
+            'analytic_account_id': self.order_id.analytic_account_id.id
+        })
+        return res
+
+
+class StockRule(models.Model):
+    _inherit = 'stock.rule'
+
+    def _get_stock_move_values(self, product_id, product_qty, product_uom, location_id, name, origin, company_id, values):
+        res = super()._get_stock_move_values(product_id, product_qty,
+                                             product_uom, location_id, name, origin, company_id, values)
+        res.update({
+            'project_id': values.get('project_id'),
+            'analytic_account_id': values.get('analytic_account_id'),
+        })
+        return res
+
+
 class stock_move(models.Model):
     _inherit = 'stock.move'
 
     project_stock_move_id = fields.Many2one(
         'project.task', string='Stock Move')
+    project_id = fields.Many2one(
+        'project.project', string='Project')
+    analytic_account_id = fields.Many2one(
+        'account.analytic.account', string='Analytic Account')
+
+    def _get_new_picking_values(self):
+        res = super()._get_new_picking_values()
+        res.update({
+            'project_id': self.project_id.id,
+            'analytic_account_id': self.analytic_account_id.id
+        })
+        return res
 
 
 class product_template(models.Model):
@@ -192,8 +230,8 @@ class stock_picking(models.Model):
     job_orders_user_id = fields.Many2one('res.users', 'Task / Job Orders User')
     project_id = fields.Many2one(
         'project.project', 'Construction Project')
-    analylic_acc_id = fields.Many2one(
-        'account.analytic.account', 'Analylic Account')
+    analytic_account_id = fields.Many2one(
+        'account.analytic.account', 'Analytic Account')
     bill_of_qty_id = fields.Many2one('bill.quantity', 'Bill Of Quantity')
     cost_equipment = fields.Float(string="Equipment Cost")
     worker_cost = fields.Float(
@@ -228,7 +266,7 @@ class stock_picking(models.Model):
                         'sale_ids': [(4, sale_order_id.id)] if sale_order_id else False,
                         'picking_ids': [(4, rec.id)],
                         'total_cost': total_cost,
-                        'analytic_line_ids': [(4, rec.analytic_id.id)] if rec.analytic_id else False,
+                        'analytic_line_ids': [(4, rec.analytic_account_id.id)] if rec.analytic_account_id else False,
                     })
                 else:
                     vals = {
@@ -240,7 +278,7 @@ class stock_picking(models.Model):
                         'picking_ids': [(4, rec.id)],
                         'uom_id': line.product_uom.id,
                         'sale_ids': [(4, sale_order_id.id)] if sale_order_id else False,
-                        'analytic_line_ids': [(4, rec.analytic_id.id)] if rec.analytic_id else False,
+                        'analytic_line_ids': [(4, rec.analytic_account_id.id)] if rec.analytic_account_id else False,
                     }
                     rec.project_id.write(
                         {'material_ids': [(0, 0, vals)]})
