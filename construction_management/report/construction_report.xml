@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <data>
+
+                <report id="report_custom_project" string="Projects" model="project.project" report_type="qweb-pdf" file="construction_management.report_project_project" name="construction_management.report_project_project" />
+
+                <report id="report_custom_project_note" string="Project Note" model="note.note" report_type="qweb-pdf" file="construction_management.report_project_note" name="construction_management.report_project_note" />
+
+                <report id="report_custom_project_job_order" string="Project Task" model="project.task" report_type="qweb-pdf" file="construction_management.report_project_job_order" name="construction_management.report_project_job_order" />
+
+                <report id="action_consumed_materials_report" string="Consumed Materials" model="project.project" report_type="qweb-pdf" file="construction_management.material_report" name="construction_management.material_report" />
+
+        </data>
+</odoo>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="inherit_bi_view_edit_project_form" model="ir.ui.view">
+            <field name="name">inherit.bi.view.edit.project.form</field>
+            <field name="model">project.project</field>
+            <field name="inherit_id" ref="project.edit_project"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='misc']" position="after">
+                    <group string="Custom" name="custom">
+                        <field name="project_cost"/>
+                    </group>
+                </xpath>
+                <notebook position="inside">
+                    <page string="Related Sale Order">
+                        <group>
+                            <field name="sale_order_ids" nolabel="1"/>
+                        </group>
+                    </page>
+                    <!-- <page string="Related Purchase Order"> -->
+                    <!-- <group> -->
+                    <!-- <field name="purchase_order_ids" nolabel="1"/> -->
+                    <!-- </group> -->
+                    <!-- </page> -->
+                    <page string="Inventory Usage">
+                        <center>
+                            <strong>
+                                <separator string="Inventory Usage By Bill Of Quantity"/>
+                            </strong>
+                        </center>
+                        <br/>
+                        <group>
+
+                            <field name="inventory_usages_ids" nolabel="1">
+                                <tree>
+                                    <field name="product_id"/>
+                                    <field name="uom_id"/>
+                                    <field name="qty"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal"/>
+
+                                </tree>
+
+                            </field>
+                        </group>
+                    </page>
+                    <page string="Consumed Materials">
+                        <group>
+                            <field name="material_ids" nolabel="1">
+                                <tree>
+                                    <field name="product_id"/>
+                                    <field name="uom_id"/>
+                                    <field name="quantity"/>
+                                    <field name="cost"/>
+                                    <field name="cost_total"/>
+                                    <field name="sale_ids" widget="many2many_tags"/>
+                                    <field name="picking_ids" widget="many2many_tags"/>
+                                </tree>
+                            </field>
+                        </group>
+                    </page>
+                    <page string="Project Deliverables">
+                        <group>
+                            <field name="project_deliverables_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="planned_qty"/>
+                                    <field name="used_qty"/>
+                                    <!-- <field name="status"/> -->
+                                </tree>
+
+                            </field>
+                        </group>
+                    </page>
+                    <page string="Work Package">
+                        <center>
+                            <strong>
+                                <separator string="Work Package By Bill Of Quantity"/>
+                            </strong>
+                        </center>
+                        <br/>
+                        <group>
+
+                            <field name="work_package_ids" nolabel="1">
+                                <tree>
+                                    <field name="work_package_id"/>
+                                    <field name="uom_id"/>
+                                    <field name="qty"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal"/>
+
+                                </tree>
+
+                            </field>
+                        </group>
+                    </page>
+                </notebook>
+            </field>
+        </record>
+
+        <!-- model.name inherit form view -->
+        <record id="oo_sale_order_form" model="ir.ui.view">
+            <field name="name">sale.order.inherit.view.form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='payment_term_id']" position="after">
+                    <field name="project_id"/>
+                </xpath>
+            </field>
+        </record>
+        <!-- model.name inherit tree view -->
+    <record id="oo_sale_order_tree" model="ir.ui.view">
+        <field name="name">sale.order.inherit.view.tree</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_quotation_tree_with_onboarding"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='expected_date']" position="after">
+                <field name="project_id"/>
+            </xpath>
+        </field>
+    </record>
+    </data>
+</odoo>
