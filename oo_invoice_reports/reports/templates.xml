@@ -207,15 +207,7 @@
 
           <div class="clearfix">
             <div id="total" class="row mb-4">
-              <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'}">
-                <br />
-                <br />
-                <p>PREPARED BY:_________________________________</p>
-                <br />
-                <br />
-                <p>APPROVED BY:_________________________________</p>
-              </div>
-
+              <div class="col-6" />
               <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'}">
                 <table class="table table-sm" style="page-break-inside: avoid;">
                   <tr class="border-black o_subtotal" style="">
@@ -298,26 +290,25 @@
             </h6>
           </div>
 
-          <div class="row" style="display: flex; display: -moz-box; display: -webkit-box; -webkit-box-pack: justify; -moz-box-pack:justify;">
-            <div t-foreach="o.company_id.partner_id.bank_ids" t-as="bank" class="col-auto border border-dark mr-1 text-center border-2">
-              <p class="m-0">
-                <b>
-                  BANK DETAILS &#10;
-                  <span t-field="bank.currency_id" />
-                </b>
-              </p>
-              <p class="m-0">
-                BANK NAME:
-                <span t-field="bank.bank_id.name" />
-              </p>
-              <p class="m-0">
-                A/C NAME:
-                <span t-field="bank.acc_holder_name" />
-              </p>
-              <p class="m-0">
-                A/C NO:
-                <span t-field="bank.acc_number" />
-              </p>
+          <div class="row w-100">
+            <div class="col-6">
+              <div class="border-2">
+                <p class="w-100 text-center">
+                  <strong>BANK DETAILS</strong>
+                </p>
+                <p class="p-0">Bank Name: &amp;nbsp; Stanbic Bank Kenya</p>
+                <p class="p-0">A/C Name: &amp;nbsp; Bima Clearing &amp; Forwading LTD</p>
+                <p class="p-0">A/C NO: &amp;nbsp; 0100004181209 (KES)</p>
+                <p class="p-0">A/C NO: &amp;nbsp; 0100000097572 (USD)</p>
+                <p class="p-0">Branch &amp; Code: &amp;nbsp; Chiromo Branch - 31007</p>
+              </div>
+            </div>
+            <div class="col-6">
+              <br />
+              <p>PREPARED BY:_________________________________</p>
+              <br />
+              <br />
+              <p>APPROVED BY:_________________________________</p>
             </div>
           </div>
 
