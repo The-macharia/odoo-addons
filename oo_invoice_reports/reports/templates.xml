@@ -64,7 +64,7 @@
               <p class="border border-dark text-center border-2" t-field="o.entry" />
             </div>
 
-            <div class="col-auto" t-if="o.invoice_origin" name="origin">
+            <div class="col-auto" t-if="o.invoice_origin == 'idfoer0'" name="origin">
               <strong>Source:</strong>
               <p class="m-0" t-field="o.invoice_origin" />
             </div>
