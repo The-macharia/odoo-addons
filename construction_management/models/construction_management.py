@@ -248,6 +248,18 @@ class stock_picking(models.Model):
         self.job_orders_user_id = self.job_orders_id.user_id
         self.project_id = self.job_orders_id.project_id
 
+    def prepare_analytic_line(self, line, cost):
+        return {
+            'name': line.product_id.name,
+            'account_id': line.picking_id.analytic_account_id.id,
+            'product_id': line.product_id.id,
+            'product_uom_id': line.product_id.uom_id.id,
+            'unit_amount': line.product_uom_qty,
+            'date': line.picking_id.scheduled_date.date(),
+            'amount': cost * -1,
+            'partner_id': line.partner_id.id,
+        }
+
     def button_validate(self):
         res = super().button_validate()
         for rec in self.filtered('project_id'):
@@ -256,16 +268,16 @@ class stock_picking(models.Model):
             for line in rec.move_ids_without_package:
                 is_to_update = rec.project_id.material_ids.filtered(
                     lambda x: x.product_id.id == line.product_id.id)
-                total_cost = line.product_id.standard_price * line.product_uom_qty
+                cost_total = line.product_id.standard_price * line.product_uom_qty
 
                 if is_to_update:
                     qty = is_to_update.quantity + line.product_uom_qty
-                    total_cost = is_to_update.total_cost + total_cost
+                    cost_total = is_to_update.cost_total + cost_total
                     is_to_update.write({
                         'quantity': qty,
                         'sale_ids': [(4, sale_order_id.id)] if sale_order_id else False,
                         'picking_ids': [(4, rec.id)],
-                        'total_cost': total_cost,
+                        'cost_total': cost_total,
                         'analytic_line_ids': [(4, rec.analytic_account_id.id)] if rec.analytic_account_id else False,
                     })
                 else:
@@ -274,7 +286,7 @@ class stock_picking(models.Model):
                         'product_id': line.product_id.id,
                         'quantity': line.product_uom_qty,
                         'cost': line.product_id.standard_price,
-                        'cost_total': total_cost,
+                        'cost_total': cost_total,
                         'picking_ids': [(4, rec.id)],
                         'uom_id': line.product_uom.id,
                         'sale_ids': [(4, sale_order_id.id)] if sale_order_id else False,
@@ -282,5 +294,8 @@ class stock_picking(models.Model):
                     }
                     rec.project_id.write(
                         {'material_ids': [(0, 0, vals)]})
+                analytic_line_values = rec.prepare_analytic_line(
+                    line, cost_total)
+                self.env['account.analytic.line'].create(analytic_line_values)
 
         return res

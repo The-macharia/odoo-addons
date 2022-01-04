@@ -55,8 +55,8 @@
                                     <field name="cost" />
                                     <field name="cost_total" sum="Total Cost" />
                                     <field name="sale_ids" widget="many2many_tags" optional="hide" />
-                                    <field name="picking_ids" widget="many2many_tags" />
-                                    <field name="analytic_line_ids" widget="many2many_tags" />
+                                    <field name="picking_ids" widget="many2many_tags" optional="hide" />
+                                    <field name="analytic_line_ids" widget="many2many_tags" optional="hide" />
                                 </tree>
                             </field>
                         </group>
