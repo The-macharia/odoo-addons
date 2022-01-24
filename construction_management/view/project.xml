@@ -112,7 +112,7 @@
             </field>
         </record>
         <!-- model.name inherit tree view -->
-        <record id="oo_sale_order_tree" model="ir.ui.view">
+        <record id="oo_sale_order_quotation_tree" model="ir.ui.view">
             <field name="name">sale.order.inherit.view.tree</field>
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_quotation_tree_with_onboarding" />
@@ -122,5 +122,18 @@
                 </xpath>
             </field>
         </record>
+
+        <!-- model.name inherit tree view -->
+        <record id="oo_sale_order_tree" model="ir.ui.view">
+            <field name="name">sale.order.inherit.view.tree</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_tree" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='expected_date']" position="after">
+                    <field name="project_id" />
+                </xpath>
+            </field>
+        </record>
+
     </data>
 </odoo>
