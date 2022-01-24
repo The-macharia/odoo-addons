@@ -87,22 +87,22 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <td class="border border-dark text-center border-2">
+                    <td class="border border-dark text-center border-2" style="background: white !important; color: black;">
                       <span t-field="o.mawb" />
                     </td>
-                    <td class="border border-dark text-center border-2">
+                    <td class="border border-dark text-center border-2" style="background: white !important; color: black;">
                       <span t-field="o.flight" />
                     </td>
-                    <td class="border border-dark text-center border-2">
+                    <td class="border border-dark text-center border-2" style="background: white !important; color: black;">
                       <span t-field="o.no_of_packages" />
                     </td>
-                    <td class="border border-dark text-center border-2">
+                    <td class="border border-dark text-center border-2" style="background: white !important; color: black;">
                       <span t-field="o.terms" />
                     </td>
-                    <td class="border border-dark text-center border-2">
+                    <td class="border border-dark text-center border-2" style="background: white !important; color: black;">
                       <span t-field="o.hawb" />
                     </td>
-                    <td class="border border-dark text-center border-2">
+                    <td class="border border-dark text-center border-2" style="background: white !important; color: black;">
                       <span t-field="o.cbm" />
                     </td>
                   </tr>
