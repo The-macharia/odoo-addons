@@ -23,7 +23,6 @@
                 <b>Invoice No</b>
               </strong>
               <p class="border border-dark text-center border-2">
-                <!-- <span t-if="o.type == 'out_invoice' and o.state == 'posted'">Invoice</span> <span t-if="o.type == 'out_invoice' and o.state == 'draft'">Draft Invoice</span> <span t-if="o.type == 'out_invoice' and o.state == 'cancel'">Cancelled Invoice</span> <span t-if="o.type == 'out_refund'">Credit Note</span> <span t-if="o.type == 'in_refund'">Vendor Credit Note</span> <span t-if="o.type == 'in_invoice'">Vendor Bill</span> -->
                 <span t-if="o.name == '/'">Draft Invoice</span>
                 <span t-if="o.name != '/'" t-field="o.name" />
               </p>
@@ -291,24 +290,31 @@
           </div>
 
           <div class="row w-100">
-            <div class="col-6">
+            <div class="col-7 d-flex">
+              <t t-set="bank" t-value="o.company_id.partner_id.bank_ids[0] or False" />
               <div class="border-2">
                 <p class="w-100 text-center">
                   <strong>BANK DETAILS</strong>
                 </p>
-                <p class="p-0">Bank Name: &amp;nbsp; Stanbic Bank Kenya</p>
-                <p class="p-0">A/C Name: &amp;nbsp; Bima Clearing &amp; Forwading LTD</p>
-                <p class="p-0">A/C NO: &amp;nbsp; 0100004181209 (KES)</p>
-                <p class="p-0">A/C NO: &amp;nbsp; 0100000097572 (USD)</p>
-                <p class="p-0">Branch &amp; Code: &amp;nbsp; Chiromo Branch - 31007</p>
-              </div>
+                <p class="p-0">Bank Name: &amp;nbsp; <span t-esc="bank.bank_id.name"/></p>
+                <p class="p-0">
+                  A/C Name: &amp;nbsp;
+                  <span t-esc="bank.acc_holder_name" />
+                </p>
+                <t t-foreach="o.company_id.partner_id.bank_ids" t-as="bank">
+                  <p class="p-0">
+                    A/C NO.: &amp;nbsp;
+                    <span t-esc="'{} ({})'.format(bank.acc_number, bank.currency_id.name)" />
+                  </p>
+                </t>
+                  <p class="p-0">Branch &amp; Code: &amp;nbsp; Chiromo Branch - 31007</p>
+                </div>
             </div>
-            <div class="col-6">
+            <div class="col-5">
+              <br/>
+              <p style="padding-top: 20px;">PREPARED BY:____________________________</p>
               <br />
-              <p>PREPARED BY:_________________________________</p>
-              <br />
-              <br />
-              <p>APPROVED BY:_________________________________</p>
+              <p style="padding-top: 10px;">APPROVED BY:_____________________________</p>
             </div>
           </div>
 
