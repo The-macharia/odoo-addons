@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from odoo import api, fields, models
+from odoo import fields, models
 from odoo.exceptions import ValidationError
 
 
@@ -27,29 +27,14 @@ class AccountMove(models.Model):
     _name = 'account.move'
     _inherit = ['account.move', 'sms.oo.sms']
 
-    def prepare_sms_data(self, phone):
-        template = self.get_sms_template(self._name)
-        if template:
-            message = template.body
-            message = message.strip().format(name=self.partner_id.name,
-                                             number=self.name,
-                                             amount=self.amount_residual)
-
-            return {'to': phone, 'message': message}
-
     def post(self):
         res = super().post()
         for rec in self:
-            phone = rec.partner_id.phone or rec.partner_id.mobile
-            if phone:
-                valid_number = rec.format_and_validate_number(rec.partner_id)
-                if valid_number:
-                    message = rec.prepare_sms_data(valid_number)
-                    if message:
-                        rec.send_sms(message)
-            else:
+            numbers = rec._format_and_validate_number(rec.partner_id)
+            if not numbers:
                 raise ValidationError(
-                    "Selected customer does not have a valid phone or mobile number. \
-                    Hint: Add a country to the partner's record for better validation.")
-
+                    "Customer does not have a valid phone number. \
+                    Add a country to the customer's record for optimized validation.")
+            payload = rec.prepare_sms_data(numbers)
+            rec._send_sms(payload)
         return res
