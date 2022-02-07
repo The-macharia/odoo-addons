@@ -35,6 +35,5 @@ class AccountMove(models.Model):
                 raise ValidationError(
                     "Customer does not have a valid phone number. \
                     Add a country to the customer's record for optimized validation.")
-            payload = rec.prepare_sms_data(numbers)
-            rec._send_sms(payload)
+            rec._send_sms(numbers)
         return res

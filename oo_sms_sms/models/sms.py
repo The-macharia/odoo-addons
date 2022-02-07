@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from gc import callbacks
 import json
 import logging
 import requests
@@ -31,7 +32,7 @@ class SmsOOSms(models.AbstractModel):
             [('model_id.model', '=', self._name)], limit=1)
         return template
 
-    def _prepare_sms_data(self, numbers):
+    def _prepare_sms_message(self):
         template = self.get_sms_template(self._name)
         if template:
             message = template.body
@@ -39,19 +40,23 @@ class SmsOOSms(models.AbstractModel):
                                              number=self.name,
                                              amount=self.amount_residual)
 
-            return [message, numbers]
+            return message
 
-    def _send_sms(self, payload):
+    def _send_sms_callback(self, error, response):
+        {'SMSMessageData': {'Message': 'Sent to 3/3 Total Cost: KES 2.4000', 'Recipients': [{'statusCode': 101, 'number': '+254713235761', 'cost': 'KES 0.8000', 'status': 'Success', 'messageId': 'ATXid_17b373b919d633b5f187700791f49d0a'}, {
+            'statusCode': 101, 'number': '+254720890160', 'cost': 'KES 0.8000', 'status': 'Success', 'messageId': 'ATXid_979457e5f6111c059dd67dbbb54bd019'}, {'statusCode': 101, 'number': '+254714452862', 'cost': 'KES 0.8000', 'status': 'Success', 'messageId': 'ATXid_244a21e775a9a6e3ad65bda8653e959b'}]}}
+
+
+    def _send_sms(self, numbers):
         username, api_key, sender = self._get_api_settings()
         africastalking.initialize(username, api_key)
         sms = africastalking.SMS
 
-        message, numbers = payload
-        response = sms.send(message, numbers, sender_id=sender)
+        message = self._prepare_sms_message()
+        response = sms.send(message, numbers, callback=self._send_sms_callback)
         _logger.error(response)
         return response
 
-        # self.prepare_post_sms_notification(partners=[self.partner_id])
     def prepare_post_sms_notification(self, partners=None):
         subtype = self.env.ref('mail.mt_note')
         partners_to = False
@@ -68,7 +73,7 @@ class SmsOOSms(models.AbstractModel):
         }
 
     def _format_and_validate_number(self, partner, company=None):
-        if not partner.phone or partner.child_ids.mapped('phone'):
+        if not partner.phone and not partner.child_ids.mapped('phone'):
             return False
 
         if not company:
