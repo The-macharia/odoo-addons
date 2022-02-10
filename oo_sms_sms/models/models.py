@@ -9,14 +9,11 @@ class AccountMove(models.Model):
     _name = 'account.move'
     _inherit = ['account.move', 'sms.oo.sms']
 
-    def post(self):
-        res = super().post()
+    def action_post(self):
+        res = super().action_post()
         for rec in self:
             numbers = rec._format_and_validate_number(rec.partner_id)
-            if not numbers:
-                raise ValidationError(
-                    "Customer does not have a valid phone number. \
-                    Add a country to the customer's record for optimized validation.")
+            rec._raise_validation_error(numbers)
             rec._send_sms(numbers)
         return res
 

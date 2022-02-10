@@ -12,7 +12,7 @@
     'author': "My Company",
     'website': "http://www.yourcompany.com",
 
-
+    'license': "LGPL-3",
     'category': 'Uncategorized',
     'version': '13.0.1.0',
 

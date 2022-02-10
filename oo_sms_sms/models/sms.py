@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import json
 import logging
-import requests
-from urllib.parse import urlencode
 
-from odoo import models, _
-from odoo.exceptions import UserError
-from odoo.addons.phone_validation.models.phone_validation_mixin import PhoneValidationMixin as PVM
-from odoo.addons.phone_validation.tools import phone_validation
 import africastalking
+from odoo import _, models
+from odoo.addons.phone_validation.tools.phone_validation import \
+    phone_sanitize_numbers
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -26,22 +23,25 @@ class SmsOOSms(models.AbstractModel):
         sender = params.get_param('oo_sms_sms.sms_shortcode').strip()
         return username, key, sender
 
-    def get_sms_template(self, mode):
+    def get_sms_template(self):
         template = self.env['sms.template'].search(
             [('model_id.model', '=', self._name)], limit=1)
         return template
 
     def _prepare_sms_message(self):
-        template = self.get_sms_template(self._name)
-        if template:
-            message = template.body
-            message = message.strip().format(name=self.partner_id.name,
-                                             number=self.name,
-                                             amount=self.amount_residual)
+        template = self.get_sms_template()
+        MailRenderMixin = self.env['mail.render.mixin']
 
-            return message
+        if template and template.body:
+            body = MailRenderMixin._render_template(
+                template.body, self._name, [self.id], post_process=True)
+
+            return body
+        return {}
 
     def _send_sms_callback(self, error, response):
+        _logger.error(error)
+        _logger.info(response)
         {'SMSMessageData': {'Message': 'Sent to 3/3 Total Cost: KES 2.4000', 'Recipients': [{'statusCode': 101, 'number': '+254713235761', 'cost': 'KES 0.8000', 'status': 'Success', 'messageId': 'ATXid_17b373b919d633b5f187700791f49d0a'}, {
             'statusCode': 101, 'number': '+254720890160', 'cost': 'KES 0.8000', 'status': 'Success', 'messageId': 'ATXid_979457e5f6111c059dd67dbbb54bd019'}, {'statusCode': 101, 'number': '+254714452862', 'cost': 'KES 0.8000', 'status': 'Success', 'messageId': 'ATXid_244a21e775a9a6e3ad65bda8653e959b'}]}}
 
@@ -50,8 +50,9 @@ class SmsOOSms(models.AbstractModel):
         africastalking.initialize(username, api_key)
         sms = africastalking.SMS
 
-        message = self._prepare_sms_message()
-        response = sms.send(message, numbers, sender_id=sender, callback=self._send_sms_callback)
+        message = self._prepare_sms_message().get(self.id, '')
+        response = sms.send(message, numbers, sender_id=sender,
+                            callback=self._send_sms_callback)
         _logger.error(response)
         return response
 
@@ -70,29 +71,22 @@ class SmsOOSms(models.AbstractModel):
             'notified_partner_ids': partners_to,
         }
 
-    def _format_and_validate_number(self, partner, company=None):
-        if not partner.phone and not partner.child_ids.mapped('phone'):
+    def _format_and_validate_number(self, partner):
+        related_numbers = partner.child_ids.filtered('phone').mapped('phone')
+        if not partner.phone and not related_numbers:
             return False
+        country = partner.country_id
+        numbers = [partner._phone_format(phone) for phone in related_numbers]
+        numbers.append(partner._phone_format(partner.phone))
+        numbers = list(set(filter(lambda n: n, numbers)))
+        if numbers:
+            sanitized = phone_sanitize_numbers(
+                numbers, country.code, country.phone_code)
+            return [num['sanitized'] for num in sanitized.values()]
+        return False
 
-        if not company:
-            company = partner.company_id or self._context.get('company_id')
-
-        numbers = [self._validate_numbers(
-            partner, company, partner.country_id)]
-
-        for child in partner.child_ids.filtered('phone'):
-            number = self._validate_numbers(child, company, partner.country_id)
-            if number:
-                numbers.append(number)
-
-        return list(set(numbers))
-
-    def _validate_numbers(self, partner, company, country, formats='E164'):
-        phone_no = PVM.phone_format(
-            partner, partner.phone, country=country, company=company)
-
-        mobile_obj = phone_validation.phone_sanitize_numbers_w_record(
-            [phone_no], country, force_format=formats)
-        mobile = mobile_obj.get(phone_no)
-        mobile = mobile.get('sanitized') or False
-        return mobile
+    def _raise_validation_error(self, numbers):
+        if not numbers:
+            raise ValidationError(
+                "Customer does not have a valid phone number. \
+                    Add a country to the customer's record for optimized validation.")
