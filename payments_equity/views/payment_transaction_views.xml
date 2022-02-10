@@ -1,0 +1,19 @@
+<odoo>
+    <data>
+      <record id="payment_transaction_form" model="ir.ui.view">
+        <field name="name">Equity Transaction Form</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+          <xpath expr="//field[@name='acquirer_reference']" position="after">
+            <field name="mobile"
+              readonly="1"
+              attrs="{'invisible': [('provider', '!=', 'equity')]}"/>
+            <field name="transaction_timestamp"
+              readonly="1"
+              attrs="{'invisible': [('provider', '!=', 'equity')]}"/>
+          </xpath>
+        </field>
+    </record>
+    </data>
+</odoo>
