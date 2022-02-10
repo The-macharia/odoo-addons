@@ -1,26 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-from odoo import fields, models
+from odoo import models
 from odoo.exceptions import ValidationError
-
-
-class ResConfigSettings(models.TransientModel):
-    _inherit = 'res.config.settings'
-
-    sms_username = fields.Char(
-        string='Username',
-        default='sandbox',
-        config_parameter='oo_sms_sms.sms_username')
-    sms_api_key = fields.Char(
-        string='Api Key',
-        config_parameter='oo_sms_sms.sms_api_key')
-    sms_shortcode = fields.Char(
-        string="Shortcode", size=5,
-        config_parameter='oo_sms_sms.sms_shortcode')
-    sms_api_env = fields.Selection(selection=[
-        ('live', 'Live'), ('sandbox', 'Sandbox'),
-    ], string="SMS Mode", default='sandbox', config_parameter='oo_sms_sms.sms_api_env')
 
 
 class AccountMove(models.Model):
@@ -29,6 +11,38 @@ class AccountMove(models.Model):
 
     def post(self):
         res = super().post()
+        for rec in self:
+            numbers = rec._format_and_validate_number(rec.partner_id)
+            if not numbers:
+                raise ValidationError(
+                    "Customer does not have a valid phone number. \
+                    Add a country to the customer's record for optimized validation.")
+            rec._send_sms(numbers)
+        return res
+
+
+class SaleOrder(models.Model):
+    _name = 'sale.order'
+    _inherit = ['sale.order', 'sms.oo.sms']
+
+    def action_confirm(self):
+        res = super().action_confirm()
+        for rec in self:
+            numbers = rec._format_and_validate_number(rec.partner_id)
+            if not numbers:
+                raise ValidationError(
+                    "Customer does not have a valid phone number. \
+                    Add a country to the customer's record for optimized validation.")
+            rec._send_sms(numbers)
+        return res
+
+
+class PurchaseOrder(models.Model):
+    _name = 'purchase.order'
+    _inherit = ['purchase.order', 'sms.oo.sms']
+
+    def button_confirm(self):
+        res = super().button_confirm()
         for rec in self:
             numbers = rec._format_and_validate_number(rec.partner_id)
             if not numbers:

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="oo_res_config_settings_sms" model="ir.ui.view">
+        <field name="name">res.config.settings.sms</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="5" />
+        <field name="inherit_id" ref="base.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Africa's Talking Api" string="Africa's Talking Api" data-key="africa_talking_api">
+
+                    <h2>Enable Africa's Talking API</h2>
+                    <div class="row mt16 o_settings_container" name="at_sms_config_setting_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="enable_sms_api" />
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="enable_sms_api" />
+                                <div class="text-muted">Enable SMS functionality. (If checked this will require you to fill the africa's talking api setup.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 attrs="{'invisible': [('enable_sms_api', '=', False)]}">Africa's Talking Configuration</h2>
+                    <div class="row mt16 o_settings_container" name="at_sms_config_setting_container" attrs="{'invisible': [('enable_sms_api', '=', False)]}">
+                        <div class="col-12 col-lg-6 o_setting_box" id="africastalking_username" title="Add Username and API Key">
+                            <div class="o_setting_right_pane">
+                                <label for="sms_username" />
+                                <field name="sms_username" style="width:100% !important" attrs="{'required': [('enable_sms_api', '=', True)]}" />
+                                <div class="text-muted">Add Valid Username of Africa's Talking SMS</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" id="africastalking_api_key" title="API Key">
+                            <div class="o_setting_right_pane">
+                                <label for="sms_api_key" />
+                                <field name="sms_api_key" style="width:100% !important" attrs="{'required': [('enable_sms_api', '=', True)]}" />
+                                <div class="text-muted">Set API key to send SMS from Africa's Talking SMS</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" id="africastalking_shortcode" title="Shortcode">
+                            <div class="o_setting_right_pane">
+                                <label for="sms_shortcode" />
+                                <field name="sms_shortcode" style="width:100% !important" attrs="{'required': [('enable_sms_api', '=', True)]}" />
+                                <div class="text-muted">Set shortcode to send SMS from Africa's Talking SMS</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 attrs="{'invisible': [('enable_sms_api', '=', False)]}">SMS Activation</h2>
+                    <div class="row mt16 o_settings_container" name="at_sms_activation_setting_container" attrs="{'invisible': [('enable_sms_api', '=', False)]}">
+                        <div class="col-12 col-lg-6 o_setting_box" name="at_sms_activation_sale">
+                            <div class="o_setting_left_pane">
+                                <field name="sales_enaled" />
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="sales_enaled" />
+                                <div class="text-muted">Send sms on confirming a draft sales order</div>
+                                <div class="content-group" attrs="{'invisible': [('sales_enaled', '=', False)], 'required': [('sales_enaled', '=', True)]}">
+                                    <div class="row mt16">
+                                        <label for="sale_sms_template_id" class="col o_light_label" />
+                                        <field name="sale_sms_template_id" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-6 o_setting_box" name="at_sms_activation_purchase">
+                            <div class="o_setting_left_pane">
+                                <field name="purchase_enabled" />
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="purchase_enabled" />
+                                <div class="text-muted">Send sms on confirming a draft purchase order</div>
+                                <div class="content-group" attrs="{'invisible': [('purchase_enabled', '=', False)], 'required': [('purchase_enabled', '=', True)]}">
+                                    <div class="row mt16">
+                                        <label for="purchase_sms_template_id" class="col o_light_label" />
+                                        <field name="purchase_sms_template_id" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-6 o_setting_box" name="at_sms_activation_invoice">
+                            <div class="o_setting_left_pane">
+                                <field name="invoice_enabled" />
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="invoice_enabled" />
+                                <div class="text-muted">Send sms on confirming a draft Invoice</div>
+                                <div class="content-group" attrs="{'invisible': [('invoice_enabled', '=', False)], 'required': [('invoice_enabled', '=', True)]}">
+                                    <div class="row mt16">
+                                        <label for="invoice_sms_template_id" class="col o_light_label" />
+                                        <field name="invoice_sms_template_id" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

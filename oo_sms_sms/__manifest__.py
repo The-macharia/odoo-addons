@@ -18,8 +18,11 @@
 
     # any module necessary for this one to work correctly
     'depends': ['account', 'sale', 'purchase'],
+    'external_dependencies': {
+        'python': ['africastalking']
+    },
     'data': [
-        'views/view.xml'
+        'views/res_config.xml'
     ]
 
 
