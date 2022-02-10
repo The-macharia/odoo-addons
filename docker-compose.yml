@@ -1,25 +1,32 @@
 version: '2'
 services:
    db:
-        image: postgres:<version>
+        image: postgres:13
         environment:
                 - POSTGRES_USER=odoo
                 - POSTGRES_PASSWORD=odoo
                 - POSTGRES_DB=postgres
-                - PGDATA=/var/lib/postgresql14/data/pgdata
+                - PGDATA=/var/lib/postgresql/data/pgdata
         volumes:
-                - db<version>-data=/var/lib/postgresql14/data/pgdata
+                - db15-data=/var/lib/postgresql/data/pgdata
+        networks:
+                - network-15
    odoo14:
-        image: odoo:<version>
+        image: odoo:15.0
         command: --dev=all
         ports:
-                - <port>:8069
+                - 8015:8069
         links:
                 - db:db
         volumes:
                 - ./config:/etc/odoo
                 - .:/mnt/extra-addons
-                - odoo<version>-data:/var/lib/odoo
+                - ~/odoo-dev/15odoo/addons:/mnt/enterprise
+                - odoo15-data:/var/lib/odoo
+        networks:
+                - network-15
 volumes:
-        odoo<version>-data:
-        db<version>-data:
+        odoo15-data:
+        db15-data:
+networks:
+        network-15:
