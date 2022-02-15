@@ -249,15 +249,17 @@ class stock_picking(models.Model):
         self.project_id = self.job_orders_id.project_id
 
     def prepare_analytic_line(self, line, cost):
+        account_id = self.analytic_account_id or self.project_id.analytic_account_id
         return {
             'name': line.product_id.name,
-            'account_id': line.picking_id.analytic_account_id.id,
+            'account_id': account_id.id,
             'product_id': line.product_id.id,
             'product_uom_id': line.product_id.uom_id.id,
             'unit_amount': line.product_uom_qty,
-            'date': line.picking_id.scheduled_date.date(),
+            'date': self.scheduled_date.date(),
             'amount': cost * -1,
             'partner_id': line.partner_id.id,
+            'group_id': False,
         }
 
     def button_validate(self):
@@ -294,8 +296,9 @@ class stock_picking(models.Model):
                     }
                     rec.project_id.write(
                         {'material_ids': [(0, 0, vals)]})
-                analytic_line_values = rec.prepare_analytic_line(
-                    line, cost_total)
-                self.env['account.analytic.line'].create(analytic_line_values)
+                if rec.analytic_account_id or rec.project_id.analytic_account_id:
+                    analytic_line_values = rec.prepare_analytic_line(
+                        line, cost_total)
+                    self.env['account.analytic.line'].create(analytic_line_values)
 
         return res
