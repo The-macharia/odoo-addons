@@ -96,6 +96,22 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="col-12 col-lg-6 o_setting_box" name="at_sms_activation_payment">
+                            <div class="o_setting_left_pane">
+                                <field name="payment_enabled" />
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="payment_enabled" />
+                                <div class="text-muted">Send sms on confirming a draft Payment - This will not include internal transfer payments</div>
+                                <div class="content-group" attrs="{'invisible': [('payment_enabled', '=', False)], 'required': [('payment_enabled', '=', True)]}">
+                                    <div class="row mt16">
+                                        <label for="payment_sms_template_id" class="col o_light_label" />
+                                        <field name="payment_sms_template_id" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </xpath>

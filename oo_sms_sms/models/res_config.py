@@ -28,3 +28,7 @@ class ResConfigSettings(models.TransientModel):
         string='Enable Purchase SMS', config_parameter='oo_sms_sms.purchase_enabled')
     purchase_sms_template_id = fields.Many2one(
         'sms.template', string='Purchase SMS Template', config_parameter='oo_sms_sms.purchase_sms_template_id')
+    payment_enabled = fields.Boolean(
+        string='Enable Payment SMS', config_parameter='oo_sms_sms.payment_enabled')
+    payment_sms_template_id = fields.Many2one(
+        'sms.template', string='Payments SMS Template', config_parameter='oo_sms_sms.payment_sms_template_id')
