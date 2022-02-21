@@ -9,6 +9,7 @@ class AccountMove(models.Model):
     _inherit = ['account.move', 'sms.oo.sms']
 
     def action_post(self):
+        res = super().action_post()
         params = self.env['ir.config_parameter'].sudo()
         sms_allowed = params.get_param('oo_sms_sms.invoice_enabled')
         if sms_allowed:
@@ -16,7 +17,7 @@ class AccountMove(models.Model):
                 numbers = rec._format_and_validate_number(rec.partner_id)
                 rec._raise_validation_error(numbers)
                 rec._send_sms(numbers)
-        return super().action_post()
+        return res
 
 
 class AccountPayment(models.Model):
@@ -24,6 +25,7 @@ class AccountPayment(models.Model):
     _inherit = ['account.payment', 'sms.oo.sms']
 
     def action_post(self):
+        res = super().action_post()
         params = self.env['ir.config_parameter'].sudo()
         sms_allowed = params.get_param('oo_sms_sms.payment_enabled')
         if sms_allowed:
@@ -31,7 +33,7 @@ class AccountPayment(models.Model):
                 numbers = rec._format_and_validate_number(rec.partner_id)
                 rec._raise_validation_error(numbers)
                 rec._send_sms(numbers)
-        return super().action_post()
+        return res
 
 
 class SaleOrder(models.Model):
@@ -39,6 +41,7 @@ class SaleOrder(models.Model):
     _inherit = ['sale.order', 'sms.oo.sms']
 
     def action_confirm(self):
+        res = super().action_confirm()
         params = self.env['ir.config_parameter'].sudo()
         sms_allowed = params.get_param('oo_sms_sms.sales_enaled')
         if sms_allowed:
@@ -46,7 +49,7 @@ class SaleOrder(models.Model):
                 numbers = rec._format_and_validate_number(rec.partner_id)
                 rec._raise_validation_error(numbers)
                 rec._send_sms(numbers)
-        return super().action_confirm()
+        return res
 
 
 class PurchaseOrder(models.Model):
@@ -54,6 +57,7 @@ class PurchaseOrder(models.Model):
     _inherit = ['purchase.order', 'sms.oo.sms']
 
     def button_confirm(self):
+        res = super().button_confirm()
         params = self.env['ir.config_parameter'].sudo()
         sms_allowed = params.get_param('oo_sms_sms.purchase_enabled')
         if sms_allowed:
@@ -61,4 +65,4 @@ class PurchaseOrder(models.Model):
                 numbers = rec._format_and_validate_number(rec.partner_id)
                 rec._raise_validation_error(numbers)
                 rec._send_sms(numbers)
-        return super().button_confirm()
+        return res
