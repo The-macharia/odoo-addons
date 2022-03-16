@@ -262,9 +262,8 @@ class stock_picking(models.Model):
             'group_id': False,
         }
 
-    def button_validate(self):
-        res = super().button_validate()
-        for rec in self.filtered('project_id'):
+    def update_consumed_materials(self):
+        for rec in self:
             sale_order_id = self.env['sale.order'].search(
                 [('name', '=', rec.origin)], limit=1)
             for line in rec.move_ids_without_package:
@@ -300,5 +299,10 @@ class stock_picking(models.Model):
                     analytic_line_values = rec.prepare_analytic_line(
                         line, cost_total)
                     self.env['account.analytic.line'].create(analytic_line_values)
+
+    def button_validate(self):
+        res = super().button_validate()
+        for rec in self.filtered('project_id'):
+            rec.update_consumed_materials()
 
         return res

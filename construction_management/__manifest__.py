@@ -61,6 +61,7 @@
     "website": "https://www.browseinfo.in",
     "data": [
         "security/ir.model.access.csv",
+        'data/cron.xml',
         'view/project.xml',
         "view/main_menu.xml",
         'view/bill_of_quantity_view.xml',

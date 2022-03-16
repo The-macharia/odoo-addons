@@ -133,3 +133,13 @@ class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
     project_id = fields.Many2one('project.project', string='Project')
+
+
+class StockPicking(models.Model):
+    _inherit = 'stock.picking'
+
+    @api.model
+    def _update_consumed_materials_cron(self):
+        deliveries = self.env['stock.picking'].search([('project_id', '!=', False), ('state', '=', 'done')])
+        deliveries = deliveries.filtered(lambda d: d.id not in d.project_id.material_ids.mapped('picking_ids').ids)
+        deliveries.update_consumed_materials()
