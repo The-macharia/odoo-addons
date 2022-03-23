@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- loyalty.group action window -->
+    <record id="oo_loyalty_group_action" model="ir.actions.act_window">
+        <field name="name">Loyalty Groups</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">loyalty.group</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">Add New Loyalty Groups</p>
+        </field>
+    </record>
+
+    <!-- savings.group action window -->
+    <record id="oo_saving_group_action" model="ir.actions.act_window">
+        <field name="name">Saving Groups</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">savings.group</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">Add New Saving Groups</p>
+        </field>
+    </record>
+
+    <!-- loyalty.loyalty action window -->
+    <record id="oo_loyalty_action" model="ir.actions.act_window">
+        <field name="name">Loyalties</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">loyalty.loyalty</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">Add New Customer Loyalties</p>
+        </field>
+    </record>
+
+    <!-- saving.saving action window -->
+    <record id="oo_saving_action" model="ir.actions.act_window">
+        <field name="name">Savings</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">saving.saving</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">Add New Customer Savings</p>
+        </field>
+    </record>
+
+    <!-- This Menu Item will appear in the Upper bar, that's why It needs NO parent or action -->
+    <menuitem id="oo_loyalty_savings_menu_root" name="Loyalty and Savings" web_icon="oo_loyalty_savings,static/description/icon.png" sequence="19" />
+    <!-- This Menu Item Must have a parent -->
+    <menuitem id="oo_loyalty_menu_categ" name="Loyalties" parent="oo_loyalty_savings_menu_root" sequence="1">
+        <menuitem id="oo_loyalty_menu_act" name="Loyalties" action="oo_loyalty_action" sequence="1" />
+        <menuitem id="oo_loyalty_group_menu_act" name="Loyalty Groups" action="oo_loyalty_group_action" sequence="2" />
+    </menuitem>
+
+    <menuitem id="oo_saving_menu_categ" name="Savings" parent="oo_loyalty_savings_menu_root" sequence="1">
+        <menuitem id="oo_saving_menu_act" name="Savings" action="oo_saving_action" sequence="1" />
+        <menuitem id="oo_saving_group_menu_act" name="Saving Groups" action="oo_saving_group_action" sequence="2" />
+    </menuitem>
+
+    <!-- stock.crates action window -->
+    <record id="oo_stock_crates_action" model="ir.actions.act_window">
+        <field name="name">Stock Crates</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">stock.crates</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="oo_crates_issue_menu" name="Crates Issued" parent="sale.product_menu_catalog" action="oo_stock_crates_action"
+        sequence="100"/>
+</odoo>

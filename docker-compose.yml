@@ -8,12 +8,14 @@ services:
                 - POSTGRES_DB=postgres
                 - PGDATA=/var/lib/postgresql/data/pgdata
         volumes:
-                - db15-data=/var/lib/postgresql/data/pgdata
+                - db15-data:/var/lib/postgresql/data/pgdata
+        ports:
+                - 51515:5432
         networks:
                 - network-15
    odoo15:
         image: odoo:15.0
-        command: --dev=all
+        command: -d sms -u oo_loyalty_savings --dev=all
         ports:
                 - 8015:8069
         links:

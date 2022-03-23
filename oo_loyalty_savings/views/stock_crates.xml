@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- stock.crates search view -->
+    <record id="oo_stock_crates_view_search" model="ir.ui.view">
+        <field name="name">stock.crates.view.search</field>
+        <field name="model">stock.crates</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="partner_id" />
+                <field name="date" />
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]" context="{'group_by': 'state'}" />
+                <filter name="posted" string="Posted" domain="[('state', '=', 'posted')]" context="{'group_by': 'state'}" />
+            </search>
+        </field>
+    </record>
+
+    <!-- stock.crates tree view -->
+    <record id="oo_stock_crates_view_tree" model="ir.ui.view">
+        <field name="name">stock.crates.view.tree</field>
+        <field name="model">stock.crates</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="date" />
+                <field name="partner_id" />
+                <field name="crates_remaining" />
+                <field name="crates_issued" />
+                <field name="crates_returned" />
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- stock.crates form view -->
+    <record id="oo_stock_crates_view_form" model="ir.ui.view">
+        <field name="name">stock.crates.view.form</field>
+        <field name="model">stock.crates</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button string="Approve" name="action_approve" type="object" class="oe_highlight" attrs="{'invisible': [('state','=', 'posted')]}" />
+                    <field name="state" widget="statusbar" />
+                </header>
+                <sheet>
+                    <group attrs="{'readonly': [('state','=', 'posted')]}">
+                        <group>
+                            <field name="partner_id" attrs="{'readonly': [('state','=', 'posted')]}" />
+                            <field name="date" attrs="{'readonly': [('state','=', 'posted')]}" />
+                        </group>
+                        <group>
+                            <field name="crates_remaining" attrs="{'readonly': [('state','=', 'posted')]}" />
+                            <field name="crates_issued" attrs="{'readonly': [('state','=', 'posted')]}" />
+                            <field name="crates_returned" attrs="{'readonly': [('state','=', 'posted')]}" />
+                        </group>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" />
+                    <field name="message_ids" widget="mail_thread" />
+                </div>
+            </form>
+        </field>
+    </record>
+</odoo>

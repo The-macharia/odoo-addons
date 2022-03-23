@@ -1,0 +1,142 @@
+<odoo>
+    <data>
+      <!-- savings.group search view -->
+      <record id="oo_saving_group_view_search" model="ir.ui.view">
+        <field name="name">savings.group.view.search</field>
+        <field name="model">savings.group</field>
+        <field name="arch" type="xml">
+          <search>
+            <field name="name" />
+            <filter name="archive" string="Archived" domain="[('active', '=', False)]" />
+          </search>
+        </field>
+      </record>
+
+      <!-- savings.group tree view -->
+      <record id="oo_saving_group_view_tree" model="ir.ui.view">
+        <field name="name">savings.group.view.tree</field>
+        <field name="model">savings.group</field>
+        <field name="arch" type="xml">
+          <tree>
+            <field name="name" />
+            <field name="members_count" />
+            <field name="amount_tosave" />
+          </tree>
+        </field>
+      </record>
+
+      <!-- savings.group form view -->
+      <record id="oo_saving_group_view_form" model="ir.ui.view">
+        <field name="name">savings.group.view.form</field>
+        <field name="model">savings.group</field>
+        <field name="arch" type="xml">
+          <form>
+            <sheet>
+              <div class="oe_button_box" name="button_box">
+                <button name="action_list_members" type="object" class="oe_stat_button" icon="fa-sitemap">
+                  <field name="members_count" string="Total Members" widget="statinfo" />
+                </button>
+              </div>
+              <group>
+                <group>
+                  <field name="name" />
+                  <field name="amount_tosave" />
+                  <field name="min_amount" />
+                </group>
+                <group>
+                  <field name="active" widget="boolean_button" />
+                  <field name="product_ids" widget="many2many_tags" />
+                </group>
+              </group>
+            </sheet>
+          </form>
+        </field>
+      </record>
+
+      <!-- saving.saving search view -->
+      <record id="oo_saving_view_search" model="ir.ui.view">
+        <field name="name">saving.saving.view.search</field>
+        <field name="model">saving.saving</field>
+        <field name="arch" type="xml">
+          <search>
+            <field name="partner_id" />
+            <filter name="group_id" string="Group" context="{'group_by': 'group_id'}" />
+          </search>
+        </field>
+      </record>
+
+      <!-- saving.saving tree view -->
+      <record id="oo_saving_view_tree" model="ir.ui.view">
+        <field name="name">saving.saving.view.tree</field>
+        <field name="model">saving.saving</field>
+        <field name="arch" type="xml">
+          <tree>
+            <field name="partner_id" />
+            <field name="group_id" />
+            <field name="total_savings" />
+            <field name="date_enrolled" />
+          </tree>
+        </field>
+      </record>
+
+      <!-- saving.saving form view -->
+      <record id="oo_saving_view_form" model="ir.ui.view">
+        <field name="name">saving.saving.view.form</field>
+        <field name="model">saving.saving</field>
+        <field name="arch" type="xml">
+          <form>
+            <header>
+              <button string="Redeem Points" name="%(action_redeem_points)d" type="action" class="oe_highlight" context="{'default_collection_type': 'savings'}" />
+            </header>
+            <sheet>
+              <group>
+                <group>
+                  <field name="partner_id" />
+                  <field name="total_savings" />
+                  <field name="group_id" />
+                </group>
+                <group>
+                  <field name="date_enrolled" />
+                  <field name="date_exited" />
+                </group>
+              </group>
+
+              <group>
+                <notebook>
+                  <page name="collections" string="Collection Lines">
+                    <field name="saving_lines" nolabel="1" context="{'default_collection_type': 'savings'}">
+                      <tree editable="bottom">
+                        <field name="date" />
+                        <field name="product_id" />
+                        <field name="quantity" />
+                        <field name="invoice_line_id" />
+                        <field name="invoice_id" />
+                        <field name="amount" />
+                        <field name="collection_type" invisible="1" />
+                        <field name="saving_id" invisible="1" />
+                      </tree>
+                    </field>
+                  </page>
+
+                  <page name="redeem" string="Redeem Lines">
+                    <field name="redeem_lines" nolabel="1" context="{'default_collection_type': 'savings'}">
+                      <tree editable="bottom">
+                        <field name="date" />
+                        <field name="invoice_id" invisible="1" />
+                        <field name="amount_before" />
+                        <field name="amount_redeemed" />
+                        <field name="amount_balance" />
+                        <field name="redeem_type" invisible="1" />
+                        <field name="saving_id" invisible="1" />
+                      </tree>
+                    </field>
+                  </page>
+                </notebook>
+              </group>
+            </sheet>
+          </form>
+        </field>
+      </record>
+
+    </data>
+</odoo>

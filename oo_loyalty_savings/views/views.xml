@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- res.partner inherit form view -->
+    <record id="oo_ls_view_partner_form" model="ir.ui.view">
+        <field name="name">res.partner.inherit.view.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" type="object" name="get_partner_loyalty" icon="fa-gift">
+                    <field string="Loyalty Points" name="loyalty_points" widget="statinfo" />
+                </button>
+
+                <button class="oe_stat_button" type="object" name="get_partner_savings" icon="fa-usd">
+                    <field string="Savings" name="savings_points" widget="statinfo" />
+                </button>
+
+                <button class="oe_stat_button" type="object" name="get_all_crates" icon="fa-eject" attrs="{'invisible': [('total_crates', '&lt;', 1)]}">
+                    <field string="Total Crates" name="total_crates" widget="statinfo" />
+                </button>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- product.template inherit form view -->
+    <record id="oo_ls_product_template_only_form_view" model="ir.ui.view">
+        <field name="name">product.template.inherit.view.form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//div[@name='options']" position="inside">
+                <span class="d-inline-block" attrs="{'invisible': [('sale_ok', '=', False)]}">
+                    <field name="is_sub_product" />
+                    <label for="is_sub_product" />
+                </span>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- product.product inherit form view -->
+    <record id="oo_ls_product_normal_form_view" model="ir.ui.view">
+        <field name="name">product.product.inherit.view.form</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//div[@name='options']" position="inside">
+                <span class="d-inline-block" attrs="{'invisible': [('sale_ok', '=', False)]}">
+                    <field name="is_sub_product" />
+                    <label for="is_sub_product" />
+                </span>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
