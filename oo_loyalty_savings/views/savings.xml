@@ -86,7 +86,7 @@
         <field name="arch" type="xml">
           <form>
             <header>
-              <button string="Redeem Points" name="%(action_redeem_points)d" type="action" class="oe_highlight" context="{'default_collection_type': 'savings'}" />
+              <button string="Withdraw" name="%(action_redeem_points)d" type="action" class="oe_highlight" context="{'default_collection_type': 'savings'}" />
             </header>
             <sheet>
               <group>

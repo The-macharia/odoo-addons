@@ -14,7 +14,7 @@
                         </group>
                     </group>
                         <footer>
-                        <button string="Redeem Points" name="redeem_points" type="object" class="btn-primary" />
+                        <button string="Validate" name="redeem_points" type="object" class="btn-primary" />
                         <button string="Cancel" class="btn-secondary" special="cancel" />
                     </footer>
                 </form>

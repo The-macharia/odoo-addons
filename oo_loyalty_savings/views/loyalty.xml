@@ -111,6 +111,7 @@
                     <field name="date" />
                     <field name="invoice_line_id" />
                     <field name="points" />
+                    <field name="points_worth" />
                     <field name="amount_total" />
                     <field name="collection_type" invisible="1" />
                     <field name="loyalty_id" invisible="1" />

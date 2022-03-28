@@ -73,6 +73,7 @@ class Loyalty(models.Model):
 class CollectionLines(models.Model):
     _name = 'collection.line'
     _description = 'Loyalty and savings collection lines'
+    _order = 'date desc'
 
     loyalty_id = fields.Many2one('loyalty.loyalty', string='Loyalty')
     saving_id = fields.Many2one('saving.saving', string='Savings')
@@ -86,11 +87,13 @@ class CollectionLines(models.Model):
                                        string='Collection Type', required=True, default='loyalty')
     product_id = fields.Many2one('product.product', string='Product')
     quantity = fields.Float(string='Quantity')
+    points_worth = fields.Float(string='Points Worth', readonly=True)
 
 
 class RedeemLines(models.Model):
     _name = 'redeem.line'
     _description = 'Loyalty and savings redemption lines'
+    _order = 'date desc'
 
     loyalty_id = fields.Many2one('loyalty.loyalty', string='Loyalty')
     saving_id = fields.Many2one('saving.saving', string='Savings')

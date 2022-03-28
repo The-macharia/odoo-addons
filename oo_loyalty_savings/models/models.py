@@ -74,7 +74,9 @@ class AccountMove(models.Model):
             'points': float_round(line.price_subtotal / loyalty.group_id.amount_for_point, precision_rounding=0.01),
             'amount_total': line.price_subtotal,
             'collection_type': 'loyalty',
+            'points_worth': float_round(line.price_subtotal / loyalty.group_id.amount_for_point, precision_rounding=0.01) / loyalty.group_id.currency_points
         }) for line in lines]
+
         total_points = self._calculate_loyalty_total_points(loyalty_lines) + loyalty.total_points
         return loyalty.write({'loyalty_lines': loyalty_lines, 'total_points': total_points})
 
@@ -88,38 +90,26 @@ class AccountMove(models.Model):
             'amount_total': line.price_subtotal,
             'collection_type': 'savings',
         }) for line in lines]
+
         total_savings = saving.total_savings + self._calculate_savings_total_points(saving_lines)
         return saving.write({'saving_lines': saving_lines, 'total_savings': total_savings})
 
-    @api.depends(
-        'line_ids.matched_debit_ids.debit_move_id.move_id.payment_id.is_matched',
-        'line_ids.matched_debit_ids.debit_move_id.move_id.line_ids.amount_residual',
-        'line_ids.matched_debit_ids.debit_move_id.move_id.line_ids.amount_residual_currency',
-        'line_ids.matched_credit_ids.credit_move_id.move_id.payment_id.is_matched',
-        'line_ids.matched_credit_ids.credit_move_id.move_id.line_ids.amount_residual',
-        'line_ids.matched_credit_ids.credit_move_id.move_id.line_ids.amount_residual_currency',
-        'line_ids.debit', 'line_ids.credit', 'line_ids.currency_id', 'line_ids.amount_currency',
-        'line_ids.amount_residual', 'line_ids.amount_residual_currency',
-        'line_ids.payment_id.state', 'line_ids.full_reconcile_id')
-    def _compute_amount(self):
-        res = super()._compute_amount()
+    def action_post(self):
+        res = super().action_post()
         for rec in self:
-            if rec.payment_state == 'in_payment':
-                payment_widget = json.loads(rec.invoice_payments_widget)
-                payment_date = payment_widget.get('content') and payment_widget.get('content')[0].get('date')
-                loyalty_id = rec.partner_id.loyalty_id
-                loyalty_group = loyalty_id and loyalty_id.group_id or False
-                if loyalty_group and loyalty_group.product_ids:
-                    lines = rec.invoice_line_ids.filtered(lambda l: l.product_id.id in loyalty_group.product_ids.ids)
-                    if lines:
-                        rec._process_loyalty_lines(payment_date, loyalty_id, lines)
+            loyalty_id = rec.partner_id.loyalty_id
+            loyalty_group = loyalty_id and loyalty_id.group_id or False
+            if loyalty_group and loyalty_group.product_ids:
+                lines = rec.invoice_line_ids.filtered(lambda l: l.product_id.id in loyalty_group.product_ids.ids)
+                if lines:
+                    rec._process_loyalty_lines(rec.invoice_date, loyalty_id, lines)
 
-                savings_id = rec.partner_id.savings_id
-                savings_group = savings_id and savings_id.group_id or False
-                if savings_group and savings_group.product_ids:
-                    lines = rec.invoice_line_ids.filtered(lambda l: l.product_id.id in savings_group.product_ids.ids)
-                    if lines:
-                        rec._process_savings_lines(payment_date, savings_id, lines)
+            savings_id = rec.partner_id.savings_id
+            savings_group = savings_id and savings_id.group_id or False
+            if savings_group and savings_group.product_ids:
+                lines = rec.invoice_line_ids.filtered(lambda l: l.product_id.id in savings_group.product_ids.ids)
+                if lines:
+                    rec._process_savings_lines(rec.invoice_date, savings_id, lines)
         return res
 
 
@@ -128,6 +118,7 @@ class StockCrates(models.Model):
     _inherit = ['mail.thread']
     _description = 'Issuing of crates to customers'
     _rec_name = 'partner_id'
+    _order = 'id desc, date desc'
 
     partner_id = fields.Many2one('res.partner', string='Partner', required=True, tracking=True)
     date = fields.Date(string='Date', required=True, tracking=True)
@@ -137,6 +128,11 @@ class StockCrates(models.Model):
                                       store=True, help="Crates remaining at this time.")
     state = fields.Selection(string='State', selection=[(
         'draft', 'Draft'), ('posted', 'Posted')], default='draft', tracking=True)
+
+    @api.onchange('partner_id')
+    def _onchange_partner_id(self):
+        for rec in self:
+            rec.crates_remaining = rec.partner_id.total_crates
 
     def action_approve(self):
         held_crates = self.crates_issued - self.crates_returned
