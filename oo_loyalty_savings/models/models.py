@@ -3,9 +3,6 @@
 
 from odoo import fields, models, api
 from odoo.tools.float_utils import float_round
-import json
-from datetime import date
-from odoo.exceptions import ValidationError
 
 
 class ProductTemplate(models.Model):
@@ -71,10 +68,10 @@ class AccountMove(models.Model):
         loyalty_lines = [(0, 0, {
             'date': payment_date,
             'invoice_line_id': line.id,
-            'points': float_round(line.price_subtotal / loyalty.group_id.amount_for_point, precision_rounding=0.01),
-            'amount_total': line.price_subtotal,
+            'points': float_round(line.price_total / loyalty.group_id.amount_for_point, precision_rounding=0.01),
+            'amount_total': line.price_total,
             'collection_type': 'loyalty',
-            'points_worth': float_round(line.price_subtotal / loyalty.group_id.amount_for_point, precision_rounding=0.01) / loyalty.group_id.currency_points
+            'points_worth': float_round(line.price_total / loyalty.group_id.amount_for_point, precision_rounding=0.01) / loyalty.group_id.currency_points
         }) for line in lines]
 
         total_points = self._calculate_loyalty_total_points(loyalty_lines) + loyalty.total_points
@@ -87,7 +84,7 @@ class AccountMove(models.Model):
             'quantity': line.quantity,
             'invoice_line_id': line.id,
             'amount': saving.group_id.amount_tosave * line.quantity,
-            'amount_total': line.price_subtotal,
+            'amount_total': line.price_total,
             'collection_type': 'savings',
         }) for line in lines]
 

@@ -22,6 +22,8 @@
     'data': [
         'security/ir.model.access.csv',
         'wizards/wizard.xml',
+        'reports/invoice.xml',
+        'reports/reports.xml',
 
         'views/views.xml',
         'views/loyalty.xml',

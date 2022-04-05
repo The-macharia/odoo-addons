@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <template id="oo_tax_groups_totals" inherit_id="account.tax_groups_totals">
+        <xpath expr="//t[1]/tr/t[1]/td[1]/span[1]" position="replace">
+            <span class="text-nowrap">Savings</span>
+        </xpath>
+        <xpath expr="//t[1]/tr/t[2]/td[1]/span[1]" position="replace">
+            <span class="text-nowrap">Savings</span>
+        </xpath>
+    </template>
+
+    <template id="oo_document_tax_totals" inherit_id="account.document_tax_totals">
+        <xpath expr="//t[1]/tr/td[1]" position="replace">
+            <td>
+                <strong>Amount</strong>
+            </td>
+        </xpath>
+    </template>
+
+
+    <template id="oo_report_invoice_document" inherit_id="account.report_invoice_document">
+        <xpath expr="//th[@name='th_taxes']" position="replace" />
+
+        <xpath expr="//t[@name='account_invoice_line_accountable']/td[5]" position="replace" />
+
+        <xpath expr="//p[@name='payment_communication']" position="replace" />
+
+        <xpath expr="//p[@name='payment_term']" position="replace" />
+
+        <xpath expr="//div[@name='comment']" position="replace" />
+
+        <xpath expr="//p[@name='note']" position="replace" />
+
+        <xpath expr="//p[@name='incoterm']" position="replace" />
+
+        <xpath expr="//div[@id='qrcode']" position="replace">
+            <div class="row">
+                <div class="col-3">
+                    Crates Balance: &amp;nbsp;
+                    <strong t-esc="o.partner_id.total_crates" />
+                </div>
+                <div class="col-3">
+                    Total Loyalty Points: &amp;nbsp;
+                    <strong t-esc="o.partner_id.loyalty_points" />
+                </div>
+                <div class="col-3">
+                    Cumulative Extra Cents: &amp;nbsp;
+                    <strong t-esc="o.partner_id.savings_points" />
+                </div>
+                <div class="col-3">
+                    Customer Balance: &amp;nbsp;
+                    <strong t-esc="o.partner_id.total_due" />
+                </div>
+            </div>
+        </xpath>
+
+    </template>
+</odoo>
