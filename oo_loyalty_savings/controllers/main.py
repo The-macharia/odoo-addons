@@ -14,7 +14,7 @@ class LoyaltySavings(http.Controller):
 
     def _process_partner_id(self, name):
         partner_model = request.env['res.partner'].sudo()
-        partner_id = partner_model.search([('name', '=', name), ('company_type', '=', 'company')], limit=1)
+        partner_id = partner_model.search([('name', '=', name), ('parent_id', '=', False)], limit=1)
         if not partner_id:
             partner_id = partner_model.create({
                 'name': name,
@@ -22,12 +22,14 @@ class LoyaltySavings(http.Controller):
                 'property_account_receivable_id': 26,
                 'property_account_payable_id': 51
             })
+        _logger.info(f'Found partner_id {partner_id.id}')
         return partner_id
 
     def _process_loyalty(self, partner_id, group, points):
         loyalty_model = request.env['loyalty.loyalty'].sudo()
 
         loyalty_id = loyalty_model.search([('partner_id', '=', partner_id.id), ('group_id', '=', group.id)], limit=1)
+
         line = {
             'date': today,
             'points': points,
@@ -42,11 +44,13 @@ class LoyaltySavings(http.Controller):
                 'date_enrolled': today,
                 'loyalty_lines': [(0, 0, line)]
             })
+            _logger.info(f'Created loyalty_id {loyalty_id.id}')
         else:
-            loyalty_id.write({'loyalty_lines': [(0, 0, line)]})
+            _logger.info(f'Found loyalty_id {loyalty_id.id}')
+            loyalty_id.sudo().write({'loyalty_lines': [(0, 0, line)]})
 
     def _process_savings(self, partner_id, group, points):
-        savings_model = request.env['savings.savings'].sudo()
+        savings_model = request.env['saving.saving'].sudo()
 
         savings_id = savings_model.search([('partner_id', '=', partner_id.id), ('group_id', '=', group.id)], limit=1)
 
@@ -62,14 +66,16 @@ class LoyaltySavings(http.Controller):
                 'date_enrolled': today,
                 'saving_lines': [(0, 0, line)]
             })
+            _logger.info(f'Created savings_id {savings_id.id}')
         else:
-            savings_id.write({'savings_lines': [(0, 0, line)]})
+            _logger.info(f'Found savings_id {savings_id.id}')
+            savings_id.write({'saving_lines': [(0, 0, line)]})
 
     @http.route('/loyalty/upload', type="json", csrf="None", auth="public", methods=['GET', 'POST'])
     def loyalty(self, **kw):
         group_model = request.env['loyalty.group'].sudo()
 
-        data = json.loads(request.httprequest.get_data()).get('payload')
+        data = json.loads(request.httprequest.get_data()).get('params')
         for group in data:
             loyalty_group = group_model.search([('name', '=', group.strip())], limit=1)
             if not group:
@@ -82,7 +88,7 @@ class LoyaltySavings(http.Controller):
 
     @http.route('/savings/upload', type="json", csrf="None", auth="public", methods=['GET', 'POST'])
     def savings(self, **kw):
-        data = json.loads(request.httprequest.get_data()).get('payload')
+        data = json.loads(request.httprequest.get_data()).get('params')
         group_model = request.env['savings.group'].sudo()
         for group in data:
             savings_group = group_model.search([('name', '=', group.strip())], limit=1)

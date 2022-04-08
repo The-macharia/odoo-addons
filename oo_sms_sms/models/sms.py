@@ -4,10 +4,10 @@ import logging
 
 import africastalking
 from odoo import _, models
-from odoo.addons.phone_validation.tools.phone_validation import \
-    phone_sanitize_numbers
+from odoo.addons.phone_validation.tools.phone_validation import phone_sanitize_numbers
 from odoo.exceptions import ValidationError
-
+from functools import reduce
+import operator
 _logger = logging.getLogger(__name__)
 
 
@@ -54,6 +54,7 @@ class SmsOOSms(models.AbstractModel):
         response = sms.send(message, numbers, sender_id=sender,
                             callback=self._send_sms_callback)
         _logger.error(response)
+        self.message_post(body=f'Sent sms successfully to {numbers}')
         return response
 
     def prepare_post_sms_notification(self, partners=None):
@@ -72,16 +73,16 @@ class SmsOOSms(models.AbstractModel):
         }
 
     def _format_and_validate_number(self, partner):
-        related_numbers = partner.child_ids.filtered('phone').mapped('phone')
-        if not partner.phone and not related_numbers:
+        related_phone = partner.child_ids.mapped(lambda x: [x.mobile, x.phone])
+        related_phone += [[partner.phone, partner.mobile]]
+        numbers = set(filter(lambda x: x, reduce(operator.iconcat, related_phone, [])))
+        if not numbers:
             return False
         country = partner.country_id
-        numbers = [partner._phone_format(phone) for phone in related_numbers]
-        numbers.append(partner._phone_format(partner.phone))
+        numbers = [partner._phone_format(phone) for phone in numbers]
         numbers = list(set(filter(lambda n: n, numbers)))
         if numbers:
-            sanitized = phone_sanitize_numbers(
-                numbers, country.code, country.phone_code)
+            sanitized = phone_sanitize_numbers(numbers, country.code, country.phone_code)
             return [num['sanitized'] for num in sanitized.values()]
         return False
 

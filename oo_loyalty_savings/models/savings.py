@@ -39,11 +39,18 @@ class Savings(models.Model):
     group_id = fields.Many2one('savings.group', string='Saving Group', required=True)
     date_enrolled = fields.Date(string='Date Enrolled', required=True)
     date_exited = fields.Date(string='Date Exited')
-    total_savings = fields.Float(string='Total Savings', readonly=True)
+    total_savings = fields.Float(string='Total Savings', readonly=True, compute="_compute_total_savings", store=True)
     saving_lines = fields.One2many('collection.line', 'saving_id', string='Saving Lines',
                                    domain=[('collection_type', '=', 'savings')])
     redeem_lines = fields.One2many('redeem.line', inverse_name='saving_id',
                                    string='Redeem Lines', domain=[('redeem_type', '=', 'savings')])
+
+    @api.depends('saving_lines', 'saving_lines.points')
+    def _compute_total_savings(self):
+        for rec in self:
+            amount = rec.mapped('saving_lines').filtered(
+                lambda s: s.collection_type == 'savings').mapped('amount') or [0]
+            rec.total_savings = sum(amount)
 
     @api.model
     def create(self, vals):

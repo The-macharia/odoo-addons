@@ -15,8 +15,10 @@ class AccountMove(models.Model):
         if sms_allowed:
             for rec in self:
                 numbers = rec._format_and_validate_number(rec.partner_id)
-                rec._raise_validation_error(numbers)
-                rec._send_sms(numbers)
+                if numbers:
+                    rec._send_sms(numbers)
+                else:
+                    rec.message_post('Failed sending sms to {re.partner_id.name}')
         return res
 
 
@@ -31,8 +33,10 @@ class AccountPayment(models.Model):
         if sms_allowed:
             for rec in self.filtered(lambda p: not p.is_internal_transfer):
                 numbers = rec._format_and_validate_number(rec.partner_id)
-                rec._raise_validation_error(numbers)
-                rec._send_sms(numbers)
+                if numbers:
+                    rec._send_sms(numbers)
+                else:
+                    rec.message_post('Failed sending sms to {re.partner_id.name}')
         return res
 
 
@@ -47,8 +51,11 @@ class SaleOrder(models.Model):
         if sms_allowed:
             for rec in self:
                 numbers = rec._format_and_validate_number(rec.partner_id)
-                rec._raise_validation_error(numbers)
-                rec._send_sms(numbers)
+                if numbers:
+                    rec._send_sms(numbers)
+                else:
+                    rec.message_post('Failed sending sms to {re.partner_id.name}')
+
         return res
 
 
