@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 
 
-from odoo import fields, models, api
+import logging
+
+from odoo import api, fields, models
 from odoo.tools.float_utils import float_round
+
+MOVE_TYPE = {'out_invoice': 1, 'out_refund': -1}
+
+_logger = logging.getLogger(__name__)
 
 
 class ProductTemplate(models.Model):
@@ -52,48 +58,45 @@ class ResPartner(models.Model):
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
-    def _calculate_loyalty_total_points(self, lines):
-        total_points = 0
-        for line in lines:
-            total_points += line[-1]['points']
-        return total_points
-
-    def _calculate_savings_total_points(self, lines):
-        total_amount = 0
-        for line in lines:
-            total_amount += line[-1]['amount']
-        return total_amount
-
     def _process_loyalty_lines(self, payment_date, loyalty, lines):
-        loyalty_lines = [(0, 0, {
-            'date': payment_date,
-            'invoice_line_id': line.id,
-            'points': float_round(line.price_total / loyalty.group_id.amount_for_point, precision_rounding=0.01),
-            'amount_total': line.price_total,
-            'collection_type': 'loyalty',
-            'points_worth': float_round(line.price_total / loyalty.group_id.amount_for_point, precision_rounding=0.01) / loyalty.group_id.currency_points
-        }) for line in lines]
-
-        total_points = self._calculate_loyalty_total_points(loyalty_lines) + loyalty.total_points
+        loyalty_lines = []
+        total_points = loyalty.total_points
+        for line in lines:
+            points = float_round(line.price_total / loyalty.group_id.amount_for_point, precision_rounding=0.01)
+            points = points * MOVE_TYPE.get(self.move_type, 0)
+            total_points += points
+            loyalty_lines.append((0, 0, {
+                'date': payment_date,
+                'invoice_line_id': line.id,
+                'points': points,
+                'amount_total': line.price_total * MOVE_TYPE.get(self.move_type, 0),
+                'collection_type': 'loyalty',
+                'points_worth': points / loyalty.group_id.currency_points
+            }))
+        _logger.info(f'{self.move_type} LOYALTIES: {loyalty_lines}')
         return loyalty.write({'loyalty_lines': loyalty_lines, 'total_points': total_points})
 
     def _process_savings_lines(self, payment_date, saving, lines):
-        saving_lines = [(0, 0, {
-            'date': payment_date,
-            'product_id': line.product_id.id,
-            'quantity': line.quantity,
-            'invoice_line_id': line.id,
-            'amount': saving.group_id.amount_tosave * line.quantity,
-            'amount_total': line.price_total,
-            'collection_type': 'savings',
-        }) for line in lines]
-
-        total_savings = saving.total_savings + self._calculate_savings_total_points(saving_lines)
+        total_savings = saving.total_savings
+        saving_lines = []
+        for line in lines:
+            amount = saving.group_id.amount_tosave * line.quantity * MOVE_TYPE.get(self.move_type, 0)
+            total_savings += amount
+            saving_lines.append((0, 0, {
+                'date': payment_date,
+                'product_id': line.product_id.id,
+                'quantity': line.quantity * MOVE_TYPE.get(self.move_type, 0),
+                'invoice_line_id': line.id,
+                'amount': amount,
+                'amount_total': line.price_total * MOVE_TYPE.get(self.move_type, 0),
+                'collection_type': 'savings',
+            }))
+        _logger.info(f'SAVINGS: {saving_lines}')
         return saving.write({'saving_lines': saving_lines, 'total_savings': total_savings})
 
     def action_post(self):
         res = super().action_post()
-        for rec in self:
+        for rec in self.filtered(lambda m: m.move_type in MOVE_TYPE.keys()):
             loyalty_id = rec.partner_id.loyalty_id
             loyalty_group = loyalty_id and loyalty_id.group_id or False
             if loyalty_group and loyalty_group.product_ids:

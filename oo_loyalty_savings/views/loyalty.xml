@@ -103,7 +103,6 @@
               <field name="date_exited" />
             </group>
           </group>
-          <group>
             <notebook>
               <page name="collections" string="Collection Lines">
                 <field name="loyalty_lines" nolabel="1" context="{'default_collection_type': 'loyalty'}">
@@ -126,6 +125,7 @@
                     <field name="invoice_id" invisible="1"/>
                     <field name="amount_before" />
                     <field name="amount_redeemed" />
+                    <field name="points_worth" />
                     <field name="amount_balance" />
                     <field name="redeem_type" invisible="1" />
                     <field name="loyalty_id" invisible="1" />
@@ -133,7 +133,6 @@
                 </field>
               </page>
             </notebook>
-          </group>
         </sheet>
       </form>
     </field>

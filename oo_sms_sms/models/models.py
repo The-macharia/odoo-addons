@@ -18,7 +18,7 @@ class AccountMove(models.Model):
                 if numbers:
                     rec._send_sms(numbers)
                 else:
-                    rec.message_post('Failed sending sms to {re.partner_id.name}')
+                    rec.message_post(body=f'Failed sending sms to {rec.partner_id.name}')
         return res
 
 
@@ -36,7 +36,7 @@ class AccountPayment(models.Model):
                 if numbers:
                     rec._send_sms(numbers)
                 else:
-                    rec.message_post('Failed sending sms to {re.partner_id.name}')
+                    rec.message_post(body=f'Failed sending sms to {rec.partner_id.name}')
         return res
 
 
@@ -54,8 +54,7 @@ class SaleOrder(models.Model):
                 if numbers:
                     rec._send_sms(numbers)
                 else:
-                    rec.message_post('Failed sending sms to {re.partner_id.name}')
-
+                    rec.message_post(body=f'Failed sending sms to {rec.partner_id.name}')
         return res
 
 
@@ -70,6 +69,8 @@ class PurchaseOrder(models.Model):
         if sms_allowed:
             for rec in self:
                 numbers = rec._format_and_validate_number(rec.partner_id)
-                rec._raise_validation_error(numbers)
-                rec._send_sms(numbers)
+                if numbers:
+                    rec._send_sms(numbers)
+                else:
+                    rec.message_post(body=f'Failed sending sms to {rec.partner_id.name}')
         return res

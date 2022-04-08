@@ -104,6 +104,7 @@ class RedeemLines(models.Model):
     invoice_id = fields.Many2one('account.move', string='Invoice')
     redeem_type = fields.Selection(selection=[('loyalty', 'Loyalty'), ('savings', 'Savings')],
                                    string='Redeem Type', default='loyalty')
+    points_worth = fields.Float(string='Points Worth', readonly=True)
 
     @api.depends('amount_before', 'amount_redeemed')
     def _compute_points_balance(self):

@@ -101,7 +101,6 @@
                 </group>
               </group>
 
-              <group>
                 <notebook>
                   <page name="collections" string="Collection Lines">
                     <field name="saving_lines" nolabel="1" context="{'default_collection_type': 'savings'}">
@@ -132,7 +131,6 @@
                     </field>
                   </page>
                 </notebook>
-              </group>
             </sheet>
           </form>
         </field>

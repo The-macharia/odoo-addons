@@ -25,16 +25,16 @@ class RedeemWizard(models.TransientModel):
                 raise ValidationError('You cannot redeem more points than the customer possess!')
             if loyalty_id.total_points < loyalty_id.group_id.min_points:
                 raise ValidationError('This customer does not have the required threshold for withdrawing points!')
-            points = self.points_to_redeem / loyalty_id.group_id.currency_points
-            new_total_points = loyalty_id.total_points - points
+
             loyalty_id.write({
                 'redeem_lines': [(0, 0, {
                     'redeem_type': 'loyalty',
-                    'amount_redeemed': points,
+                    'amount_redeemed': self.points_to_redeem,
+                    'points_worth': self.points_to_redeem / loyalty_id.group_id.currency_points,
                     'date': self.date,
                     'amount_before': loyalty_id.total_points,
                 })],
-                'total_points': new_total_points,
+                'total_points': loyalty_id.total_points - self.points_to_redeem,
             })
             return True
 
