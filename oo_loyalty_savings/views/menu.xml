@@ -67,4 +67,7 @@
 
     <menuitem id="oo_crates_issue_menu" name="Crates Issued" parent="sale.product_menu_catalog" action="oo_stock_crates_action"
         sequence="100"/>
+
+    <menuitem id="oo_sale_by_date_menu" name="Sale by Date Report" parent="sale.menu_sale_report"
+    action="action_sale_by_date_report" sequence="30" />
 </odoo>

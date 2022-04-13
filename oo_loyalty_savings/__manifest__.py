@@ -16,12 +16,14 @@
     'version': '15.0.0.1.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['account', 'sale_management'],
+    'depends': ['account', 'sale_management', 'sale'],
+    'external_dependencies': {'python': ['openpyxl']},
 
     # always loaded
     'data': [
         'security/ir.model.access.csv',
         'wizards/wizard.xml',
+        'wizards/sale_by_date.xml',
         'reports/invoice.xml',
         'reports/reports.xml',
 

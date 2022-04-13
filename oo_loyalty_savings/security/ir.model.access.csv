@@ -7,3 +7,5 @@ access_redeem_line,redeem.line.user,model_redeem_line,base.group_user,1,1,1,1
 access_collection_line,collection.line.user,model_collection_line,base.group_user,1,1,1,1
 access_stock_crates,stock.crates.user,model_stock_crates,base.group_user,1,1,1,1
 access_redeem_wizard,redeem.wizard.user,model_redeem_wizard,base.group_user,1,1,1,1
+access_excel_wizard,excel.wizard.user,model_excel_wizard,base.group_user,1,1,1,1
+access_sale_date_report,sale.date.report.user,model_sale_date_report,base.group_user,1,1,1,1
