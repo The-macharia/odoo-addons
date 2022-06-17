@@ -9,7 +9,8 @@
                     <group>
                         <group>
                             <field name="collection_type" widget="radio" invisible="1" />
-                            <field name="points_to_redeem"/>
+                            <field name="points_to_redeem" attrs="{'invisible':[('collection_type', '=', 'savings')]}" />
+                            <field name="points_to_redeem" string="Amount To Redeem" attrs="{'invisible':[('collection_type', '=', 'loyalty')]}" />
                             <field name="date"/>
                         </group>
                     </group>
@@ -22,7 +23,7 @@
         </record>
 
         <record id="action_redeem_points" model="ir.actions.act_window">
-            <field name="name">Redeem Loyalty and Savings</field>
+            <field name="name">Redeem</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">redeem.wizard</field>
             <field name="view_mode">form</field>

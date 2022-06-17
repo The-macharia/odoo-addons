@@ -32,6 +32,7 @@ class SavingsGroup(models.Model):
 
 class Savings(models.Model):
     _name = 'saving.saving'
+    _inherit = 'clean.group'
     _description = 'Partner savings management'
     _rec_name = 'partner_id'
 
@@ -48,9 +49,11 @@ class Savings(models.Model):
     @api.depends('saving_lines', 'saving_lines.points')
     def _compute_total_savings(self):
         for rec in self:
-            amount = rec.mapped('saving_lines').filtered(
+            total_amount = rec.mapped('saving_lines').filtered(
                 lambda s: s.collection_type == 'savings').mapped('amount') or [0]
-            rec.total_savings = sum(amount)
+            redeem_amount = rec.mapped('redeem_lines').filtered(
+                lambda s: s.redeem_type == 'savings').mapped('amount_redeemed') or [0]
+            rec.total_savings = sum(total_amount) - sum(redeem_amount)
 
     @api.model
     def create(self, vals):
@@ -64,3 +67,14 @@ class Savings(models.Model):
         if res and vals.get('partner_id'):
             partner = self.env['res.partner'].browse(vals['partner_id'])
             partner.savings_id = self.id
+
+    def action_redeem_points(self):
+        return {
+            'name': "Withdraw Savings",
+            'type': 'ir.actions.act_window',
+            'view_mode': 'form',
+            'context': {'default_collection_type': 'savings'},
+            'res_model': 'redeem.wizard',
+            'view_id': self.env.ref('oo_loyalty_savings.action_redeem_points_form').id,
+            'target': 'new'
+        }

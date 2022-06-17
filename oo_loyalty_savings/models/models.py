@@ -94,22 +94,53 @@ class AccountMove(models.Model):
         _logger.info(f'SAVINGS: {saving_lines}')
         return saving.write({'saving_lines': saving_lines, 'total_savings': total_savings})
 
+    def check_active_user(self, record):
+        if not record.date_exited or (record.date_exited and record.date_exited >= self.invoice_date):
+            return True
+        
+        return False
+        
     def action_post(self):
         res = super().action_post()
         for rec in self.filtered(lambda m: m.move_type in MOVE_TYPE.keys()):
             loyalty_id = rec.partner_id.loyalty_id
+            if loyalty_id:
+                if rec.check_active_user(loyalty_id):
+                    loyalty_group = loyalty_id.group_id
+                    if loyalty_group and loyalty_group.product_ids:
+                        lines = rec.invoice_line_ids.filtered(lambda l: l.product_id.id in loyalty_group.product_ids.ids)
+                        if lines:
+                            rec._process_loyalty_lines(rec.invoice_date, loyalty_id, lines)
+
+            savings_id = rec.partner_id.savings_id
+            if savings_id:
+                if rec.check_active_user(loyalty_id):
+                    savings_group = savings_id and savings_id.group_id or False
+                    if savings_group and savings_group.product_ids:
+                        lines = rec.invoice_line_ids.filtered(lambda l: l.product_id.id in savings_group.product_ids.ids)
+                        if lines:
+                            rec._process_savings_lines(rec.invoice_date, savings_id, lines)
+        return res
+
+    def button_draft(self):
+        res = super().button_draft()
+        for rec in self.filtered(lambda m: m.move_type in MOVE_TYPE.keys()):
+            loyalty_id = rec.partner_id.loyalty_id
             loyalty_group = loyalty_id and loyalty_id.group_id or False
             if loyalty_group and loyalty_group.product_ids:
-                lines = rec.invoice_line_ids.filtered(lambda l: l.product_id.id in loyalty_group.product_ids.ids)
-                if lines:
-                    rec._process_loyalty_lines(rec.invoice_date, loyalty_id, lines)
+                for line in rec.invoice_line_ids.filtered(lambda p: p.product_id.id in loyalty_group.product_ids.ids):
+                    loyalty_line = loyalty_id.loyalty_lines.filtered(lambda l: l.invoice_line_id.id == line.id)
+                    loyalty_line.unlink()
+                    _logger.info(f'Loyalty lines {loyalty_line.ids} deleted')
 
             savings_id = rec.partner_id.savings_id
             savings_group = savings_id and savings_id.group_id or False
             if savings_group and savings_group.product_ids:
-                lines = rec.invoice_line_ids.filtered(lambda l: l.product_id.id in savings_group.product_ids.ids)
-                if lines:
-                    rec._process_savings_lines(rec.invoice_date, savings_id, lines)
+                for line in rec.invoice_line_ids.filtered(lambda p: p.id in savings_group.product_ids.ids):
+                    saving_line = loyalty_id.saving_lines.filtered(lambda l: l.invoice_line_id.id == line.id)
+                    saving_line.unlink()
+                    _logger.info(f'Saving lines {saving_line.ids} deleted')
+
         return res
 
 

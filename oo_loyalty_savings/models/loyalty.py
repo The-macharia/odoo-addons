@@ -1,7 +1,39 @@
 # -*- coding: utf-8 -*-
 
 
+import logging
+
 from odoo import api, fields, models
+
+_logger = logging.getLogger(__name__)
+
+
+class GroupCleanup(models.AbstractModel):
+    _name = 'clean.group'
+
+    def refresh_collection_lines(self):
+        for rec in self:
+            active_model = self._context.get('active_model')
+            if active_model == 'loyalty.loyalty':
+                lines = self.env['collection.line'].read_group(
+                    [('loyalty_id', '=', rec.id)], ['date', 'invoice_line_id'], groupby='invoice_line_id', lazy=False)
+                for line in lines:
+                    if line['__count'] < 2 or not line.get('invoice_line_id'):
+                        continue
+                    collection_line = rec.loyalty_lines.filtered(
+                        lambda l: l.invoice_line_id.id == line['invoice_line_id'][0]).sorted('id')
+                    collection_line[:-1].unlink()
+                    _logger.info(f'Loyalty lines deleted {collection_line.ids}')
+            if active_model == 'saving.saving':
+                lines = self.env['collection.line'].read_group(
+                    [('saving_id', '=', rec.id)], ['date', 'invoice_line_id'], groupby='invoice_line_id', lazy=False)
+                for line in lines:
+                    if line['__count'] < 2 or not line.get('invoice_line_id'):
+                        continue
+                    collection_line = rec.saving_lines.filtered(
+                        lambda l: l.invoice_line_id.id == line['invoice_line_id'][0]).sorted('id')
+                    collection_line[:-1].unlink()
+                    _logger.info(f'Saving lines deleted {collection_line.ids}')
 
 
 class LoyaltyGroup(models.Model):
@@ -36,6 +68,7 @@ class LoyaltyGroup(models.Model):
 
 class Loyalty(models.Model):
     _name = 'loyalty.loyalty'
+    _inherit = 'clean.group'
     _description = 'Partner loyalty management'
     _rec_name = 'partner_id'
 
@@ -52,9 +85,11 @@ class Loyalty(models.Model):
     @api.depends('loyalty_lines', 'loyalty_lines.points')
     def _compute_total_points(self):
         for rec in self:
-            amount = rec.mapped('loyalty_lines').filtered(
+            total_amount = rec.mapped('loyalty_lines').filtered(
                 lambda s: s.collection_type == 'loyalty').mapped('points') or [0]
-            rec.total_points = sum(amount)
+            redeem_amount = rec.mapped('redeem_lines').filtered(
+                lambda s: s.redeem_type == 'loyalty').mapped('amount_redeemed') or [0]
+            rec.total_points = sum(total_amount) - sum(redeem_amount)
 
     @api.model
     def create(self, vals):

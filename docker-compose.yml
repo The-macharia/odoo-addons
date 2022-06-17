@@ -15,7 +15,7 @@ services:
                 - network-15
    odoo15:
         image: odoo:15.0
-        command: -d sms -u oo_loyalty_savings --dev=all
+        command: --dev=all
         ports:
                 - 8015:8069
         links:

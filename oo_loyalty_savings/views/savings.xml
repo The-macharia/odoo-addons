@@ -86,7 +86,7 @@
         <field name="arch" type="xml">
           <form>
             <header>
-              <button string="Withdraw" name="%(action_redeem_points)d" type="action" class="oe_highlight" context="{'default_collection_type': 'savings'}" />
+              <button string="Withdraw" name="action_redeem_points" type="object" class="oe_highlight" context="{'default_collection_type': 'savings'}" />
             </header>
             <sheet>
               <group>
@@ -122,9 +122,9 @@
                       <tree editable="bottom">
                         <field name="date" />
                         <field name="invoice_id" invisible="1" />
-                        <field name="amount_before" />
-                        <field name="amount_redeemed" />
-                        <field name="amount_balance" />
+                        <field name="amount_before" string="Savings Before"/>
+                        <field name="amount_redeemed" string="Amount Withdrawn"/>
+                        <field name="amount_balance" string="Balance"/>
                         <field name="redeem_type" invisible="1" />
                         <field name="saving_id" invisible="1" />
                       </tree>

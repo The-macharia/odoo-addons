@@ -13,7 +13,7 @@ class AccountMove(models.Model):
         params = self.env['ir.config_parameter'].sudo()
         sms_allowed = params.get_param('oo_sms_sms.invoice_enabled')
         if sms_allowed:
-            for rec in self:
+            for rec in self.filtered(lambda r: r.move_type in ['out_invoice', 'out_refund']):
                 numbers = rec._format_and_validate_number(rec.partner_id)
                 if numbers:
                     rec._send_sms(numbers)

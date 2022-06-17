@@ -70,4 +70,6 @@
 
     <menuitem id="oo_sale_by_date_menu" name="Sale by Date Report" parent="sale.menu_sale_report"
     action="action_sale_by_date_report" sequence="30" />
+
+    <menuitem id="oo_sale_analysis_report_menu" name="Sale Analysis Report" parent="account.account_reports_management_menu" action="action_sale_analysis_report" sequence="30" />
 </odoo>
