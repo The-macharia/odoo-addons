@@ -1,0 +1,162 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <template id="oo_loading_report_document">
+        <div class="page">
+            <div class="row text-center">
+                <h3 t-if="delivery_note" class="w-100 text-center">Delivery Note</h3>
+                <h3 t-else="" class="w-100 text-center">Loading Note</h3>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6">
+                    <p>
+                        <span>Batch No:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.x_studio_batch_number" />
+                    </p>
+                    <p>
+                        <span>Sale Order No:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.origin" />
+                    </p>
+                    <p>
+                        <span>Vehicle Reg No:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.x_studio_truck_number" />
+                    </p>
+                    <p>
+                        <span>Trailer No:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.x_studio_trailer_number" />
+                    </p>
+                    <p>
+                        <span>Vessel Name:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.x_studio_vessel_name" />
+                    </p>
+                    <p>
+                        <span>Driver Name:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.x_studio_driver_name" />
+                    </p>
+
+                    <p>
+                        <span>H/O REF:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.x_studio_customer_ref" />
+                    </p>
+
+                </div>
+                <div class="col-6">
+                    <p>
+                        <span>Date:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.scheduled_date" />
+                    </p>
+                    <p>
+                        <span>Day:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.scheduled_date.strftime('%A')" />
+                    </p>
+                    <p>
+                        <span>Tank Number:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.x_studio_tank_number" />
+                    </p>
+                    <p t-if="delivery_note">
+                        <span>Metre Index Before:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.x_studio_meter_index_before_loading" />
+                    </p>
+                    <p t-if="delivery_note">
+                        <span>Metre Index After:</span>
+                        &amp;nbsp;
+                        <span t-esc="o.x_studio_meter_index_after_loading" />
+                    </p>
+
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-6">
+                    <h4>Customer</h4>
+                    <p t-field="o.partner_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;name&quot;], &quot;no_marker&quot;: True}" />
+
+                </div>
+                <div class="col-6" />
+            </div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <table class="table table-main">
+                        <thead>
+                            <tr>
+                                <th class="text-left">Item</th>
+                                <th class="text-left">Description</th>
+                                <th class="text-left">UOM</th>
+                                <th class="text-left">Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.move_ids_without_package" t-as="item">
+                                <td class="text-left">
+                                    <span t-field="item.product_id.default_code" />
+                                </td>
+                                <td class="text-left">
+                                    <span t-field="item.product_id.name" />
+                                </td>
+                                <td class="text-left">
+                                    <span t-field="item.product_id.uom_id.name" />
+                                </td>
+                                <t t-if="delivery_note">
+                                    <td class="text-left">
+                                        <span t-field="item.quantity_done" />
+                                    </td>
+                                </t>
+                                <t t-else="">
+                                    <td class="text-left">
+                                        <span t-field="item.product_uom_qty" />
+                                    </td>
+                                </t>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <br />
+            <div class="row mt-4">
+                <div class="col-6">
+                    <p>Loader Name:________________________________________</p>
+                    <p>Driver Name:________________________________________</p>
+                    <p>Dispatch Clerk Name:________________________________</p>
+                    <p>Cashier Name:________________________________________</p>
+                </div>
+                <div class="col-6">
+                    <p>Signature:________________________________________</p>
+                    <p>Signature:________________________________________</p>
+                    <p>Signature:________________________________________</p>
+                    <p>Signature:________________________________________</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="oo_loading_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-set="delivery_note" t-value="False" />
+                    <t t-call="oo_reports.oo_loading_report_document" />
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="oo_delivery_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-set="delivery_note" t-value="True" />
+                    <t t-call="oo_reports.oo_loading_report_document" />
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

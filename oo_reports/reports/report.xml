@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="action_report_action_loading" model="ir.actions.report">
+        <field name="name">Loading Note (New)</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">oo_reports.oo_loading_report</field>
+        <field name="report_file">oo_reports.oo_loading_report</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_action_delivery" model="ir.actions.report">
+        <field name="name">Delivery Notes (New)</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">oo_reports.oo_delivery_report</field>
+        <field name="report_file">oo_reports.oo_delivery_report</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking" />
+        <field name="binding_type">report</field>
+    </record>
+</odoo>
