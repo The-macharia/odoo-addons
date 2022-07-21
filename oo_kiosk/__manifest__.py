@@ -22,6 +22,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/menus.xml',
+        'views/views.xml',
         'views/kiosk_groups.xml',
         'views/kiosk_mrp.xml',
     ]
