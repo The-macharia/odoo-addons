@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="oo_kiosk_group_action" model="ir.actions.act_window">
+        <field name="name">Kiosk Group</field>
+        <field name="res_model">kiosk.group</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="oo_kiosk_mrp_action" model="ir.actions.act_window">
+        <field name="name">Kiosk Orders</field>
+        <field name="res_model">kiosk.mrp</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- This Menu Item must have a parent and an action -->
+    <menuitem id="oo_kiosk_mrp_menu_act" name="Kiosk Orders" parent="mrp.menu_mrp_manufacturing" action="oo_kiosk_mrp_action" sequence="0" />
+    <menuitem id="oo_kiosk_group_menu_act" name="Kiosk Groups" parent="mrp.menu_mrp_bom" action="oo_kiosk_group_action" sequence="100" />
+</odoo>

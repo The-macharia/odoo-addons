@@ -1,0 +1,38 @@
+{
+    "sourceFile": "views/kiosk_groups.xml",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 5,
+            "patches": [
+                {
+                    "date": 1658446678517,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1658446685343,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,8 +1,8 @@\n <?xml version='1.0' encoding='utf-8'?>\n <odoo>\n   <!-- kisok.group tree view -->\n-  <record id=\"model_name_view_tree\" model=\"ir.ui.view\">\n+  <record id=\"oo_kiosk_group_view_tree\" model=\"ir.ui.view\">\n     <field name=\"name\">kisok.group.view.tree</field>\n     <field name=\"model\">kisok.group</field>\n     <field name=\"arch\" type=\"xml\">\n       <tree>\n"
+                },
+                {
+                    "date": 1658446730355,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -12,5 +12,40 @@\n       </tree>\n     </field>\n   </record>\n \n+\n+  <!-- kiosk.group form view -->\n+  <record id=\"model_name_view_form\" model=\"ir.ui.view\">\n+    <field name=\"name\">kiosk.group.view.form</field>\n+    <field name=\"model\">kiosk.group</field>\n+    <field name=\"arch\" type=\"xml\">\n+      <form string=\"\">\n+        <sheet>\n+          <group>\n+            <group>\n+              <field name=\"name\" />\n+              <field name=\"product_id\" />\n+              <field name=\"quantity\" />\n+            </group>\n+            <group />\n+          </group>\n+\n+          <notebook>\n+            <page name=\"components\" string=\"Components\">\n+              <group string=\"Packaging Lines\">\n+                <field name=\"package_lines\" nolabel=\"1\">\n+                  <tree editable=\"bottom\">\n+                    <field name=\"bom_id\" />\n+                    <field name=\"related_group_ids\" widget=\"many2many_tags\" />\n+                    <!-- <field name=\"product_id\" /> <field name=\"package_type\" /> <field name=\"finished_qty\" /> <field name=\"has_punching\" /> <field name=\"has_bending\" /> <field name=\"has_spot_weld\" /> <field name=\"has_grinding\" /> <field name=\"has_coating\" /> <field name=\"packing\" /> -->\n+                    <field name=\"group_id\" invisible=\"1\" />\n+                  </tree>\n+                </field>\n+              </group>\n+            </page>\n+          </notebook>\n+        </sheet>\n+      </form>\n+    </field>\n+  </record>\n </odoo>\n"
+                },
+                {
+                    "date": 1658446736867,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,9 +14,9 @@\n   </record>\n \n \n   <!-- kiosk.group form view -->\n-  <record id=\"model_name_view_form\" model=\"ir.ui.view\">\n+  <record id=\"oo_kiosk_group_view_form\" model=\"ir.ui.view\">\n     <field name=\"name\">kiosk.group.view.form</field>\n     <field name=\"model\">kiosk.group</field>\n     <field name=\"arch\" type=\"xml\">\n       <form string=\"\">\n"
+                },
+                {
+                    "date": 1658446769324,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,10 +1,23 @@\n <?xml version='1.0' encoding='utf-8'?>\n <odoo>\n-  <!-- kisok.group tree view -->\n+\n+  <!-- kiosk.group search view -->\n+  <record id=\"model_name_view_search\" model=\"ir.ui.view\">\n+    <field name=\"name\">kiosk.group.view.search</field>\n+    <field name=\"model\">kiosk.group</field>\n+    <field name=\"arch\" type=\"xml\">\n+      <search string=\"Search Description\">\n+        <field name=\"name\" />\n+        <field name=\"product_id\" />\n+      </search>\n+    </field>\n+  </record>\n+\n+  <!-- kiosk.group tree view -->\n   <record id=\"oo_kiosk_group_view_tree\" model=\"ir.ui.view\">\n-    <field name=\"name\">kisok.group.view.tree</field>\n-    <field name=\"model\">kisok.group</field>\n+    <field name=\"name\">kiosk.group.view.tree</field>\n+    <field name=\"model\">kiosk.group</field>\n     <field name=\"arch\" type=\"xml\">\n       <tree>\n         <field name=\"name\" />\n         <field name=\"product_id\" />\n"
+                },
+                {
+                    "date": 1658446779363,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,9 +1,9 @@\n <?xml version='1.0' encoding='utf-8'?>\n <odoo>\n \n   <!-- kiosk.group search view -->\n-  <record id=\"model_name_view_search\" model=\"ir.ui.view\">\n+  <record id=\"oo_kiosk_group_view_search\" model=\"ir.ui.view\">\n     <field name=\"name\">kiosk.group.view.search</field>\n     <field name=\"model\">kiosk.group</field>\n     <field name=\"arch\" type=\"xml\">\n       <search string=\"Search Description\">\n"
+                }
+            ],
+            "date": 1658446678517,
+            "name": "Commit-0",
+            "content": "<?xml version='1.0' encoding='utf-8'?>\n<odoo>\n  <!-- kisok.group tree view -->\n  <record id=\"model_name_view_tree\" model=\"ir.ui.view\">\n    <field name=\"name\">kisok.group.view.tree</field>\n    <field name=\"model\">kisok.group</field>\n    <field name=\"arch\" type=\"xml\">\n      <tree>\n        <field name=\"name\" />\n        <field name=\"product_id\" />\n        <field name=\"quantity\" />\n      </tree>\n    </field>\n  </record>\n\n</odoo>\n"
+        }
+    ]
+}

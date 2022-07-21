@@ -1,0 +1,30 @@
+{
+    "sourceFile": "security/ir.model.access.csv",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 3,
+            "patches": [
+                {
+                    "date": 1658446845268,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1658446896939,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,4 +1,4 @@\n id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink\n-access_loyalty,loyalty.user,model_loyalty_loyalty,base.group_user,1,1,1,1\n-access_saving,saving.user,model_saving_saving,base.group_user,1,1,1,1\n-access_loyalty_group,loyalty.group.user,model_loyalty_group,base.group_user,1,1,1,1\n+access_kiosk_group,kiosk.group.user,model_kiosk_group,base.group_user,1,1,1,1\n+access_kiosk_group,kiosk.group.user,model_kiosk_group,base.group_user,1,1,1,1\n+access_kiosk_group,kiosk.group.user,model_kiosk_group,base.group_user,1,1,1,1\n"
+                },
+                {
+                    "date": 1658446929456,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,4 +1,4 @@\n id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink\n access_kiosk_group,kiosk.group.user,model_kiosk_group,base.group_user,1,1,1,1\n+access_kiosk_package_line,kiosk.package.line.user,model_kiosk_package_line,base.group_user,1,1,1,1\n access_kiosk_group,kiosk.group.user,model_kiosk_group,base.group_user,1,1,1,1\n-access_kiosk_group,kiosk.group.user,model_kiosk_group,base.group_user,1,1,1,1\n"
+                },
+                {
+                    "date": 1658446957223,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,4 +1,4 @@\n id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink\n access_kiosk_group,kiosk.group.user,model_kiosk_group,base.group_user,1,1,1,1\n access_kiosk_package_line,kiosk.package.line.user,model_kiosk_package_line,base.group_user,1,1,1,1\n-access_kiosk_group,kiosk.group.user,model_kiosk_group,base.group_user,1,1,1,1\n+access_kiosk_mrp,kiosk.mrp.user,model_kiosk_mrp,base.group_user,1,1,1,1\n"
+                }
+            ],
+            "date": 1658446845268,
+            "name": "Commit-0",
+            "content": "id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink\naccess_loyalty,loyalty.user,model_loyalty_loyalty,base.group_user,1,1,1,1\naccess_saving,saving.user,model_saving_saving,base.group_user,1,1,1,1\naccess_loyalty_group,loyalty.group.user,model_loyalty_group,base.group_user,1,1,1,1\n"
+        }
+    ]
+}

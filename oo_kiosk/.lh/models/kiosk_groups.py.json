@@ -1,0 +1,18 @@
+{
+    "sourceFile": "models/kiosk_groups.py",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1658446316773,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1658446316773,
+            "name": "Commit-0",
+            "content": "# -*- coding: utf-8 -*-\n\nfrom odoo import models, fields\n\n\nclass MrpBom(models.Model):\n    _inherit = 'mrp.bom'\n\n    is_kiosk_bom = fields.Boolean(string='Kiosk Bom')\n\n\nclass KioskGroups(models.Model):\n    _name = 'kiosk.group'\n    _description = 'Kiosk Product Group'\n    _order = 'sequence asc'\n\n    name = fields.Char()\n    sequence = fields.Integer(string='Sequence')\n    product_id = fields.Many2one('product.product', string='Consumed Product')\n    quantity = fields.Float(string='Quantity')\n    package_lines = fields.One2many('kiosk.package.line', inverse_name='group_id', string='Package Lines')\n\n\nclass KioskPackageLine(models.Model):\n    _name = 'kiosk.package.line'\n    _description = 'Packaging group lines'\n\n    bom_id = fields.Many2one('mrp.bom', string='Bom', required=True, domain=[('is_kiosk_bom', '=', True)])\n    related_group_ids = fields.Many2many('kiosk.group', string='Related Groups')\n    group_id = fields.Many2one('kiosk.group', string='Group')\n"
+        }
+    ]
+}

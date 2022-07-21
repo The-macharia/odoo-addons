@@ -1,0 +1,50 @@
+{
+    "sourceFile": "views/menus.xml",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 8,
+            "patches": [
+                {
+                    "date": 1658447028551,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1658447083911,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -20,5 +20,8 @@\n         <field name=\"help\" type=\"html\">\n \n         </field>\n     </record>\n+\n+    <!-- This Menu Item must have a parent and an action -->\n+    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"\" parent=\"\" action=\"\" sequence=\"\" />\n </odoo>\n"
+                },
+                {
+                    "date": 1658447094438,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -22,6 +22,6 @@\n         </field>\n     </record>\n \n     <!-- This Menu Item must have a parent and an action -->\n-    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"\" parent=\"\" action=\"\" sequence=\"\" />\n+    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"\" action=\"\" sequence=\"\" />\n </odoo>\n"
+                },
+                {
+                    "date": 1658447130759,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -22,6 +22,7 @@\n         </field>\n     </record>\n \n     <!-- This Menu Item must have a parent and an action -->\n-    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"\" action=\"\" sequence=\"\" />\n+    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"\" />\n+    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"\" />\n </odoo>\n"
+                },
+                {
+                    "date": 1658447143462,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -22,7 +22,7 @@\n         </field>\n     </record>\n \n     <!-- This Menu Item must have a parent and an action -->\n-    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"\" />\n-    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"\" />\n+    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"0\" />\n+    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"100\" />\n </odoo>\n"
+                },
+                {
+                    "date": 1658447171743,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -23,6 +23,6 @@\n     </record>\n \n     <!-- This Menu Item must have a parent and an action -->\n     <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"0\" />\n-    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"100\" />\n+    <menuitem id=\"oo_kiosk_group_menu_act\" name=\"Kiosk Groups\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"100\" />\n </odoo>\n"
+                },
+                {
+                    "date": 1658447184669,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -23,6 +23,6 @@\n     </record>\n \n     <!-- This Menu Item must have a parent and an action -->\n     <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"0\" />\n-    <menuitem id=\"oo_kiosk_group_menu_act\" name=\"Kiosk Groups\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"100\" />\n+    <menuitem id=\"oo_kiosk_group_menu_act\" name=\"Kiosk Groups\" parent=\"mrp.menu_mrp_bom\" action=\"\" sequence=\"100\" />\n </odoo>\n"
+                },
+                {
+                    "date": 1658447219181,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -10,9 +10,9 @@\n \n         </field>\n     </record>\n \n-    <record id=\"kiosk.mrp_action\" model=\"ir.actions.act_window\">\n+    <record id=\"oo_kiosk_mrp_action\" model=\"ir.actions.act_window\">\n         <field name=\"name\">Kiosk Orders</field>\n         <field name=\"res_model\">kiosk.mrp</field>\n         <field name=\"view_mode\">tree,form</field>\n         <field name=\"domain\">[]</field>\n@@ -22,7 +22,7 @@\n         </field>\n     </record>\n \n     <!-- This Menu Item must have a parent and an action -->\n-    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"\" sequence=\"0\" />\n+    <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"oo_kiosk_mrp_action\" sequence=\"0\" />\n     <menuitem id=\"oo_kiosk_group_menu_act\" name=\"Kiosk Groups\" parent=\"mrp.menu_mrp_bom\" action=\"\" sequence=\"100\" />\n </odoo>\n"
+                },
+                {
+                    "date": 1658447254530,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,28 +1,18 @@\n <?xml version='1.0' encoding='utf-8'?>\n <odoo>\n-    <record id=\"kiosk.group_action\" model=\"ir.actions.act_window\">\n+    <record id=\"oo_kiosk_group_action\" model=\"ir.actions.act_window\">\n         <field name=\"name\">Kiosk Group</field>\n         <field name=\"res_model\">kiosk.group</field>\n         <field name=\"view_mode\">tree,form</field>\n-        <field name=\"domain\">[]</field>\n-        <field name=\"context\">{}</field>\n-        <field name=\"help\" type=\"html\">\n-\n-        </field>\n     </record>\n \n     <record id=\"oo_kiosk_mrp_action\" model=\"ir.actions.act_window\">\n         <field name=\"name\">Kiosk Orders</field>\n         <field name=\"res_model\">kiosk.mrp</field>\n         <field name=\"view_mode\">tree,form</field>\n-        <field name=\"domain\">[]</field>\n-        <field name=\"context\">{}</field>\n-        <field name=\"help\" type=\"html\">\n-\n-        </field>\n     </record>\n \n     <!-- This Menu Item must have a parent and an action -->\n     <menuitem id=\"oo_kiosk_mrp_menu_act\" name=\"Kiosk Orders\" parent=\"mrp.menu_mrp_manufacturing\" action=\"oo_kiosk_mrp_action\" sequence=\"0\" />\n-    <menuitem id=\"oo_kiosk_group_menu_act\" name=\"Kiosk Groups\" parent=\"mrp.menu_mrp_bom\" action=\"\" sequence=\"100\" />\n+    <menuitem id=\"oo_kiosk_group_menu_act\" name=\"Kiosk Groups\" parent=\"mrp.menu_mrp_bom\" action=\"oo_kiosk_group_action\" sequence=\"100\" />\n </odoo>\n"
+                }
+            ],
+            "date": 1658447028551,
+            "name": "Commit-0",
+            "content": "<?xml version='1.0' encoding='utf-8'?>\n<odoo>\n    <record id=\"kiosk.group_action\" model=\"ir.actions.act_window\">\n        <field name=\"name\">Kiosk Group</field>\n        <field name=\"res_model\">kiosk.group</field>\n        <field name=\"view_mode\">tree,form</field>\n        <field name=\"domain\">[]</field>\n        <field name=\"context\">{}</field>\n        <field name=\"help\" type=\"html\">\n\n        </field>\n    </record>\n\n    <record id=\"kiosk.mrp_action\" model=\"ir.actions.act_window\">\n        <field name=\"name\">Kiosk Orders</field>\n        <field name=\"res_model\">kiosk.mrp</field>\n        <field name=\"view_mode\">tree,form</field>\n        <field name=\"domain\">[]</field>\n        <field name=\"context\">{}</field>\n        <field name=\"help\" type=\"html\">\n\n        </field>\n    </record>\n</odoo>\n"
+        }
+    ]
+}

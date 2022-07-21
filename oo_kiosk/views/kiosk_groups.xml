@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+
+  <!-- kiosk.group search view -->
+  <record id="oo_kiosk_group_view_search" model="ir.ui.view">
+    <field name="name">kiosk.group.view.search</field>
+    <field name="model">kiosk.group</field>
+    <field name="arch" type="xml">
+      <search string="Search Description">
+        <field name="name" />
+        <field name="product_id" />
+      </search>
+    </field>
+  </record>
+
+  <!-- kiosk.group tree view -->
+  <record id="oo_kiosk_group_view_tree" model="ir.ui.view">
+    <field name="name">kiosk.group.view.tree</field>
+    <field name="model">kiosk.group</field>
+    <field name="arch" type="xml">
+      <tree>
+        <field name="name" />
+        <field name="product_id" />
+        <field name="quantity" />
+      </tree>
+    </field>
+  </record>
+
+
+  <!-- kiosk.group form view -->
+  <record id="oo_kiosk_group_view_form" model="ir.ui.view">
+    <field name="name">kiosk.group.view.form</field>
+    <field name="model">kiosk.group</field>
+    <field name="arch" type="xml">
+      <form string="">
+        <sheet>
+          <group>
+            <group>
+              <field name="name" />
+              <field name="product_id" />
+              <field name="quantity" />
+            </group>
+            <group />
+          </group>
+
+          <notebook>
+            <page name="components" string="Components">
+              <group string="Packaging Lines">
+                <field name="package_lines" nolabel="1">
+                  <tree editable="bottom">
+                    <field name="bom_id" />
+                    <field name="related_group_ids" widget="many2many_tags" />
+                    <!-- <field name="product_id" /> <field name="package_type" /> <field name="finished_qty" /> <field name="has_punching" /> <field name="has_bending" /> <field name="has_spot_weld" /> <field name="has_grinding" /> <field name="has_coating" /> <field name="packing" /> -->
+                    <field name="group_id" invisible="1" />
+                  </tree>
+                </field>
+              </group>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+</odoo>

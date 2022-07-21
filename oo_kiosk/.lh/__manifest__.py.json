@@ -1,0 +1,22 @@
+{
+    "sourceFile": "__manifest__.py",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1658446589892,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1658447329139,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,35 +1,28 @@\n # -*- coding: utf-8 -*-\n {\n-    'name': \"oo_kiosk\",\n+    'name': \"Kiosk Mrp\",\n \n-    'summary': \"\"\"\n-        Short (1 phrase/line) summary of the module's purpose, used as\n-        subtitle on modules listing or apps.openerp.com\"\"\",\n+    'summary': \"\"\" \"\"\",\n \n     'description': \"\"\"\n         Long description of module's purpose\n     \"\"\",\n \n-    'author': \"My Company\",\n+    'author': \"Teclea Ltd\",\n     'website': \"http://www.yourcompany.com\",\n \n-    # Categories can be used to filter modules in modules listing\n-    # Check https://github.com/odoo/odoo/blob/13.0/odoo/addons/base/data/ir_module_category_data.xml\n-    # for the full list\n+\n     'category': 'Uncategorized',\n-    'version': '0.1',\n+    'version': '15.0.0.1.0',\n \n     # any module necessary for this one to work correctly\n     'depends': ['mrp'],\n \n     # always loaded\n     'data': [\n-        # 'security/ir.model.access.csv',\n-        'views/views.xml',\n-        'views/templates.xml',\n-    ],\n-    # only loaded in demonstration mode\n-    'demo': [\n-        'demo/demo.xml',\n-    ],\n+        'security/ir.model.access.csv',\n+        'views/menus.xml',\n+        'views/kiosk_groups.xml',\n+        'views/kiosk_mrp.xml',\n+    ]\n }\n"
+                }
+            ],
+            "date": 1658446589892,
+            "name": "Commit-0",
+            "content": "# -*- coding: utf-8 -*-\n{\n    'name': \"oo_kiosk\",\n\n    'summary': \"\"\"\n        Short (1 phrase/line) summary of the module's purpose, used as\n        subtitle on modules listing or apps.openerp.com\"\"\",\n\n    'description': \"\"\"\n        Long description of module's purpose\n    \"\"\",\n\n    'author': \"My Company\",\n    'website': \"http://www.yourcompany.com\",\n\n    # Categories can be used to filter modules in modules listing\n    # Check https://github.com/odoo/odoo/blob/13.0/odoo/addons/base/data/ir_module_category_data.xml\n    # for the full list\n    'category': 'Uncategorized',\n    'version': '0.1',\n\n    # any module necessary for this one to work correctly\n    'depends': ['mrp'],\n\n    # always loaded\n    'data': [\n        # 'security/ir.model.access.csv',\n        'views/views.xml',\n        'views/templates.xml',\n    ],\n    # only loaded in demonstration mode\n    'demo': [\n        'demo/demo.xml',\n    ],\n}\n"
+        }
+    ]
+}

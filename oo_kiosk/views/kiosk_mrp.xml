@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- kiosk.mrp search view -->
+    <record id="oo_kiosk_mrp_view_search" model="ir.ui.view">
+        <field name="name">kiosk.mrp.view.search</field>
+        <field name="model">kiosk.mrp</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="group_id" />
+                <field name="mrp_type" />
+
+                <filter name="filter_draft" string="State" domain="[('state', '=', 'draft')]" />
+                <filter name="filter_posted" string="State" domain="[('state', '=', 'posted')]" />
+                <filter name="group_state" string="State" context="{'group_by': 'state'}" />
+            </search>
+        </field>
+    </record>
+    <!-- kiosk.mrp tree view -->
+    <record id="oo_kiosk_mrp_view_tree" model="ir.ui.view">
+        <field name="name">kiosk.mrp.view.tree</field>
+        <field name="model">kiosk.mrp</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="mrp_type" />
+                <field name="group_id" />
+                <field name="state" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- kiosk.mrp form view -->
+    <record id="oo_kiosk_view_form" model="ir.ui.view">
+        <field name="name">kiosk.mrp.view.form</field>
+        <field name="model">kiosk.mrp</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <header>
+                    <button string="Confirm" name="action_confirm" type="object" class="oe_highlight" attrs="{'invisible': [('state', 'in', ('posted','cancel'))]}" />
+                    <button string="Cancel" name="action_cancel" type="object" class="oe_highlight" attrs="{'invisible': [('state', 'in', ('draft','cancel'))]}" />
+                    <field name="state" widget="statusbar" />
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="get_mrps" type="object" class="oe_stat_button" icon="fa-">
+                            <field name="mrp_count" string="" widget="statinfo" />
+                        </button>
+                    </div>
+                    <group>
+                        <field name="mrp_type" />
+                        <field name="group_id" attrs="{'required': [('mrp_type', '=', 'program')], 'invisible': [('mrp_type', '!=', 'program')]}" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

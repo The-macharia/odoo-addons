@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_kiosk_group,kiosk.group.user,model_kiosk_group,base.group_user,1,1,1,1
+access_kiosk_package_line,kiosk.package.line.user,model_kiosk_package_line,base.group_user,1,1,1,1
+access_kiosk_mrp,kiosk.mrp.user,model_kiosk_mrp,base.group_user,1,1,1,1
