@@ -1,0 +1,18 @@
+{
+    "sourceFile": "data/sequence.xml",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1658448068239,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1658448068239,
+            "name": "Commit-0",
+            "content": "<?xml version='1.0' encoding='utf-8'?>\r\n<odoo>\r\n  <data noupdate=\"0\">\r\n\r\n    <record id=\"kiosk_mrp_sequence\" model=\"ir.sequence\">\r\n      <field name=\"name\">Kiosk Mrp Sequence</field>\r\n      <field name=\"code\">kiosk.order.sequence</field>\r\n      <field name=\"prefix\">KMO</field>\r\n      <field name=\"padding\">5</field>\r\n      <field name=\"company_id\" eval=\"False\" />\r\n    </record>\r\n\r\n  </data>\r\n</odoo>\r\n"
+        }
+    ]
+}
