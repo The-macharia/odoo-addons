@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
-from odoo.exceptions import ValidationError
 from datetime import datetime
+
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class Mrp(models.Model):
@@ -17,6 +18,7 @@ class Mrp(models.Model):
 class KioskManufacturing(models.Model):
     _name = 'kiosk.mrp'
 
+    name = fields.Char(string='Name', default='New', readonly="1")
     group_id = fields.Many2one('kiosk.group', string='Product Group')
     date_planned = fields.Datetime('Date Planned', default=datetime.now())
     mrp_type = fields.Selection(string='Type', selection=[('kiosk', 'Kiosk'), ('program', 'Program')], required=True)
@@ -24,6 +26,13 @@ class KioskManufacturing(models.Model):
         'draft', 'Draft'), ('posted', 'Posted'), ('cancel', 'Cancelled')], default='draft')
     mrp_ids = fields.Many2many(comodel_name='mrp.production', string='Mrp Orders')
     mrp_count = fields.Integer(string='Manufacturing Orders Count', compute='_compute_mrp_count')
+
+    @api.model
+    def create(self, vals):
+        if vals.get('name') == 'New':
+            vals['name'] = self.env['ir.sequence'].next_by_code('kiosk.order.sequence') or _('New')
+        res = super().create(vals)
+        return res
 
     @api.depends('mrp_ids')
     def _compute_mrp_count(self):

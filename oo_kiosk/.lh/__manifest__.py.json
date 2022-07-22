@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 2,
+            "activePatchIndex": 3,
             "patches": [
                 {
                     "date": 1658446589892,
@@ -16,6 +16,10 @@
                 {
                     "date": 1658447654838,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -21,8 +21,9 @@\n     # always loaded\n     'data': [\n         'security/ir.model.access.csv',\n         'views/menus.xml',\n+        'views/views.xml',\n         'views/kiosk_groups.xml',\n         'views/kiosk_mrp.xml',\n     ]\n }\n"
+                },
+                {
+                    "date": 1658448087226,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -20,8 +20,10 @@\n \n     # always loaded\n     'data': [\n         'security/ir.model.access.csv',\n+        'data/sequence.xml',\n+\n         'views/menus.xml',\n         'views/views.xml',\n         'views/kiosk_groups.xml',\n         'views/kiosk_mrp.xml',\n"
                 }
             ],
             "date": 1658446589892,
