@@ -11,9 +11,6 @@ class Mrp(models.Model):
 
     kiosk_mrp_id = fields.Many2one('kiosk.mrp', string='Kiosk Mrp')
 
-    # def action_confirm(self):
-    #     raise ValidationError(self.move_finished_ids)
-
 
 class KioskManufacturing(models.Model):
     _name = 'kiosk.mrp'
@@ -29,7 +26,7 @@ class KioskManufacturing(models.Model):
 
     @api.model
     def create(self, vals):
-        if vals.get('name') == 'New':
+        if not vals.get('name') or vals.get('name') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code('kiosk.order.sequence') or _('New')
         res = super().create(vals)
         return res
@@ -42,7 +39,7 @@ class KioskManufacturing(models.Model):
     def get_mrps(self):
         return {
             'type': 'ir.actions.act_window',
-            'name': f'{self.group_id.name} Mrp Orders',
+            'name': f'{self.name} Mrp Orders',
             'res_model': 'mrp.production',
             'view_mode': 'tree,form',
             'domain': [('kiosk_mrp_id', '=', self.id)]
@@ -73,7 +70,8 @@ class KioskManufacturing(models.Model):
                 'kiosk_mrp_id': self.id,
                 'location_src_id': src_location_id.id,
                 'location_dest_id': dest_location_id.id,
-                'procurement_group_id': procurement_group_id
+                'procurement_group_id': procurement_group_id,
+                'origin': line.group_id.name,
             }
             # group_vals.append(vals)
             mo = self.env['mrp.production'].with_context({'import_file': True}).create(vals)
